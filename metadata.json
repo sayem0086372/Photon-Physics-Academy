@@ -1,0 +1,10 @@
+{
+  "name": "Photon Physics Academy \u2014 Mymensingh",
+  "description": "Photon Physics Academy website with refined compact classroom gallery, configurable Store banner, advanced store management, guest checkout, and Cash on Delivery.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ],
+  "version": "1.3.4",
+  "release": "1.3.4"
+}

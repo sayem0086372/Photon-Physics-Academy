@@ -1,0 +1,20 @@
+[build]
+  command = "npm install --no-audit --no-fund && npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+  # Public (publishable) Supabase values — safe to ship in the browser bundle
+  VITE_SUPABASE_URL = "https://odhfhknaknzvnkrbnlyt.supabase.co"
+  VITE_SUPABASE_ANON_KEY = "sb_publishable_l2IMcAHL6X8I8F68yJsdxg_Zl8xrFQK"
+
+# Single-page app fallback
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
