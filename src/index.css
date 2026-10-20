@@ -1,0 +1,148 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Plus Jakarta Sans', 'Hind Siliguri', system-ui, -apple-system, sans-serif;
+  --font-bangla: 'Hind Siliguri', 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', 'Hind Siliguri', system-ui, -apple-system, sans-serif;
+  background-color: #f8fafc;
+  color: #1e293b;
+}
+
+.font-bangla {
+  font-family: 'Hind Siliguri', 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+
+/* Light theme delicate physics grid & accents */
+.physics-grid {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(14, 165, 233, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(14, 165, 233, 0.07) 1px, transparent 1px);
+}
+
+.physics-dots {
+  background-size: 24px 24px;
+  background-image: radial-gradient(rgba(2, 132, 199, 0.12) 1px, transparent 1px);
+}
+
+@keyframes ppaFadeIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes ppaSlideFade {
+  from { opacity: .45; transform: scale(1.015) translateX(8px); }
+  to { opacity: 1; transform: scale(1) translateX(0); }
+}
+.cart-confirmation { animation: ppaFadeIn .22s ease-out; }
+.slideshow-image { animation: ppaSlideFade .7s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .cart-confirmation, .slideshow-image { animation: none !important; }
+}
+
+/* v1.3.7 all-display responsiveness layer */
+html {
+  width: 100%;
+  min-width: 0;
+  scroll-padding-top: 5rem;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  overflow-x: clip;
+  overflow-wrap: anywhere;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+img, video, canvas, svg {
+  max-width: 100%;
+}
+
+img, video {
+  height: auto;
+}
+
+input, select, textarea, button {
+  max-width: 100%;
+  font: inherit;
+}
+
+input, select, textarea {
+  min-width: 0;
+}
+
+textarea {
+  resize: vertical;
+}
+
+button, a, input, select, textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button, [role="button"], a {
+  touch-action: manipulation;
+}
+
+/* Long URLs, order IDs and customer-provided text should not force page overflow. */
+main, header, footer, section, article, aside, nav, form, [role="dialog"] {
+  min-width: 0;
+}
+
+pre, code {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+/* Horizontal data tables remain scrollable inside their own panel on touch screens. */
+.overflow-x-auto {
+  max-width: 100%;
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 639px) {
+  html { scroll-padding-top: 4.25rem; }
+  body { font-size: 15px; }
+  input, select, textarea { font-size: 16px; }
+  button { min-height: 40px; }
+  a { overflow-wrap: anywhere; }
+  [role="dialog"] {
+    max-height: calc(100dvh - 1rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}
+
+@media (max-width: 360px) {
+  .physics-grid { background-size: 24px 24px; }
+  .physics-dots { background-size: 18px 18px; }
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .overflow-x-auto { scrollbar-width: thin; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
