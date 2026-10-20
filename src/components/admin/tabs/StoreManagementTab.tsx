@@ -1,0 +1,239 @@
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { AlertCircle, BookOpen, CheckCircle2, ImagePlus, LoaderCircle, Package, Pencil, Plus, RefreshCw, Save, Search, ShoppingBag, Truck, TicketPercent, Download, BarChart3, X, type LucideIcon } from 'lucide-react';
+import { supabase } from '../../../lib/supabase';
+
+type StoreBook = {
+  id: string; title: string; author: string | null; description: string | null; category: string | null;
+  cover_image_url: string | null; price_bdt: number; discount_percent: number; stock_quantity: number;
+  low_stock_threshold: number; is_active: boolean; created_at: string;
+};
+type StoreOrderItem = { title_snapshot: string; quantity: number; unit_price_bdt: number; line_total_bdt: number };
+type StoreOrder = {
+  id: string; order_number: string; customer_name: string; customer_email: string | null; phone: string;
+  delivery_address: string; area?: string | null; city: string; subtotal_bdt: number; delivery_fee_bdt: number; total_bdt: number; coupon_code?: string | null; coupon_discount_bdt?: number;
+  payment_method: string; payment_status: string; order_status: string; transaction_reference: string | null; sender_mobile?: string | null; created_at: string; items?: StoreOrderItem[];
+};
+type DeliverySettings = { id: number; default_delivery_fee_bdt: number; free_delivery_threshold_bdt: number | null; bkash_instructions: string | null; nagad_instructions: string | null };
+type StoreCoupon = { id: string; code: string; description: string | null; discount_type: 'percent' | 'fixed'; discount_value: number; max_discount_bdt: number | null; min_subtotal_bdt: number; usage_limit: number | null; per_user_limit: number; starts_at: string | null; ends_at: string | null; is_active: boolean; created_at: string };
+type StoreTab = 'books' | 'orders' | 'coupons' | 'analytics' | 'delivery';
+const blankCoupon = { code: '', description: '', discount_type: 'percent' as 'percent' | 'fixed', discount_value: '10', max_discount_bdt: '', min_subtotal_bdt: '0', usage_limit: '', per_user_limit: '1', starts_at: '', ends_at: '', is_active: true };
+const blankBook = { title: '', author: '', description: '', category: 'Physics', cover_image_url: '', price_bdt: '0', discount_percent: '0', stock_quantity: '0', low_stock_threshold: '5', is_active: true };
+const money = (n: number) => new Intl.NumberFormat('en-BD', { style: 'currency', currency: 'BDT', maximumFractionDigits: 0 }).format(Number(n) || 0).replace('BDT', '৳');
+const field = 'w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100';
+const label = 'mb-1.5 block text-xs font-semibold text-slate-600';
+
+export const StoreManagementTab: React.FC = () => {
+  const [tab, setTab] = useState<StoreTab>('books');
+  const [books, setBooks] = useState<StoreBook[]>([]);
+  const [orders, setOrders] = useState<StoreOrder[]>([]);
+  const [settings, setSettings] = useState<DeliverySettings | null>(null);
+  const [coupons, setCoupons] = useState<StoreCoupon[]>([]);
+  const [couponSchemaReady, setCouponSchemaReady] = useState(true);
+  const [couponFormOpen, setCouponFormOpen] = useState(false);
+  const [editingCouponId, setEditingCouponId] = useState<string | null>(null);
+  const [couponForm, setCouponForm] = useState(blankCoupon);
+  const [userId, setUserId] = useState('');
+  const [isStoreAdmin, setIsStoreAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
+  const [query, setQuery] = useState('');
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState(blankBook);
+  const [orderFilter, setOrderFilter] = useState('all');
+  const [paymentNote, setPaymentNote] = useState<Record<string, string>>({});
+  const [smsOrder, setSmsOrder] = useState<StoreOrder | null>(null);
+  const [smsMessage, setSmsMessage] = useState('');
+  const [smsBusy, setSmsBusy] = useState(false);
+
+  const load = useCallback(async () => {
+    if (!supabase) { setError('Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Netlify environment variables.'); setLoading(false); return; }
+    setLoading(true); setError(''); setNotice('');
+    try {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!authData.user) throw new Error('Please sign in to the admin panel again.');
+      setUserId(authData.user.id);
+      const { data: admin, error: adminError } = await supabase.rpc('is_store_admin');
+      if (adminError) throw adminError;
+      if (admin !== true) { setIsStoreAdmin(false); setBooks([]); setOrders([]); setSettings(null); setLoading(false); return; }
+      setIsStoreAdmin(true);
+      const [bookRes, orderRes, settingRes, couponRes] = await Promise.all([
+        supabase.from('store_books').select('*').order('created_at', { ascending: false }).range(0,999),
+        supabase.from('store_orders').select('*').order('created_at', { ascending: false }).range(0,999),
+        supabase.from('store_delivery_settings').select('*').eq('id', 1).maybeSingle(),
+        supabase.from('store_coupons').select('*').order('created_at', { ascending: false }).range(0,999),
+      ]);
+      if (bookRes.error) throw bookRes.error;
+      if (orderRes.error) throw orderRes.error;
+      if (settingRes.error) throw settingRes.error;
+      const rawOrders = (orderRes.data ?? []) as StoreOrder[];
+      const orderIds = rawOrders.map(o => o.id);
+      const itemRes = orderIds.length ? await supabase.from('store_order_items').select('order_id,title_snapshot,quantity,unit_price_bdt,line_total_bdt').in('order_id', orderIds) : { data: [], error: null };
+      if (itemRes.error) throw itemRes.error;
+      const itemMap = new Map<string, StoreOrderItem[]>();
+      for (const item of (itemRes.data ?? []) as (StoreOrderItem & { order_id: string })[]) itemMap.set(item.order_id, [...(itemMap.get(item.order_id) ?? []), item]);
+      setCouponSchemaReady(!couponRes.error);
+      setCoupons(couponRes.error ? [] : (couponRes.data ?? []) as StoreCoupon[]);
+      setBooks((bookRes.data ?? []) as StoreBook[]);
+      setOrders(rawOrders.map(o => ({ ...o, items: itemMap.get(o.id) ?? [] })));
+      setSettings((settingRes.data as DeliverySettings | null) ?? { id: 1, default_delivery_fee_bdt: 80, free_delivery_threshold_bdt: null, bkash_instructions: '', nagad_instructions: '' });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Unable to load store data.');
+    } finally { setLoading(false); }
+  }, []);
+  useEffect(() => { void load(); }, [load]);
+
+  const filteredBooks = useMemo(() => books.filter(b => `${b.title} ${b.author ?? ''} ${b.category ?? ''}`.toLowerCase().includes(query.toLowerCase())), [books, query]);
+  const filteredOrders = useMemo(() => orders.filter(o => orderFilter === 'all' || (orderFilter === 'pending_payment' ? (o.payment_method === 'cod' ? !['delivered','cancelled','refunded'].includes(o.order_status.toLowerCase()) : ['pending','rejected'].includes(o.payment_status.toLowerCase()) && !['cancelled','refunded'].includes(o.order_status.toLowerCase())) : o.order_status.toLowerCase() === orderFilter)), [orders, orderFilter]);
+  const lowStock = books.filter(b => b.stock_quantity <= b.low_stock_threshold).length;
+  const pendingPayments = orders.filter(o => o.payment_method === 'cod' ? !['delivered','cancelled','refunded'].includes(o.order_status.toLowerCase()) : ['pending','rejected'].includes(o.payment_status.toLowerCase()) && !['cancelled','refunded'].includes(o.order_status.toLowerCase())).length;
+
+  const openAdd = () => { setEditingId(null); setForm(blankBook); setShowForm(true); };
+  const openEdit = (b: StoreBook) => { setEditingId(b.id); setForm({ title: b.title, author: b.author ?? '', description: b.description ?? '', category: b.category ?? '', cover_image_url: b.cover_image_url ?? '', price_bdt: String(b.price_bdt), discount_percent: String(b.discount_percent), stock_quantity: String(b.stock_quantity), low_stock_threshold: String(b.low_stock_threshold), is_active: b.is_active }); setShowForm(true); };
+  const saveBook = async (e: React.FormEvent) => {
+    e.preventDefault(); if (!supabase || !isStoreAdmin) return;
+    if (!form.title.trim()) { setError('Book title is required.'); return; }
+    setBusy(true); setError(''); setNotice('');
+    const payload = { title: form.title.trim(), author: form.author.trim() || null, description: form.description.trim() || null, category: form.category.trim() || null, cover_image_url: form.cover_image_url.trim() || null, price_bdt: Number(form.price_bdt), discount_percent: Number(form.discount_percent), stock_quantity: Number(form.stock_quantity), low_stock_threshold: Number(form.low_stock_threshold), is_active: form.is_active, updated_at: new Date().toISOString() };
+    if (![payload.price_bdt, payload.discount_percent, payload.stock_quantity, payload.low_stock_threshold].every(Number.isFinite) || payload.price_bdt < 0 || payload.discount_percent < 0 || payload.discount_percent > 100 || payload.stock_quantity < 0 || payload.low_stock_threshold < 0) { setError('Check price, discount (0–100), and stock values.'); setBusy(false); return; }
+    try {
+      const result = editingId ? await supabase.from('store_books').update(payload).eq('id', editingId).select('*').single() : await supabase.from('store_books').insert(payload).select('*').single();
+      if (result.error) throw result.error;
+      setNotice(editingId ? 'Book updated.' : 'Book added.'); setShowForm(false); setForm(blankBook); setEditingId(null); await load();
+    } catch (e) { setError(e instanceof Error ? e.message : 'Could not save book.'); }
+    finally { setBusy(false); }
+  };
+  const toggleBook = async (b: StoreBook) => {
+    if (!supabase || !isStoreAdmin) return;
+    setBusy(true); setError('');
+    const { error: e } = await supabase.from('store_books').update({ is_active: !b.is_active, updated_at: new Date().toISOString() }).eq('id', b.id);
+    if (e) setError(e.message); else { setNotice(b.is_active ? 'Book hidden from the public store.' : 'Book published to the public store.'); await load(); }
+    setBusy(false);
+  };
+  const verifyPayment = async (order: StoreOrder) => {
+    if (!supabase || !isStoreAdmin) return;
+    if (!confirm(`Mark payment for ${order.order_number} as verified? Only confirm after checking the actual bKash/Nagad transaction.`)) return;
+    setBusy(true); setError(''); setNotice('');
+    const { error: e } = await supabase.rpc('set_store_payment_status', { p_order_id: order.id, p_status: 'verified', p_note: paymentNote[order.id]?.trim() || 'Payment manually verified by administrator.' });
+    if (e) setError(e.message); else {
+      setNotice(`Payment recorded as verified for ${order.order_number}.`);
+      if (order.payment_method !== 'cod') {
+        const method = order.payment_method === 'bkash' ? 'bKash' : 'Nagad';
+        setSmsOrder(order);
+        setSmsMessage(`Photon Physics Academy: আপনার Order ${order.order_number}-এর ${method} payment ৳${Number(order.total_bdt).toLocaleString('en-BD')} verify করা হয়েছে। ধন্যবাদ।`);
+      }
+      await load();
+    }
+    setBusy(false);
+  };
+  const sendPaymentConfirmationSms = async () => {
+    if (!supabase || !smsOrder || !smsMessage.trim()) return;
+    setSmsBusy(true); setError('');
+    try {
+      const { data, error: smsError } = await supabase.functions.invoke('sms-gateway', { body: { action: 'send', to: [smsOrder.phone], msg: smsMessage.trim() } });
+      if (smsError) throw smsError;
+      if (data?.success === false || data?.error) throw new Error(data.error || 'SMS gateway could not send the message.');
+      setNotice(`Payment verified. Confirmation SMS request sent to ${smsOrder.phone}.`);
+      setSmsOrder(null); setSmsMessage('');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not send confirmation SMS.');
+    } finally { setSmsBusy(false); }
+  };
+  const advanceOrder = async (order: StoreOrder) => {
+    if (!supabase || !isStoreAdmin) return;
+    const next: Record<string, string> = { placed: 'confirmed', confirmed: 'processing', processing: 'shipped', shipped: 'delivered' };
+    const nextStatus = next[order.order_status.toLowerCase()];
+    if (!nextStatus) return;
+    if (nextStatus === 'processing' && order.payment_method !== 'cod' && order.payment_status !== 'verified') {
+      setError('Verify the wallet payment before moving this order to processing.'); return;
+    }
+    if (!confirm(`Move ${order.order_number} from ${order.order_status} to ${nextStatus}?`)) return;
+    setBusy(true); setError(''); setNotice('');
+    const { error: e } = await supabase.rpc('set_store_order_status', { p_order_id: order.id, p_status: nextStatus, p_note: `Updated from Store Management to ${nextStatus}.` });
+    if (e) setError(e.message); else { setNotice(`${order.order_number} is now ${nextStatus}.`); await load(); }
+    setBusy(false);
+  };
+
+  const openAddCoupon = () => { setEditingCouponId(null); setCouponForm(blankCoupon); setCouponFormOpen(true); };
+  const openEditCoupon = (c: StoreCoupon) => { setEditingCouponId(c.id); setCouponForm({ code: c.code, description: c.description ?? '', discount_type: c.discount_type, discount_value: String(c.discount_value), max_discount_bdt: c.max_discount_bdt == null ? '' : String(c.max_discount_bdt), min_subtotal_bdt: String(c.min_subtotal_bdt), usage_limit: c.usage_limit == null ? '' : String(c.usage_limit), per_user_limit: String(c.per_user_limit), starts_at: c.starts_at ? c.starts_at.slice(0,16) : '', ends_at: c.ends_at ? c.ends_at.slice(0,16) : '', is_active: c.is_active }); setCouponFormOpen(true); };
+  const saveCoupon = async (e: React.FormEvent) => {
+    e.preventDefault(); if (!supabase || !isStoreAdmin || !couponSchemaReady) return;
+    const value = Number(couponForm.discount_value), min = Number(couponForm.min_subtotal_bdt), perUser = Number(couponForm.per_user_limit);
+    const maxDiscount = couponForm.max_discount_bdt.trim() === '' ? null : Number(couponForm.max_discount_bdt);
+    const usageLimit = couponForm.usage_limit.trim() === '' ? null : Number(couponForm.usage_limit);
+    const code = couponForm.code.trim().toUpperCase();
+    if (!/^[A-Z0-9_-]{3,40}$/.test(code)) { setError('Coupon code must be 3–40 characters using letters, numbers, hyphens or underscores.'); return; }
+    if (!Number.isFinite(value) || value <= 0 || (couponForm.discount_type === 'percent' && value > 100) || !Number.isFinite(min) || min < 0 || !Number.isInteger(perUser) || perUser < 1 || (maxDiscount !== null && (!Number.isFinite(maxDiscount) || maxDiscount < 0)) || (usageLimit !== null && (!Number.isInteger(usageLimit) || usageLimit < 1))) { setError('Check the coupon discount, minimum subtotal, and usage limits.'); return; }
+    if (couponForm.starts_at && couponForm.ends_at && new Date(couponForm.ends_at) <= new Date(couponForm.starts_at)) { setError('Coupon end time must be later than start time.'); return; }
+    setBusy(true); setError(''); setNotice('');
+    const payload = { code, description: couponForm.description.trim() || null, discount_type: couponForm.discount_type, discount_value: value, max_discount_bdt: maxDiscount, min_subtotal_bdt: min, usage_limit: usageLimit, per_user_limit: perUser, starts_at: couponForm.starts_at ? new Date(couponForm.starts_at).toISOString() : null, ends_at: couponForm.ends_at ? new Date(couponForm.ends_at).toISOString() : null, is_active: couponForm.is_active, updated_at: new Date().toISOString() };
+    const result = editingCouponId ? await supabase.from('store_coupons').update(payload).eq('id', editingCouponId) : await supabase.from('store_coupons').insert({ ...payload, created_by: userId });
+    if (result.error) setError(result.error.message); else { setNotice(editingCouponId ? 'Coupon updated.' : 'Coupon created.'); setCouponFormOpen(false); setEditingCouponId(null); setCouponForm(blankCoupon); await load(); }
+    setBusy(false);
+  };
+  const toggleCoupon = async (coupon: StoreCoupon) => {
+    if (!supabase || !isStoreAdmin || !couponSchemaReady) return;
+    setBusy(true); setError('');
+    const { error: e } = await supabase.from('store_coupons').update({ is_active: !coupon.is_active, updated_at: new Date().toISOString() }).eq('id', coupon.id);
+    if (e) setError(e.message); else { setNotice(`${coupon.code} ${coupon.is_active ? 'paused' : 'activated'}.`); await load(); }
+    setBusy(false);
+  };
+  const exportOrdersCsv = () => {
+    const headers = ['Order number','Created at','Customer','Email','Phone','Address','Area / Thana','District / City','Status','Payment method','Payment status','Subtotal BDT','Coupon code','Coupon discount BDT','Delivery fee BDT','Total BDT'];
+    const rows = filteredOrders.map(o => [o.order_number,o.created_at,o.customer_name,o.customer_email ?? '',o.phone,o.delivery_address,o.area ?? '',o.city,o.order_status,o.payment_method === 'cod' ? 'Cash on Delivery' : o.payment_method === 'bkash' ? 'bKash' : o.payment_method === 'nagad' ? 'Nagad' : o.payment_method,o.payment_status,o.subtotal_bdt,(o as StoreOrder & {coupon_code?:string|null}).coupon_code ?? '',(o as StoreOrder & {coupon_discount_bdt?:number}).coupon_discount_bdt ?? 0,o.delivery_fee_bdt,o.total_bdt]);
+    const csv = [headers,...rows].map(row => row.map(v => { const value = String(v ?? ''); const safe = /^[=+@\-\t\r]/.test(value) ? `'${value}` : value; return `"${safe.replace(/"/g,'""')}"`; }).join(',')).join('\r\n');
+    const url = URL.createObjectURL(new Blob(['\ufeff',csv], { type: 'text/csv;charset=utf-8;' })); const a = document.createElement('a'); a.href = url; a.download = `photon-store-orders-${new Date().toISOString().slice(0,10)}.csv`; a.click(); URL.revokeObjectURL(url);
+  };
+
+  const saveDelivery = async (e: React.FormEvent) => {
+    e.preventDefault(); if (!supabase || !isStoreAdmin || !settings) return;
+    setBusy(true); setError(''); setNotice('');
+    const { error: e2 } = await supabase.from('store_delivery_settings').upsert({ id: 1, default_delivery_fee_bdt: Number(settings.default_delivery_fee_bdt), free_delivery_threshold_bdt: settings.free_delivery_threshold_bdt === null || String(settings.free_delivery_threshold_bdt) === '' ? null : Number(settings.free_delivery_threshold_bdt), bkash_instructions: settings.bkash_instructions || null, nagad_instructions: settings.nagad_instructions || null, updated_at: new Date().toISOString() });
+    if (e2) setError(e2.message); else setNotice('Delivery and payment instructions saved.');
+    setBusy(false);
+  };
+
+  if (loading) return <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white p-8 text-sm text-slate-500"><LoaderCircle className="h-4 w-4 animate-spin"/> Loading store management…</div>;
+  if (!isStoreAdmin) return <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 sm:p-8"><div className="flex items-start gap-3"><AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-700"/><div><h2 className="font-bold text-amber-950">Store administrator access required</h2><p className="mt-2 text-sm leading-6 text-amber-900">Your account is signed in, but it is not enrolled in <code>public.store_admins</code>. A project owner must verify your Supabase Authentication user ID and enroll it before book or order data can be managed.</p><p className="mt-2 break-all text-xs text-amber-800">Signed-in user ID: {userId || 'not available'}</p><button onClick={() => void load()} className="mt-4 rounded-lg bg-amber-900 px-4 py-2 text-sm font-semibold text-white">Check again</button></div></div></div>;
+
+  return <div className="space-y-6">
+    <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><p className="text-xs font-bold uppercase tracking-[.16em] text-blue-700">Commerce operations</p><h2 className="mt-1 text-2xl font-black tracking-tight text-slate-950">Store Management</h2><p className="mt-1 text-sm text-slate-500">Manage books, orders, stock, delivery and manual payment verification.</p></div><button onClick={() => void load()} className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold hover:bg-slate-50"><RefreshCw className="h-4 w-4"/> Refresh</button></div>
+    {error && <div role="alert" className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0"/>{error}<button className="ml-auto" onClick={() => setError('')} aria-label="Dismiss error"><X className="h-4 w-4"/></button></div>}
+    {notice && <div role="status" className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800"><CheckCircle2 className="h-4 w-4 shrink-0"/>{notice}<button className="ml-auto" onClick={() => setNotice('')} aria-label="Dismiss message"><X className="h-4 w-4"/></button></div>}
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5"><Metric icon={BookOpen} label="Catalog books" value={books.length}/><Metric icon={Package} label="Low-stock alerts" value={lowStock}/><Metric icon={ShoppingBag} label="Pending payments / COD" value={pendingPayments}/><Metric icon={TicketPercent} label="Active coupons" value={coupons.filter(c=>c.is_active).length}/><Metric icon={BarChart3} label="Orders loaded" value={orders.length}/></div>
+    <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-3">{([{id:'books',label:'Books & Inventory',icon:BookOpen},{id:'orders',label:'Orders & Payments',icon:ShoppingBag},{id:'coupons',label:'Coupons & Promotions',icon:TicketPercent},{id:'analytics',label:'Reports & Export',icon:BarChart3},{id:'delivery',label:'Delivery Settings',icon:Truck}] as const).map(t => {const Icon=t.icon;return <button key={t.id} onClick={() => setTab(t.id)} className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-semibold ${tab===t.id?'bg-slate-900 text-white':'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'}`}><Icon className="h-4 w-4"/>{t.label}</button>;})}</div>
+
+    {tab === 'books' && <section className="space-y-4"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div className="relative w-full sm:max-w-sm"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search title, author or category" className={`${field} pl-9`}/></div><button onClick={openAdd} className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-800"><Plus className="h-4 w-4"/> Add new book</button></div>
+      {showForm && <form onSubmit={saveBook} className="rounded-2xl border border-blue-100 bg-blue-50/40 p-4 sm:p-6"><div className="mb-4 flex items-center justify-between"><div><h3 className="font-bold text-slate-900">{editingId?'Edit book':'Add a book'}</h3><p className="mt-1 text-xs text-slate-500">Prices are in Bangladeshi taka (BDT).</p></div><button type="button" onClick={()=>setShowForm(false)} aria-label="Close book form"><X className="h-5 w-5"/></button></div><div className="grid gap-4 sm:grid-cols-2"><div><label className={label}>Book title *</label><input required maxLength={240} value={form.title} onChange={e=>setForm({...form,title:e.target.value})} className={field}/></div><div><label className={label}>Author</label><input value={form.author} onChange={e=>setForm({...form,author:e.target.value})} className={field}/></div><div><label className={label}>Category</label><input value={form.category} onChange={e=>setForm({...form,category:e.target.value})} placeholder="Physics, Chemistry…" className={field}/></div><div><label className={label}>Cover image URL</label><div className="flex gap-2"><input type="url" value={form.cover_image_url} onChange={e=>setForm({...form,cover_image_url:e.target.value})} placeholder="https://…" className={field}/><ImagePlus className="mt-2 h-5 w-5 shrink-0 text-slate-400"/></div><p className="mt-1 text-[11px] text-slate-500">Paste a public image URL. Direct file upload is not enabled yet.</p></div><div><label className={label}>Price (৳) *</label><input required type="number" min="0" step="1" value={form.price_bdt} onChange={e=>setForm({...form,price_bdt:e.target.value})} className={field}/></div><div><label className={label}>Discount (%)</label><input type="number" min="0" max="100" step="0.5" value={form.discount_percent} onChange={e=>setForm({...form,discount_percent:e.target.value})} className={field}/></div><div><label className={label}>Stock quantity</label><input type="number" min="0" step="1" value={form.stock_quantity} onChange={e=>setForm({...form,stock_quantity:e.target.value})} className={field}/></div><div><label className={label}>Low-stock alert at</label><input type="number" min="0" step="1" value={form.low_stock_threshold} onChange={e=>setForm({...form,low_stock_threshold:e.target.value})} className={field}/></div><div className="sm:col-span-2"><label className={label}>Description</label><textarea rows={3} value={form.description} onChange={e=>setForm({...form,description:e.target.value})} className={field}/></div><label className="flex items-center gap-2 text-sm font-semibold text-slate-700"><input type="checkbox" checked={form.is_active} onChange={e=>setForm({...form,is_active:e.target.checked})} className="h-4 w-4 rounded border-slate-300"/> Publish in public bookstore</label></div><div className="mt-5 flex flex-wrap justify-end gap-2"><button type="button" onClick={()=>setShowForm(false)} className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold">Cancel</button><button disabled={busy} className="inline-flex items-center gap-2 rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50"><Save className="h-4 w-4"/>{busy?'Saving…':editingId?'Save changes':'Add book'}</button></div></form>}
+      {filteredBooks.length===0 ? <EmptyPanel title="No books found" detail={query?'Try a different search.':'Add your first book to begin building the catalog.'}/> : <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white"><div className="overflow-x-auto"><table className="w-full min-w-[760px] text-left text-sm"><thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th className="px-4 py-3">Book</th><th className="px-4 py-3">Price</th><th className="px-4 py-3">Stock</th><th className="px-4 py-3">Visibility</th><th className="px-4 py-3 text-right">Actions</th></tr></thead><tbody className="divide-y divide-slate-100">{filteredBooks.map(b=><tr key={b.id} className="hover:bg-slate-50/70"><td className="px-4 py-3"><div className="flex items-center gap-3"><div className="h-14 w-11 overflow-hidden rounded-lg bg-slate-100">{b.cover_image_url?<img src={b.cover_image_url} alt="" className="h-full w-full object-cover"/>:<BookOpen className="m-3 h-5 w-5 text-slate-400"/>}</div><div><p className="font-bold text-slate-900">{b.title}</p><p className="mt-0.5 text-xs text-slate-500">{b.author||'Author not set'} · {b.category||'Uncategorised'}</p></div></div></td><td className="px-4 py-3"><p className="font-bold">{money(Number(b.price_bdt)*(1-Number(b.discount_percent)/100))}</p>{Number(b.discount_percent)>0&&<p className="text-xs text-slate-400 line-through">{money(Number(b.price_bdt))}</p>}</td><td className="px-4 py-3"><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${b.stock_quantity<=b.low_stock_threshold?'bg-amber-50 text-amber-800':'bg-emerald-50 text-emerald-800'}`}>{b.stock_quantity} in stock</span></td><td className="px-4 py-3"><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${b.is_active?'bg-blue-50 text-blue-700':'bg-slate-100 text-slate-600'}`}>{b.is_active?'Published':'Hidden'}</span></td><td className="px-4 py-3"><div className="flex justify-end gap-2"><button onClick={()=>openEdit(b)} className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-2 text-xs font-semibold hover:bg-slate-100"><Pencil className="h-3.5 w-3.5"/> Edit</button><button disabled={busy} onClick={()=>void toggleBook(b)} className="rounded-lg border border-slate-200 px-2.5 py-2 text-xs font-semibold hover:bg-slate-100">{b.is_active?'Hide':'Publish'}</button></div></td></tr>)}</tbody></table></div></div>}</section>}
+
+    {tab === 'orders' && <section className="space-y-4"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><h3 className="font-bold text-slate-900">Orders & payment review</h3><p className="mt-1 text-xs text-slate-500">Guest orders, Cash on Delivery collection, and bKash/Nagad payment verification appear here.</p></div><select value={orderFilter} onChange={e=>setOrderFilter(e.target.value)} className={`${field} sm:max-w-56`}><option value="all">All orders</option><option value="pending_payment">Pending payments / COD collection</option><option value="placed">Placed</option><option value="confirmed">Confirmed</option><option value="processing">Processing</option><option value="shipped">Shipped</option><option value="delivered">Delivered</option><option value="cancelled">Cancelled</option></select></div>
+      {filteredOrders.length===0?<EmptyPanel title="No orders yet" detail="Customer orders will appear here after the store checkout is connected."/>:<div className="space-y-3">{filteredOrders.map(o=><article key={o.id} className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5"><div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><div className="flex flex-wrap items-center gap-2"><h4 className="font-black text-slate-950">{o.order_number}</h4><span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-bold uppercase text-slate-600">{o.order_status}</span><span className={`rounded-full px-2.5 py-1 text-[11px] font-bold uppercase ${o.payment_status.toLowerCase()==='verified'?'bg-emerald-50 text-emerald-700':'bg-amber-50 text-amber-800'}`}>{o.payment_status}</span></div><p className="mt-2 text-sm font-semibold text-slate-800">{o.customer_name} · {o.phone}</p><p className="mt-1 text-xs text-slate-500">{o.customer_email||'No email'} · {new Date(o.created_at).toLocaleString()}</p><p className="mt-2 max-w-2xl text-sm text-slate-600">{o.delivery_address}</p><p className="mt-1 text-sm text-slate-600">Area / Thana: <strong>{o.area || '—'}</strong> · District / City: <strong>{o.city}</strong></p><p className="mt-2 text-xs text-slate-500">Payment method: <strong>{o.payment_method === 'cod' ? 'Cash on Delivery' : o.payment_method === 'bkash' ? 'bKash' : o.payment_method === 'nagad' ? 'Nagad' : o.payment_method}</strong>{o.transaction_reference?` · Transaction ID: ${o.transaction_reference}`:''}{o.sender_mobile?` · Sender mobile: ${o.sender_mobile}`:''}</p><div className="mt-3 rounded-lg bg-slate-50 p-3"><p className="text-xs font-bold uppercase tracking-wide text-slate-500">Items ordered</p>{o.items?.length ? <ul className="mt-1 space-y-1 text-sm text-slate-700">{o.items.map((item, index) => <li key={`${o.id}-${index}`} className="flex justify-between gap-3"><span>{item.title_snapshot} × {item.quantity}</span><strong className="shrink-0">{money(Number(item.line_total_bdt))}</strong></li>)}</ul> : <p className="mt-1 text-xs text-slate-500">No item details available.</p>}</div></div><div className="min-w-32 sm:text-right"><p className="text-xl font-black text-slate-950">{money(Number(o.total_bdt))}</p><p className="mt-1 text-xs text-slate-500">Subtotal {money(Number(o.subtotal_bdt))}{o.coupon_discount_bdt ? ` − coupon ${money(Number(o.coupon_discount_bdt))}` : ''} + delivery {money(Number(o.delivery_fee_bdt))}</p>{o.coupon_code && <p className="mt-1 text-xs font-semibold text-emerald-700">Coupon: {o.coupon_code}</p>}</div></div>
+        <div className="mt-4 flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-end sm:justify-between">
+          {o.payment_method!=='cod' && o.payment_status.toLowerCase()!=='verified' && !['cancelled','refunded'].includes(o.payment_status.toLowerCase()) ? <div className="min-w-0 flex-1"><label className={label}>Verification note (optional)</label><div className="flex flex-col gap-2 sm:flex-row"><input value={paymentNote[o.id]||''} onChange={e=>setPaymentNote({...paymentNote,[o.id]:e.target.value})} placeholder="Checked wallet transaction / TrxID" className={field}/><button disabled={busy} onClick={()=>void verifyPayment(o)} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-800 disabled:opacity-50"><CheckCircle2 className="h-4 w-4"/> Verify payment</button></div></div> : <div className="text-xs text-slate-500">{o.payment_status==='verified'?'Payment verified.':o.payment_method==='cod'?'Cash on Delivery order.':''}</div>}
+          {({placed:'confirmed',confirmed:'processing',processing:'shipped',shipped:'delivered'} as Record<string,string>)[o.order_status.toLowerCase()] && <button disabled={busy} onClick={()=>void advanceOrder(o)} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white hover:bg-slate-800 disabled:opacity-50">Move to {({placed:'confirmed',confirmed:'processing',processing:'shipped',shipped:'delivered'} as Record<string,string>)[o.order_status.toLowerCase()]}</button>}
+        </div>
+      </article>)}</div>}</section>}
+
+    {tab === 'coupons' && <section className="space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><h3 className="font-bold text-slate-900">Coupon codes & promotions</h3><p className="mt-1 text-xs text-slate-500">Create percentage or fixed discounts, set limits, and schedule campaigns.</p></div><button disabled={!couponSchemaReady} onClick={openAddCoupon} className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50"><Plus className="h-4 w-4"/> Create coupon</button></div>
+      {!couponSchemaReady && <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"><strong>Coupon database migration required.</strong><p className="mt-1">Apply <code>store_coupons_advanced_v1.sql</code> from the included source package, then refresh this panel. Other store management sections remain available.</p></div>}
+      {couponFormOpen && couponSchemaReady && <form onSubmit={saveCoupon} className="rounded-2xl border border-blue-100 bg-blue-50/40 p-4 sm:p-6"><div className="mb-4 flex items-center justify-between"><div><h4 className="font-bold text-slate-900">{editingCouponId ? 'Edit coupon' : 'Create coupon'}</h4><p className="mt-1 text-xs text-slate-500">Codes are normalized to uppercase and validated again by the database at checkout.</p></div><button type="button" onClick={()=>setCouponFormOpen(false)} aria-label="Close coupon form"><X className="h-5 w-5"/></button></div>
+        <div className="grid gap-4 sm:grid-cols-2"><div><label className={label}>Coupon code *</label><input required maxLength={40} value={couponForm.code} onChange={e=>setCouponForm({...couponForm,code:e.target.value.toUpperCase()})} placeholder="WELCOME10" className={field}/></div><div><label className={label}>Discount type *</label><select value={couponForm.discount_type} onChange={e=>setCouponForm({...couponForm,discount_type:e.target.value as 'percent'|'fixed'})} className={field}><option value="percent">Percentage (%)</option><option value="fixed">Fixed amount (৳)</option></select></div><div><label className={label}>{couponForm.discount_type==='percent'?'Discount percentage':'Discount amount (৳)'} *</label><input required type="number" min="0.01" max={couponForm.discount_type==='percent'?100:undefined} step="0.01" value={couponForm.discount_value} onChange={e=>setCouponForm({...couponForm,discount_value:e.target.value})} className={field}/></div><div><label className={label}>Maximum discount (৳, optional)</label><input type="number" min="0" step="1" value={couponForm.max_discount_bdt} onChange={e=>setCouponForm({...couponForm,max_discount_bdt:e.target.value})} className={field}/></div><div><label className={label}>Minimum cart subtotal (৳)</label><input required type="number" min="0" step="1" value={couponForm.min_subtotal_bdt} onChange={e=>setCouponForm({...couponForm,min_subtotal_bdt:e.target.value})} className={field}/></div><div><label className={label}>Total uses (blank = unlimited)</label><input type="number" min="1" step="1" value={couponForm.usage_limit} onChange={e=>setCouponForm({...couponForm,usage_limit:e.target.value})} className={field}/></div><div><label className={label}>Uses per customer</label><input required type="number" min="1" step="1" value={couponForm.per_user_limit} onChange={e=>setCouponForm({...couponForm,per_user_limit:e.target.value})} className={field}/></div><div><label className={label}>Starts at (optional)</label><input type="datetime-local" value={couponForm.starts_at} onChange={e=>setCouponForm({...couponForm,starts_at:e.target.value})} className={field}/></div><div><label className={label}>Ends at (optional)</label><input type="datetime-local" value={couponForm.ends_at} onChange={e=>setCouponForm({...couponForm,ends_at:e.target.value})} className={field}/></div><div><label className={label}>Campaign description</label><input value={couponForm.description} onChange={e=>setCouponForm({...couponForm,description:e.target.value})} placeholder="New customer offer" className={field}/></div><label className="flex items-center gap-2 text-sm font-semibold text-slate-700"><input type="checkbox" checked={couponForm.is_active} onChange={e=>setCouponForm({...couponForm,is_active:e.target.checked})} className="h-4 w-4 rounded border-slate-300"/> Active immediately</label></div>
+        <div className="mt-5 flex justify-end gap-2"><button type="button" onClick={()=>setCouponFormOpen(false)} className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold">Cancel</button><button disabled={busy} className="inline-flex items-center gap-2 rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50"><Save className="h-4 w-4"/>{busy?'Saving…':editingCouponId?'Save coupon':'Create coupon'}</button></div></form>}
+      {coupons.length===0 ? <EmptyPanel title={couponSchemaReady?'No coupons created yet':'Coupon table not ready'} detail={couponSchemaReady?'Create a campaign code and it will be available at checkout after the matching migration is deployed.':'Apply the included coupon migration to enable coupon management.'}/> : <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white"><div className="overflow-x-auto"><table className="w-full min-w-[850px] text-left text-sm"><thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th className="px-4 py-3">Code / campaign</th><th className="px-4 py-3">Discount</th><th className="px-4 py-3">Rules</th><th className="px-4 py-3">Schedule</th><th className="px-4 py-3">Status</th><th className="px-4 py-3 text-right">Actions</th></tr></thead><tbody className="divide-y divide-slate-100">{coupons.map(c=><tr key={c.id}><td className="px-4 py-3"><p className="font-black tracking-wide">{c.code}</p><p className="mt-1 text-xs text-slate-500">{c.description||'No description'}</p></td><td className="px-4 py-3 font-bold">{c.discount_type==='percent'?`${c.discount_value}%`:money(Number(c.discount_value))}{c.max_discount_bdt!==null&&<p className="text-xs font-normal text-slate-500">Cap {money(Number(c.max_discount_bdt))}</p>}</td><td className="px-4 py-3 text-xs text-slate-600">Min {money(Number(c.min_subtotal_bdt))}<br/>Total uses: {c.usage_limit??'Unlimited'}<br/>Per customer: {c.per_user_limit}</td><td className="px-4 py-3 text-xs text-slate-600">{c.starts_at?new Date(c.starts_at).toLocaleString():'No start'}<br/>to {c.ends_at?new Date(c.ends_at).toLocaleString():'No expiry'}</td><td className="px-4 py-3"><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${c.is_active?'bg-emerald-50 text-emerald-700':'bg-slate-100 text-slate-600'}`}>{c.is_active?'Active':'Paused'}</span></td><td className="px-4 py-3"><div className="flex justify-end gap-2"><button onClick={()=>openEditCoupon(c)} className="rounded-lg border border-slate-200 px-2.5 py-2 text-xs font-semibold">Edit</button><button disabled={busy} onClick={()=>void toggleCoupon(c)} className="rounded-lg border border-slate-200 px-2.5 py-2 text-xs font-semibold">{c.is_active?'Pause':'Activate'}</button></div></td></tr>)}</tbody></table></div></div>}
+    </section>}
+
+    {tab === 'analytics' && <section className="space-y-4"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><h3 className="font-bold text-slate-900">Store reports & export</h3><p className="mt-1 text-xs text-slate-500">Summary uses the latest {orders.length} orders loaded into this panel; this is not a full historical accounting ledger.</p></div><button onClick={exportOrdersCsv} className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white"><Download className="h-4 w-4"/> Export filtered orders CSV</button></div><div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><SummaryMetric label="Orders loaded" value={orders.length.toLocaleString()}/><SummaryMetric label="Delivered orders" value={orders.filter(o=>o.order_status==='delivered').length.toLocaleString()}/><SummaryMetric label="Active orders" value={orders.filter(o=>!['delivered','cancelled','refunded'].includes(o.order_status)).length.toLocaleString()}/><SummaryMetric label="Gross order value" value={money(orders.filter(o=>!['cancelled','refunded'].includes(o.order_status)).reduce((sum,o)=>sum+Number(o.total_bdt||0),0))}/></div><div className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600"><strong className="text-slate-900">Included in CSV:</strong> order number, timestamp, customer contact, delivery address, status, payment method/status, subtotal, coupon discount, delivery fee, and total. Keep exported customer data private.</div></section>}
+
+    {tab === 'delivery' && settings && <form onSubmit={saveDelivery} className="max-w-3xl space-y-5 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6"><div><h3 className="font-bold text-slate-900">Delivery and wallet instructions</h3><p className="mt-1 text-sm text-slate-500">These settings are used for checkout guidance. Never put secret API keys here.</p></div><div className="grid gap-4 sm:grid-cols-2"><div><label className={label}>Default delivery fee (৳)</label><input type="number" min="0" step="1" required value={settings.default_delivery_fee_bdt} onChange={e=>setSettings({...settings,default_delivery_fee_bdt:Number(e.target.value)})} className={field}/></div><div><label className={label}>Free delivery threshold (৳, optional)</label><input type="number" min="0" step="1" value={settings.free_delivery_threshold_bdt??''} onChange={e=>setSettings({...settings,free_delivery_threshold_bdt:e.target.value===''?null:Number(e.target.value)})} className={field}/></div><div className="sm:col-span-2"><label className={label}>bKash payment instructions</label><textarea rows={3} value={settings.bkash_instructions??''} onChange={e=>setSettings({...settings,bkash_instructions:e.target.value})} placeholder="Business account payment instructions (no API secrets)" className={field}/></div><div className="sm:col-span-2"><label className={label}>Nagad payment instructions</label><textarea rows={3} value={settings.nagad_instructions??''} onChange={e=>setSettings({...settings,nagad_instructions:e.target.value})} placeholder="Business account payment instructions (no API secrets)" className={field}/></div></div><button disabled={busy} className="inline-flex items-center gap-2 rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50"><Save className="h-4 w-4"/>{busy?'Saving…':'Save settings'}</button></form>}
+    {smsOrder && <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/60 p-4" role="dialog" aria-modal="true" aria-labelledby="payment-sms-title"><div className="w-full max-w-lg rounded-2xl bg-white p-5 shadow-2xl sm:p-6"><div className="flex items-start justify-between gap-3"><div><h3 id="payment-sms-title" className="text-lg font-black text-slate-950">Send payment confirmation SMS?</h3><p className="mt-1 text-sm text-slate-600">Payment for {smsOrder.order_number} is verified. Send an SMS to {smsOrder.customer_name} at {smsOrder.phone}?</p></div><button type="button" onClick={()=>{setSmsOrder(null);setSmsMessage('')}} className="rounded-lg p-1 text-slate-500 hover:bg-slate-100" aria-label="Close SMS dialog"><X className="h-5 w-5"/></button></div><label className="mt-4 block text-xs font-bold text-slate-700">SMS message</label><textarea rows={4} value={smsMessage} onChange={e=>setSmsMessage(e.target.value)} className={`${field} mt-1`} maxLength={1000}/><p className="mt-2 text-xs text-slate-500">SMS provider charges may apply. The message will only be sent when you press Send SMS.</p><div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><button type="button" onClick={()=>{setSmsOrder(null);setSmsMessage('')}} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold">Skip SMS</button><button type="button" disabled={smsBusy||!smsMessage.trim()} onClick={()=>void sendPaymentConfirmationSms()} className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50"><CheckCircle2 className="h-4 w-4"/>{smsBusy?'Sending…':'Send SMS'}</button></div></div></div>}
+  </div>;
+};
+
+const Metric: React.FC<{icon: LucideIcon; label: string; value: number}> = ({icon:Icon,label,value}) => <div className="rounded-2xl border border-slate-200 bg-white p-4"><div className="flex items-center justify-between"><span className="text-xs font-semibold text-slate-500">{label}</span><Icon className="h-4 w-4 text-blue-700"/></div><p className="mt-2 text-2xl font-black text-slate-950">{value}</p></div>;
+const SummaryMetric: React.FC<{label:string;value:string}> = ({label,value}) => <div className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-xs font-semibold text-slate-500">{label}</p><p className="mt-2 break-words text-xl font-black text-slate-950">{value}</p></div>;
+const EmptyPanel: React.FC<{title:string;detail:string}> = ({title,detail}) => <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-12 text-center"><ShoppingBag className="mx-auto h-8 w-8 text-slate-300"/><h3 className="mt-3 font-bold text-slate-800">{title}</h3><p className="mt-1 text-sm text-slate-500">{detail}</p></div>;
