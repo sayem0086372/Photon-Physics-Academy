@@ -27,7 +27,7 @@ export const Gallery: React.FC = () => {
   };
 
   return (
-    <section id="gallery" className="py-5 md:py-7 bg-sky-50/50 border-y border-sky-100/80">
+    <section id="gallery" className="py-5 md:py-7 bg-slate-100 border-y border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-4 pb-3 border-b border-slate-200 gap-4">
