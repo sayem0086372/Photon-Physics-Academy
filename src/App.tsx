@@ -80,7 +80,7 @@ export default function App() {
           </>
         )}
       </main>
-      <Footer onOpenAdmin={() => handleSetView('admin')} />
+      {!isStore && <Footer onOpenAdmin={() => handleSetView('admin')} />}
     </div>
   );
 }
