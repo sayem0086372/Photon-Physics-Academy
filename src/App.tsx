@@ -68,9 +68,9 @@ export default function App() {
             <div className="bg-gradient-to-r from-blue-950 via-blue-800 to-sky-700 text-white">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
                 <p className="text-sm font-semibold tracking-wide text-sky-200">PHOTON PHYSICS ACADEMY</p>
-                <h1 className="mt-2 text-3xl md:text-4xl font-black">বুক স্টোর <span className="text-sky-200">· Book Store</span></h1>
+                <h1 className="mt-2 text-3xl md:text-4xl font-black">Book Store</h1>
                 <p className="mt-3 max-w-2xl text-sm md:text-base text-blue-100">Explore books and place your order with Cash on Delivery.</p>
-                <a href="/" className="mt-5 inline-flex rounded-lg bg-white/10 hover:bg-white/20 border border-white/25 px-4 py-2 text-sm font-semibold transition">← একাডেমির হোমপেজে ফিরে যান</a>
+                <a href="/" className="mt-5 inline-flex rounded-lg bg-white/10 hover:bg-white/20 border border-white/25 px-4 py-2 text-sm font-semibold transition">← Back to Home</a>
               </div>
             </div>
             <BookStore />
