@@ -152,7 +152,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenInquiry }) => {
           <div className="p-4 rounded-xl bg-white border border-sky-100 shadow-xs">
             <div className="flex items-center gap-2 text-blue-600 mb-1">
               <BookOpen className="w-4 h-4" />
-              <span className="text-xs uppercase tracking-wider text-slate-500 font-semibold">রিসোর্স</span>
+              <span className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Resources</span>
             </div>
             <div className="text-sm font-semibold text-slate-900 font-bangla">নিজস্ব কনসেপ্ট বুক</div>
             <div className="text-xs text-slate-500 font-bangla mt-0.5">জুয়েল স্যার রচিত ও সম্পাদিত</div>
@@ -161,7 +161,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenInquiry }) => {
           <div className="p-4 rounded-xl bg-white border border-sky-100 shadow-xs">
             <div className="flex items-center gap-2 text-blue-600 mb-1">
               <Sparkles className="w-4 h-4" />
-              <span className="text-xs uppercase tracking-wider text-slate-500 font-semibold">প্র্যাকটিস</span>
+              <span className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Practice</span>
             </div>
             <div className="text-sm font-semibold text-slate-900 font-bangla">নিয়মিত প্রবলেম সলভিং</div>
             <div className="text-xs text-slate-500 font-bangla mt-0.5">অধ্যায়ভিত্তিক মূল্যায়ন পরীক্ষা</div>
@@ -170,7 +170,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenInquiry }) => {
           <div className="p-4 rounded-xl bg-white border border-sky-100 shadow-xs">
             <div className="flex items-center gap-2 text-blue-600 mb-1">
               <MapPin className="w-4 h-4" />
-              <span className="text-xs uppercase tracking-wider text-slate-500 font-semibold">অবস্থান</span>
+              <span className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Location</span>
             </div>
             <div className="text-sm font-semibold text-slate-900 font-bangla">ময়মনসিংহ শহর</div>
             <div className="text-xs text-slate-500 font-bangla mt-0.5">সহজ যোগাযোগ ও ক্লাসরুম সুবিধা</div>
