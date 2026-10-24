@@ -75,7 +75,6 @@ export default function App() {
             <About onOpenInquiry={() => handleOpenInquiry()} />
             <Programs onSelectProgram={handleOpenInquiry} />
             <Gallery />
-            <Results onOpenInquiry={() => handleOpenInquiry()} />
             <Contact prefilledProgram={inquiryProgram} />
           </>
         )}
