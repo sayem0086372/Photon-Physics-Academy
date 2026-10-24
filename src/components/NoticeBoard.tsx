@@ -130,10 +130,6 @@ export const NoticeBoard: React.FC = () => {
 
                 {/* Footer Action */}
                 <div className="pt-3.5 border-t border-slate-100 flex items-center justify-between">
-                  <div className="text-[11px] text-amber-700 font-medium">
-                    নমুনা নোটিশ (Demo)
-                  </div>
-
                   <button
                     onClick={() => setActiveModalNotice(notice)}
                     className="flex items-center gap-1 text-xs font-bold text-blue-700 hover:text-blue-800 transition-colors py-1.5 px-2.5 rounded-lg hover:bg-sky-50"
