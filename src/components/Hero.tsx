@@ -9,11 +9,7 @@ interface HeroProps {
 
 export const Hero: React.FC<HeroProps> = ({ onOpenInquiry }) => {
   return (
-    <section id="home" className="relative pt-8 pb-16 md:pt-14 md:pb-24 overflow-hidden bg-gradient-to-b from-sky-50/60 via-white to-slate-50/80">
-      {/* Background delicate scientific grid & subtle sky ambient light */}
-      <div className="absolute inset-0 physics-grid opacity-60 pointer-events-none" />
-      <div className="absolute top-10 right-10 w-96 h-96 bg-sky-200/40 blur-[120px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-10 left-10 w-80 h-80 bg-blue-100/50 blur-[100px] rounded-full pointer-events-none" />
+    <section id="home" className="relative pt-8 pb-16 md:pt-14 md:pb-24 overflow-hidden bg-[#f4f7fb]">
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Unboxed Metadata Trust Kicker */}
@@ -39,7 +35,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenInquiry }) => {
               </span>
               
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
-                Feel the Power of <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-sky-600 to-blue-800">Physics...</span>
+                Feel the Power of <span className="text-blue-700">Physics...</span>
               </h1>
               
               <h2 className="text-2xl sm:text-3xl font-bangla font-bold text-slate-800 leading-snug">
@@ -56,7 +52,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenInquiry }) => {
             <div className="flex flex-wrap items-center gap-3 pt-2">
               <a
                 href="#programs"
-                className="px-6 py-3.5 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-700 hover:to-sky-700 rounded-lg shadow-md shadow-blue-500/20 hover:shadow-blue-500/30 transition-all duration-200 flex items-center gap-2"
+                className="px-6 py-3.5 text-sm font-semibold text-white bg-blue-700 hover:bg-blue-800 rounded-lg shadow-sm transition-colors duration-200 flex items-center gap-2"
               >
                 <span>Explore Programs</span>
                 <ArrowRight className="w-4 h-4" />
