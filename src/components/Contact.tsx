@@ -176,157 +176,30 @@ export const Contact: React.FC<ContactProps> = ({ prefilledProgram = '' }) => {
             </div>
           </div>
 
-          {/* Right Column: Inquiry Form with Transparent Feedback */}
-          <div className="lg:col-span-7">
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
-              <div className="mb-6">
-                <h3 className="text-lg font-bold text-slate-900 font-bangla">
-                  অনলাইন অনুসন্ধান ও বার্তা প্রেরণ
-                </h3>
-                <p className="text-xs text-slate-500 font-bangla mt-1">
-                  ফর্মটি পূরণ করে সরাসরি তথ্য দিন। কোনো অপ্রয়োজনীয় ব্যক্তিগত তথ্য সংগ্রহ করা হয় না।
-                </p>
+          {/* Right Column: Direct WhatsApp Contact */}
+          <div className="lg:col-span-7 flex items-start">
+            <div className="w-full rounded-2xl border border-emerald-200 bg-white p-8 sm:p-10 shadow-sm">
+              <div className="w-16 h-16 rounded-2xl bg-[#25D366] text-white flex items-center justify-center mb-5 shadow-sm">
+                <MessageCircle className="w-8 h-8" />
               </div>
-
-              {!isSubmitted ? (
-                <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-                  {/* Name field */}
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 font-bangla mb-1">
-                      শিক্ষার্থী বা অভিভাবকের নাম <span className="text-blue-600">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="যেমন: তানভীর আহমেদ / অভিভাবকের নাম"
-                      className={`w-full px-4 py-3 rounded-xl bg-slate-50 border ${
-                        errors.name ? 'border-rose-500 bg-rose-50/20' : 'border-slate-200'
-                      } text-sm text-slate-900 placeholder-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors`}
-                    />
-                    {errors.name && (
-                      <p className="text-xs text-rose-600 mt-1 font-bangla">{errors.name}</p>
-                    )}
-                  </div>
-
-                  {/* Phone field */}
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 font-bangla mb-1">
-                      মোবাইল নম্বর <span className="text-blue-600">*</span>
-                    </label>
-                    <input
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="017XXXXXXXX বা 013XXXXXXXX"
-                      className={`w-full px-4 py-3 rounded-xl bg-slate-50 border ${
-                        errors.phone ? 'border-rose-500 bg-rose-50/20' : 'border-slate-200'
-                      } text-sm text-slate-900 font-mono placeholder-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors`}
-                    />
-                    {errors.phone && (
-                      <p className="text-xs text-rose-600 mt-1 font-bangla">{errors.phone}</p>
-                    )}
-                  </div>
-
-                  {/* Program / Class select (focused on active programs) */}
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 font-bangla mb-1">
-                      আগ্রহী শ্রেণি বা প্রোগ্রাম
-                    </label>
-                    <select
-                      value={program}
-                      onChange={(e) => setProgram(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors font-bangla"
-                    >
-                      <option value="অষ্টম শ্রেণি বিজ্ঞান">অষ্টম শ্রেণি বিজ্ঞান (Class 8)</option>
-                      <option value="নবম শ্রেণি পদার্থবিজ্ঞান">নবম শ্রেণি পদার্থবিজ্ঞান (Class 9)</option>
-                      <option value="দশম শ্রেণি পদার্থবিজ্ঞান">দশম শ্রেণি পদার্থবিজ্ঞান (Class 10)</option>
-                      <option value="কনসেপ্ট বুক সংগ্রহ সংক্রান্ত">কনসেপ্ট বুক সংগ্রহ সংক্রান্ত</option>
-                      <option value="সাধারণ অনুসন্ধান">সাধারণ অনুসন্ধান ও অন্যান্য</option>
-                    </select>
-                  </div>
-
-                  {/* Message field */}
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 font-bangla mb-1">
-                      আপনার জিজ্ঞাসা বা বার্তা (ঐচ্ছিক)
-                    </label>
-                    <textarea
-                      rows={3}
-                      value={message}
-                      onChange={(e) => setMessage(e.target.value)}
-                      placeholder="আপনার কোনো নির্দিষ্ট জিজ্ঞাসা থাকলে এখানে লিখুন..."
-                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-900 placeholder-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors font-bangla resize-none"
-                    />
-                  </div>
-
-                  {/* Submit Button */}
-                  <button
-                    type="submit"
-                    className="w-full py-3.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-colors"
-                  >
-                    <Send className="w-4 h-4" />
-                    <span>অনুসন্ধান বার্তা পাঠান</span>
-                  </button>
-                </form>
-              ) : (
-                /* Honest submission feedback */
-                <div className="py-4 space-y-4">
-                  <div className="p-5 rounded-xl bg-sky-50 border border-sky-200 text-left">
-                    <div className="flex items-center gap-2 text-blue-900 font-bold font-bangla text-base mb-1">
-                      <CheckCircle2 className="w-5 h-5 text-blue-600" />
-                      <span>আপনার অনুসন্ধানের বিবরণ প্রস্তুত হয়েছে!</span>
-                    </div>
-                    <p className="text-xs text-slate-700 font-bangla leading-relaxed">
-                      নাম: <strong className="text-slate-900">{name}</strong> · ফোন:{' '}
-                      <strong className="text-slate-900">{phone}</strong> · বিষয়:{' '}
-                      <strong className="text-slate-900">{program}</strong>
-                    </p>
-                  </div>
-
-                  {/* Transparent Step 1 explanation */}
-                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 font-bangla flex items-start gap-2.5 leading-relaxed">
-                    <AlertCircle className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-                    <span>
-                      <strong>স্বচ্ছতা নিশ্চিতকরণ:</strong> এটি স্টেপ ১ এর স্ট্যাটিক ফ্রন্টএন্ড ভার্সন (কোনো ব্যাকএন্ড ডাটাবেস নেই)। নিশ্চিত তাৎক্ষণিক যোগাযোগের জন্য আপনার এই বার্তাটি এক ক্লিকেই সরাসরি একাডেমির অফিশিয়াল হোয়াটসঅ্যাপে প্রেরণ করুন অথবা সরাসরি ফোন করুন।
-                    </span>
-                  </div>
-
-                  {/* 1-Click WhatsApp Trigger with pre-filled message */}
-                  <div className="space-y-2 pt-2">
-                    <a
-                      href={generateWhatsAppUrl()}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-colors"
-                    >
-                      <MessageCircle className="w-4 h-4" />
-                      <span>হোয়াটসঅ্যাপে এই বার্তাটি এখনই পাঠান</span>
-                    </a>
-
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <a
-                        href="tel:+8801312364499"
-                        className="py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 flex items-center justify-center gap-1.5 transition-colors font-semibold"
-                      >
-                        <Phone className="w-3.5 h-3.5 text-blue-600" />
-                        <span>সরাসরি কল করুন</span>
-                      </a>
-                      <button
-                        onClick={() => {
-                          setIsSubmitted(false);
-                          setName('');
-                          setPhone('');
-                          setMessage('');
-                        }}
-                        className="py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 border border-slate-200 transition-colors font-medium"
-                      >
-                        নতুন বার্তা লিখুন
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
+              <h3 className="text-2xl font-bold text-slate-900 mb-3">
+                WhatsApp Us
+              </h3>
+              <p className="text-sm sm:text-base text-slate-600 leading-relaxed mb-7">
+                Have a question about admissions, class schedules, or concept books? Chat with Photon Physics Academy directly on WhatsApp.
+              </p>
+              <a
+                href="https://wa.me/8801312364499?text=Assalamu%20Alaikum%2C%20I%20would%20like%20to%20know%20more%20about%20Photon%20Physics%20Academy."
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-auto py-4 px-7 rounded-xl bg-[#25D366] hover:bg-[#1ebe5d] text-white font-bold text-sm sm:text-base inline-flex items-center justify-center gap-2.5 shadow-sm transition-colors"
+              >
+                <MessageCircle className="w-5 h-5" />
+                <span>WhatsApp Us</span>
+              </a>
+              <p className="mt-4 text-xs text-slate-500">
+                +880 1312-364499
+              </p>
             </div>
           </div>
         </div>
