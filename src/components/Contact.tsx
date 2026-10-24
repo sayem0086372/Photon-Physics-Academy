@@ -131,18 +131,6 @@ export const Contact: React.FC<ContactProps> = ({ prefilledProgram = '' }) => {
                 </a>
               </div>
 
-              {/* Direct WhatsApp Action Button */}
-              <div className="mt-5 pt-5 border-t border-slate-100">
-                <a
-                  href="https://wa.me/8801312364499?text=আসসালামু%20আলাইকুম,%20ফোটন%20ফিজিক্স%20একাডেমি%20সম্পর্কে%20জানতে%20চাই।"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm transition-colors"
-                >
-                  <img src="https://cdn.phototourl.com/member/2026-10-24-a2556322-ef98-4816-9826-cb1deec479d3.png" alt="WhatsApp" className="w-5 h-5 object-contain" />
-                  <span>হোয়াটসঅ্যাপে চ্যাট করুন (+880 1312-364499)</span>
-                </a>
-              </div>
             </div>
 
             {/* Location & Visiting Hours */}
