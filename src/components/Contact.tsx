@@ -67,7 +67,7 @@ export const Contact: React.FC<ContactProps> = ({ prefilledProgram = '' }) => {
   };
 
   return (
-    <section id="contact" className="py-16 md:py-24 bg-sky-50/50 border-t border-sky-100/80 relative">
+    <section id="contact" className="py-16 md:py-24 bg-slate-100 border-t border-slate-200 relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="max-w-3xl mb-12">
