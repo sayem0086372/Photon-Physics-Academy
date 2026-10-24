@@ -32,7 +32,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenInquiry, onOpenAdmin }) =>
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-sky-100 bg-white/95 backdrop-blur-md shadow-xs">
+    <header className="sticky top-0 z-40 w-full border-b border-slate-200 bg-white shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between min-h-16 md:min-h-20 py-2 gap-3">
           {/* Zone 1: Official Logo */}
@@ -69,7 +69,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenInquiry, onOpenAdmin }) =>
 
             <button
               onClick={() => onOpenInquiry()}
-              className="px-3 py-2 text-xs font-semibold text-white bg-gradient-to-r from-blue-600 via-sky-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg shadow-sm shadow-blue-500/20 transition-all duration-200 whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+              className="px-3 py-2 text-xs font-semibold text-white bg-blue-700 hover:bg-blue-800 rounded-lg shadow-sm transition-colors duration-200 whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
             >
               Admission Inquiry
             </button>
