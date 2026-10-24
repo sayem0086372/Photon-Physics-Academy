@@ -139,7 +139,7 @@ export const Contact: React.FC<ContactProps> = ({ prefilledProgram = '' }) => {
                   rel="noopener noreferrer"
                   className="w-full py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm transition-colors"
                 >
-                  <MessageCircle className="w-4 h-4" />
+                  <img src="https://cdn.phototourl.com/member/2026-10-24-a2556322-ef98-4816-9826-cb1deec479d3.png" alt="WhatsApp" className="w-5 h-5 object-contain" />
                   <span>হোয়াটসঅ্যাপে চ্যাট করুন (+880 1312-364499)</span>
                 </a>
               </div>
@@ -179,8 +179,8 @@ export const Contact: React.FC<ContactProps> = ({ prefilledProgram = '' }) => {
           {/* Right Column: Direct WhatsApp Contact */}
           <div className="lg:col-span-7 flex items-start">
             <div className="w-full rounded-2xl border border-emerald-200 bg-white p-8 sm:p-10 shadow-sm">
-              <div className="w-16 h-16 rounded-2xl bg-[#25D366] text-white flex items-center justify-center mb-5 shadow-sm">
-                <MessageCircle className="w-8 h-8" />
+              <div className="w-16 h-16 rounded-2xl bg-[#25D366] flex items-center justify-center mb-5 shadow-sm p-2.5">
+                <img src="https://cdn.phototourl.com/member/2026-10-24-a2556322-ef98-4816-9826-cb1deec479d3.png" alt="WhatsApp logo" className="w-full h-full object-contain" />
               </div>
               <h3 className="text-2xl font-bold text-slate-900 mb-3">
                 WhatsApp Us
@@ -194,7 +194,7 @@ export const Contact: React.FC<ContactProps> = ({ prefilledProgram = '' }) => {
                 rel="noopener noreferrer"
                 className="w-full sm:w-auto py-4 px-7 rounded-xl bg-[#25D366] hover:bg-[#1ebe5d] text-white font-bold text-sm sm:text-base inline-flex items-center justify-center gap-2.5 shadow-sm transition-colors"
               >
-                <MessageCircle className="w-5 h-5" />
+                <img src="https://cdn.phototourl.com/member/2026-10-24-a2556322-ef98-4816-9826-cb1deec479d3.png" alt="" className="w-5 h-5 object-contain" />
                 <span>WhatsApp Us</span>
               </a>
               <p className="mt-4 text-xs text-slate-500">
