@@ -8,7 +8,7 @@ interface AboutProps {
 
 export const About: React.FC<AboutProps> = ({ onOpenInquiry }) => {
   return (
-    <section id="about" className="py-16 md:py-24 bg-sky-50/40 border-y border-sky-100/80 relative">
+    <section id="about" className="py-16 md:py-24 bg-white border-y border-slate-200 relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="max-w-3xl mb-12">
