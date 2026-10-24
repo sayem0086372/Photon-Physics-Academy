@@ -79,10 +79,10 @@ export default function App() {
           <>
             <StoreBanner />
             <Hero onOpenInquiry={handleOpenInquiry} />
+            <NoticeBoard />
             <About onOpenInquiry={() => handleOpenInquiry()} />
             <Programs onSelectProgram={handleOpenInquiry} />
             <Gallery />
-            <NoticeBoard />
             <Results onOpenInquiry={() => handleOpenInquiry()} />
             <Contact prefilledProgram={inquiryProgram} />
           </>
