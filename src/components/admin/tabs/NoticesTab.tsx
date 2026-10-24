@@ -33,7 +33,7 @@ export const NoticesTab: React.FC<NoticesTabProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newNotice.banglaTitle.trim()) {
-      alert('নোটিশের বাংলা শিরোনাম প্রদান করুন।');
+      alert('Please enter the notice title in Bengali.');
       return;
     }
     onAddNotice(newNotice);
@@ -54,7 +54,7 @@ export const NoticesTab: React.FC<NoticesTabProps> = ({
     <div className="space-y-6">
       <SectionToolbar
         title="Notice Management"
-        description="ওয়েবসাইটে প্রদর্শিত ভর্তি, পরীক্ষা ও ক্লাস রুটিন সম্পর্কিত ঘোষণা নিয়ন্ত্রণ করুন।"
+        description="Manage admission, exam, and class schedule announcements displayed on the website."
       >
         <button onClick={() => setIsModalOpen(true)} className="px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs flex items-center gap-1.5 transition-colors whitespace-nowrap">
           <Plus className="w-4 h-4" />
@@ -68,7 +68,7 @@ export const NoticesTab: React.FC<NoticesTabProps> = ({
           <EmptyState
             icon={Bell}
             title="No notices yet"
-            description="প্রথম নোটিশটি প্রকাশ করলে তা ওয়েবসাইটের নোটিশ বোর্ডে দেখা যাবে।"
+            description="Publish your first notice to display it on the public website."
             action={{ label: 'New Notice', onClick: () => setIsModalOpen(true), icon: Plus }}
           />
         </div>
@@ -115,7 +115,7 @@ export const NoticesTab: React.FC<NoticesTabProps> = ({
 
               <button
                 onClick={() => {
-                  if (confirm('আপনি কি এই নোটিশটি মুছে ফেলতে চান?')) {
+                  if (confirm('Are you sure you want to delete this notice?')) {
                     onDeleteNotice(n.id);
                   }
                 }}
@@ -145,17 +145,17 @@ export const NoticesTab: React.FC<NoticesTabProps> = ({
               Create Notice
             </h3>
             <p className="text-xs text-slate-500 mb-5">
-              ওয়েবসাইটের পাবলিক নোটিশ বোর্ডে তাৎক্ষণিক আপডেট হবে।
+              This notice will appear on the public notice board when published.
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  বাংলা শিরোনাম *
+                  Notice Title (Bengali) *
                 </label>
                 <input
                   type="text"
-                  placeholder="যেমন: গতিবিদ্যা অধ্যায় মূল্যায়ন পরীক্ষার সময়সূচি"
+                  placeholder="e.g. Kinematics Chapter Evaluation Exam Schedule"
                   value={newNotice.banglaTitle}
                   onChange={(e) => setNewNotice({ ...newNotice, banglaTitle: e.target.value })}
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bangla text-slate-900"
@@ -165,7 +165,7 @@ export const NoticesTab: React.FC<NoticesTabProps> = ({
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  ইংরেজি শিরোনাম (ঐচ্ছিক)
+                  Notice Title (English, optional)
                 </label>
                 <input
                   type="text"
@@ -179,7 +179,7 @@ export const NoticesTab: React.FC<NoticesTabProps> = ({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    ক্যাটাগরি
+                    Category
                   </label>
                   <select
                     value={newNotice.category}
@@ -201,7 +201,7 @@ export const NoticesTab: React.FC<NoticesTabProps> = ({
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    প্রকাশের তারিখ
+                    Publication Date
                   </label>
                   <input
                     type="text"
@@ -214,14 +214,14 @@ export const NoticesTab: React.FC<NoticesTabProps> = ({
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  সংক্ষিপ্ত বিবরণ *
+                  Short Description *
                 </label>
                 <textarea
                   rows={2}
                   value={newNotice.shortDescription}
                   onChange={(e) => setNewNotice({ ...newNotice, shortDescription: e.target.value })}
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bangla text-slate-900 resize-none"
-                  placeholder="নোটিশের মূল বক্তব্য সংক্ষেপে লিখুন..."
+                  placeholder="Enter a brief summary of the notice..."
                   required
                 />
               </div>
