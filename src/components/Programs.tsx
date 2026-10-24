@@ -40,13 +40,25 @@ export const Programs: React.FC<ProgramsProps> = ({ onSelectProgram }) => {
           {PROGRAMS_DATA.map((prog: Program) => (
             <div
               key={prog.id}
-              className="flex flex-col justify-between rounded-2xl border border-sky-100 bg-gradient-to-b from-white to-sky-50/30 hover:border-blue-400 hover:shadow-xl transition-all duration-300 p-7 sm:p-8 shadow-sm group"
+              className="overflow-hidden flex flex-col justify-between rounded-2xl border border-sky-100 bg-white hover:border-blue-400 hover:shadow-xl transition-all duration-300 shadow-sm group"
             >
               <div>
-                <div className="flex items-center justify-between mb-5">
-                  <div className="w-12 h-12 rounded-xl bg-sky-100 border border-sky-200 flex items-center justify-center group-hover:scale-105 transition-transform">
-                    <BookOpen className="w-6 h-6 text-blue-700" />
-                  </div>
+                <div className="relative overflow-hidden bg-slate-100">
+                  <img
+                    src={
+                      prog.id === 'class-eight'
+                        ? 'https://cdn.phototourl.com/member/2026-10-24-d41bef46-5d75-4bd3-b5d7-8dc5cc22ea39.png'
+                        : prog.id === 'class-nine'
+                          ? 'https://cdn.phototourl.com/member/2026-10-24-b370d7b1-7e0f-4454-9623-fbca99e4b95a.png'
+                          : 'https://cdn.phototourl.com/member/2026-10-24-eab7643b-7bec-4dd6-b5aa-7a8cfd4bc8ac.png'
+                    }
+                    alt={prog.name + ' program banner'}
+                    className="block w-full aspect-[16/9] object-cover object-center"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="p-7 sm:p-8">
+                  <div className="flex items-center justify-end mb-5">
                   <span className="text-xs font-semibold text-blue-800 bg-sky-100 border border-sky-200 px-3 py-1 rounded-full">
                     {prog.name}
                   </span>
@@ -74,10 +86,11 @@ export const Programs: React.FC<ProgramsProps> = ({ onSelectProgram }) => {
                     </li>
                   ))}
                 </ul>
+                </div>
               </div>
 
               {/* Card Footer: Status and Direct Action */}
-              <div className="pt-5 border-t border-slate-100 space-y-3.5">
+              <div className="mx-7 sm:mx-8 mb-7 sm:mb-8 pt-5 border-t border-slate-100 space-y-3.5">
                 <div className="text-xs text-slate-500 font-bangla flex items-center gap-1.5">
                   <Compass className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                   <span>{prog.statusLabelBangla}</span>
