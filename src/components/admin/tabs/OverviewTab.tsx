@@ -26,7 +26,7 @@ interface OverviewTabProps {
   onOpenRecordPayment: () => void;
 }
 
-const CLASS_BN: Record<string, string> = { 'Class 8': 'অষ্টম', 'Class 9': 'নবম', 'Class 10': 'দশম' };
+const CLASS_LABEL: Record<string, string> = { 'Class 8': 'Class 8', 'Class 9': 'Class 9', 'Class 10': 'Class 10' };
 
 export const OverviewTab: React.FC<OverviewTabProps> = ({
   students,
@@ -45,7 +45,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
   const activeBatches = batches.filter((b) => b.status === 'active');
   const batchClasses = (['Class 8', 'Class 9', 'Class 10'] as const)
     .filter((c) => activeBatches.some((b) => b.classLevel === c))
-    .map((c) => CLASS_BN[c]);
+    .map((c) => CLASS_LABEL[c]);
 
   const latestMonthlyMap = new Map<string, AdminPaymentRecord>();
   for (const payment of payments) {
@@ -80,7 +80,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
                 <React.Fragment key={c.cls}>
                   {i > 0 && <span>·</span>}
                   <span>
-                    {CLASS_BN[c.cls]}: <strong>{c.count}</strong>
+                    {CLASS_LABEL[c.cls]}: <strong>{c.count}</strong>
                   </span>
                 </React.Fragment>
               ))}
@@ -92,14 +92,14 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
           value={`৳${totalCollected.toLocaleString()}`}
           icon={Wallet}
           tone="emerald"
-          hint={`আদায়ের হার ${collectionRate}%`}
+          hint={`Collection rate: ${collectionRate}%`}
         />
         <StatCard
           label="Pending Due"
           value={`৳${totalDue.toLocaleString()}`}
           icon={AlertCircle}
           tone="amber"
-          hint="পরিশোধের অপেক্ষায় থাকা বকেয়া"
+          hint="Outstanding amount awaiting payment"
         />
         <StatCard
           label="Active Batches"
@@ -108,8 +108,8 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
           tone="sky"
           hint={
             batchClasses.length > 0
-              ? `${batchClasses.join(', ')} শ্রেণির ব্যাচ চলমান`
-              : 'এখনো কোনো সক্রিয় ব্যাচ নেই'
+              ? `Active batches for ${batchClasses.join(', ')}`
+              : 'No active batches yet'
           }
         />
       </div>
@@ -138,7 +138,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-sm font-bold text-slate-900">Recent Students</h3>
-              <p className="text-xs text-slate-500 font-bangla">সর্বশেষ ভর্তি হওয়া শিক্ষার্থী</p>
+              <p className="text-xs text-slate-500">Recently enrolled students</p>
             </div>
             <button
               onClick={() => onNavigateTab('students')}
@@ -154,7 +154,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
               compact
               icon={GraduationCap}
               title="No students yet"
-              description="নতুন শিক্ষার্থী ভর্তি করলে এখানে তালিকা দেখা যাবে।"
+              description="Newly enrolled students will appear here."
               action={{ label: 'Add Student', onClick: onOpenAddStudent, icon: UserPlus }}
             />
           ) : (
@@ -193,7 +193,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-sm font-bold text-slate-900">Recent Payments</h3>
-              <p className="text-xs text-slate-500 font-bangla">সাম্প্রতিক ফি লেনদেন</p>
+              <p className="text-xs text-slate-500">Latest fee transactions</p>
             </div>
             <button
               onClick={() => onNavigateTab('payments')}
@@ -209,7 +209,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
               compact
               icon={CreditCard}
               title="No payments recorded"
-              description="ফি গ্রহণ করলে লেনদেনের তালিকা এখানে দেখা যাবে।"
+              description="Recorded fee payments will appear here."
               action={{ label: 'Record Payment', onClick: onOpenRecordPayment, icon: Receipt }}
             />
           ) : (
