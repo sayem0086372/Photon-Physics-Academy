@@ -11,14 +11,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenInquiry, onOpenAdmin }) =>
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
-    { label: 'হোম', href: '/' },
-    { label: 'আমাদের সম্পর্কে', href: '/#about' },
-    { label: 'প্রোগ্রামসমূহ', href: '/#programs' },
-    { label: 'ক্লাসরুম', href: '/#gallery' },
-    { label: 'বুক স্টোর', href: '/store' },
-    { label: 'নোটিশ বোর্ড', href: '/#notices' },
-    { label: 'ফলাফল', href: '/#results' },
-    { label: 'যোগাযোগ', href: '/#contact' },
+    { label: 'Home', href: '/' },
+    { label: 'About', href: '/#about' },
+    { label: 'Programs', href: '/#programs' },
+    { label: 'Classroom', href: '/#gallery' },
+    { label: 'Book Store', href: '/store' },
+    { label: 'Notices', href: '/#notices' },
+    { label: 'Results', href: '/#results' },
+    { label: 'Contact', href: '/#contact' },
   ];
 
   const handleNavClick = (href: string) => {
@@ -71,7 +71,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenInquiry, onOpenAdmin }) =>
               onClick={() => onOpenInquiry()}
               className="px-3 py-2 text-xs font-semibold text-white bg-gradient-to-r from-blue-600 via-sky-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg shadow-sm shadow-blue-500/20 transition-all duration-200 whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
             >
-              ভর্তি সম্পর্কে জানুন
+              Admission Inquiry
             </button>
 
             {onOpenAdmin && (
@@ -109,7 +109,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenInquiry, onOpenAdmin }) =>
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
               aria-expanded={mobileMenuOpen}
-              aria-label={mobileMenuOpen ? 'মেনু বন্ধ করুন' : 'মেনু খুলুন'}
+              aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -141,7 +141,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenInquiry, onOpenAdmin }) =>
               className="w-full py-2.5 px-4 text-center text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2"
             >
               <MessageSquare className="w-4 h-4" />
-              ভর্তি সম্পর্কে জানুন
+              Admission Inquiry
             </button>
 
             <div className="grid grid-cols-2 gap-2 text-xs">
