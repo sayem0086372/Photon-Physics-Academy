@@ -60,12 +60,12 @@ export default function App() {
   if (currentView === 'admin') return <AdminGate onExitAdmin={() => handleSetView('public')} />;
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-blue-500/20 selection:text-blue-900">
+    <div className="min-h-screen bg-white text-slate-900 flex flex-col font-sans selection:bg-blue-500/20 selection:text-blue-900">
       <Navbar onOpenInquiry={() => handleOpenInquiry()} onOpenAdmin={() => handleSetView('admin')} />
       <main className="flex-1">
         {isStore ? (
           <>
-            <div className="bg-gradient-to-r from-blue-950 via-blue-800 to-sky-700 text-white">
+            <div className="bg-blue-900 text-white">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
                 <p className="text-sm font-semibold tracking-wide text-sky-200">PHOTON PHYSICS ACADEMY</p>
                 <h1 className="mt-2 text-3xl md:text-4xl font-black">Book Store</h1>
