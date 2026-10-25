@@ -70,8 +70,8 @@ export default function App() {
         ) : (
           <>
             <StoreBanner />
-            <Hero onOpenInquiry={handleOpenInquiry} />
             <NoticeBoard />
+            <Hero onOpenInquiry={handleOpenInquiry} />
             <About onOpenInquiry={() => handleOpenInquiry()} />
             <Programs onSelectProgram={handleOpenInquiry} />
             <Gallery />
