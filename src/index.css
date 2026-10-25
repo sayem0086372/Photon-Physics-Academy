@@ -118,9 +118,12 @@ pre, code {
 
 @media (max-width: 639px) {
   html { scroll-padding-top: 4.25rem; }
-  body { font-size: 15px; }
-  input, select, textarea { font-size: 16px; }
-  button { min-height: 40px; }
+  /* Slightly larger mobile typography; desktop sizing remains unchanged. */
+  body { font-size: 17px; }
+  .text-xs { font-size: 0.8125rem; line-height: 1.35rem; }
+  .text-sm { font-size: 0.9375rem; line-height: 1.55rem; }
+  input, select, textarea { font-size: 17px; }
+  button { min-height: 44px; }
   a { overflow-wrap: anywhere; }
   [role="dialog"] {
     max-height: calc(100dvh - 1rem);
