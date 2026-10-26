@@ -9,7 +9,7 @@ interface ProgramsProps {
 
 export const Programs: React.FC<ProgramsProps> = ({ onSelectProgram }) => {
   return (
-    <section id="programs" className="py-16 md:py-24 relative bg-white">
+    <section id="programs" className="py-16 md:py-24 relative bg-[#f3f6fb]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 pb-6 border-b border-slate-200 gap-4">
@@ -40,7 +40,7 @@ export const Programs: React.FC<ProgramsProps> = ({ onSelectProgram }) => {
           {PROGRAMS_DATA.map((prog: Program) => (
             <div
               key={prog.id}
-              className="overflow-hidden flex flex-col justify-between rounded-2xl border border-sky-100 bg-white hover:border-blue-400 hover:shadow-xl transition-all duration-300 shadow-sm group"
+              className="overflow-hidden flex flex-col justify-between rounded-2xl border border-white/80 bg-white/65 backdrop-blur-md hover:border-blue-200 hover:bg-white/80 hover:shadow-lg transition-all duration-300 shadow-md group"
             >
               <div>
                 <div className="relative overflow-hidden bg-slate-100">
@@ -57,7 +57,7 @@ export const Programs: React.FC<ProgramsProps> = ({ onSelectProgram }) => {
                     loading="lazy"
                   />
                 </div>
-                <div className="p-7 sm:p-8">
+                <div className="p-7 sm:p-8 bg-white/55 backdrop-blur-sm">
                   <div className="flex items-center justify-end mb-5">
                   <span className="text-xs font-semibold text-blue-800 bg-sky-100 border border-sky-200 px-3 py-1 rounded-full">
                     {prog.name}
@@ -72,7 +72,7 @@ export const Programs: React.FC<ProgramsProps> = ({ onSelectProgram }) => {
                 </p>
 
                 {/* Target Audience */}
-                <div className="text-xs text-slate-700 pb-3 mb-4 border-b border-slate-100 bg-white p-3 rounded-lg border border-slate-200/80">
+                <div className="text-xs text-slate-700 pb-3 mb-4 border border-white/90 bg-white/60 backdrop-blur-md p-3 rounded-lg shadow-sm">
                   <span className="text-slate-500">উপযুক্ত শিক্ষার্থী:</span>{' '}
                   <span className="font-semibold text-slate-900 font-bangla">{prog.targetAudience}</span>
                 </div>
