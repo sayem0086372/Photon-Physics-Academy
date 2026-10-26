@@ -46,6 +46,16 @@ body {
   .cart-confirmation, .slideshow-image { animation: none !important; }
 }
 
+/* More readable public-site typography, matching the larger reference text. */
+.public-site .text-xs { font-size: 0.875rem; line-height: 1.45rem; }
+.public-site .text-sm { font-size: 1rem; line-height: 1.65rem; }
+.public-site .text-base { font-size: 1.125rem; line-height: 1.8rem; }
+.public-site .text-lg { font-size: 1.25rem; line-height: 1.9rem; }
+.public-site .text-xl { font-size: 1.5rem; line-height: 2.1rem; }
+.public-site .text-2xl { font-size: 1.875rem; line-height: 2.35rem; }
+.public-site .text-3xl { font-size: 2.25rem; line-height: 2.6rem; }
+.public-site .text-4xl { font-size: 2.75rem; line-height: 1.15; }
+
 /* v1.3.7 all-display responsiveness layer */
 html {
   width: 100%;
