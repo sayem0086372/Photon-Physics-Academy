@@ -60,7 +60,7 @@ export default function App() {
   if (currentView === 'admin') return <AdminGate onExitAdmin={() => handleSetView('public')} />;
 
   return (
-    <div className="min-h-screen bg-white text-slate-900 flex flex-col font-sans selection:bg-blue-500/20 selection:text-blue-900">
+    <div className={`public-site min-h-screen bg-white text-slate-900 flex flex-col font-sans selection:bg-blue-500/20 selection:text-blue-900`}>
       <Navbar onOpenInquiry={() => handleOpenInquiry()} onOpenAdmin={() => handleSetView('admin')} />
       <main className="flex-1">
         {isStore ? (
