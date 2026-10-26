@@ -80,7 +80,7 @@ export const Programs: React.FC<ProgramsProps> = ({ onSelectProgram }) => {
                 {/* Features List */}
                 <ul className="space-y-2.5 mb-8">
                   {prog.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm text-slate-700 font-bangla">
+                    <li key={idx} className="flex items-start gap-3 text-base sm:text-lg leading-relaxed text-slate-700 font-bangla">
                       <span className="w-2 h-2 rounded-full bg-blue-600 mt-1.5 shrink-0" />
                       <span>{feature}</span>
                     </li>
