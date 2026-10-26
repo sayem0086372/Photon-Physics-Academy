@@ -21,7 +21,7 @@ export const Logo: React.FC<LogoProps> = ({
   return (
     <div className={`flex items-center gap-3 ${className}`}>
       <img
-        src="https://cdn.phototourl.com/member/2026-10-26-925a7a13-9a03-4247-85f4-8f437d90f7a0.jpg"
+        src="https://cdn.phototourl.com/member/2026-10-26-00b8c0d9-38d9-4d60-a377-dfd8928013de.png"
         alt="Photon Physics Academy"
         className={`${iconSizes[size]} shrink-0 object-contain`}
         loading="eager"
