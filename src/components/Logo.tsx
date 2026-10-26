@@ -12,10 +12,10 @@ export const Logo: React.FC<LogoProps> = ({
   size = 'md',
 }) => {
   const iconSizes = {
-    sm: 'w-8 h-8',
-    md: 'w-10 h-10',
-    lg: 'w-14 h-14',
-    xl: 'w-20 h-20',
+    sm: 'w-10 h-10',
+    md: 'w-14 h-14',
+    lg: 'w-16 h-16',
+    xl: 'w-24 h-24',
   };
 
   return (
@@ -23,7 +23,7 @@ export const Logo: React.FC<LogoProps> = ({
       <img
         src="https://cdn.phototourl.com/member/2026-10-26-00b8c0d9-38d9-4d60-a377-dfd8928013de.png"
         alt="Photon Physics Academy"
-        className={`${iconSizes[size]} shrink-0 object-contain`}
+        className={`${iconSizes[size]} shrink-0 rounded-lg bg-white p-1 object-contain`}
         loading="eager"
       />
 
