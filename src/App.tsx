@@ -72,6 +72,18 @@ export default function App() {
             <StoreBanner />
             <NoticeBoard />
             <Hero onOpenInquiry={handleOpenInquiry} />
+            <section aria-label="Our legacy" className="bg-white py-8 sm:py-10 border-y border-slate-200">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-8">
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-6 py-5 text-center">
+                  <div className="text-3xl sm:text-4xl font-extrabold tracking-tight text-blue-800">23 Years</div>
+                  <p className="mt-2 text-base sm:text-lg font-semibold text-slate-700 font-bangla">শিক্ষার ক্ষেত্রে আমাদের ২৩ বছরের ঐতিহ্য</p>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-6 py-5 text-center">
+                  <div className="text-3xl sm:text-4xl font-extrabold tracking-tight text-blue-800">11,000+</div>
+                  <p className="mt-2 text-base sm:text-lg font-semibold text-slate-700 font-bangla">শিক্ষার্থী আমাদের কাছ থেকে পড়াশোনা করেছে</p>
+                </div>
+              </div>
+            </section>
             <About onOpenInquiry={() => handleOpenInquiry()} />
             <Programs onSelectProgram={handleOpenInquiry} />
             <Gallery />
