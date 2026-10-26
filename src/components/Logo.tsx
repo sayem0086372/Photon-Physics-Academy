@@ -23,7 +23,7 @@ export const Logo: React.FC<LogoProps> = ({
       <img
         src="https://cdn.phototourl.com/member/2026-10-26-00b8c0d9-38d9-4d60-a377-dfd8928013de.png"
         alt="Photon Physics Academy"
-        className={`${iconSizes[size]} shrink-0 rounded-lg bg-white p-1 object-contain`}
+        className={`${iconSizes[size]} shrink-0 object-contain mix-blend-multiply`}
         loading="eager"
       />
 
