@@ -5,6 +5,17 @@ import { EmptyState } from '../ui/EmptyState';
 import { SectionToolbar } from '../ui/SectionToolbar';
 import { StatusBadge } from '../ui/StatusBadge';
 
+const studentIdForYear = (year: number, students: AdminStudent[]) => {
+  const prefix = String(year).slice(-2);
+  const max = students.reduce((highest, student) => {
+    const match = /^\d{2}(\d{4})$/.exec(student.studentIdCode);
+    return match && student.studentIdCode.startsWith(prefix)
+      ? Math.max(highest, Number(match[1]))
+      : highest;
+  }, 0);
+  return `${prefix}${String(max + 1).padStart(4, '0')}`;
+};
+
 interface StudentsTabProps {
   students: AdminStudent[];
   batches: AdminBatchRecord[];
@@ -30,7 +41,7 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
 
   // Form state for adding new student
   const [formData, setFormData] = useState({
-    studentIdCode: `PPA-26-09-0${students.length + 1}`,
+    studentIdCode: studentIdForYear(new Date().getFullYear(), students),
     fullName: '',
     banglaName: '',
     classLevel: 'Class 9' as ClassLevel,
@@ -48,8 +59,8 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
 
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  const emptyForm = (cls: ClassLevel = 'Class 9', count = students.length + 1) => ({
-    studentIdCode: `PPA-26-${cls === 'Class 8' ? '08' : cls === 'Class 9' ? '09' : '10'}-0${count}`,
+  const emptyForm = (cls: ClassLevel = 'Class 9', _count = students.length + 1) => ({
+    studentIdCode: studentIdForYear(new Date().getFullYear(), students),
     fullName: '',
     banglaName: '',
     classLevel: cls,
@@ -324,7 +335,8 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
                     type="text"
                     value={formData.studentIdCode}
                     onChange={(e) => setFormData({ ...formData, studentIdCode: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono font-bold text-slate-800"
+                    readOnly={!editingId}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono font-bold text-slate-800 read-only:cursor-not-allowed read-only:bg-slate-100"
                     required
                   />
                 </div>
