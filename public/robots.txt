@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /cart
+Disallow: /checkout
+Disallow: /order-confirmation
+
+Sitemap: https://photonphysicsbd.com/sitemap.xml
