@@ -18,6 +18,7 @@ import { Footer } from './components/Footer';
 import { AdminGate } from './components/admin/AdminGate';
 
 const isStorePath = () => /^\/(store|cart|checkout|order-confirmation)(\/.*)?$/.test(window.location.pathname);
+const isAdminPath = () => window.location.pathname === '/admin' || window.location.pathname.startsWith('/admin/');
 
 export default function App() {
   const [currentView, setCurrentView] = useState<'public' | 'admin'>('public');
@@ -27,7 +28,7 @@ export default function App() {
   useEffect(() => {
     const syncLocation = () => {
       setIsStore(isStorePath());
-      if (window.location.hash === '#admin') setCurrentView('admin');
+      if (isAdminPath() || window.location.hash === '#admin') setCurrentView('admin');
       else setCurrentView('public');
     };
     syncLocation();
@@ -41,9 +42,10 @@ export default function App() {
 
   const handleSetView = (view: 'public' | 'admin') => {
     setCurrentView(view);
-    if (view === 'admin') window.location.hash = 'admin';
-    else {
-      window.location.hash = 'home';
+    if (view === 'admin') {
+      if (!isAdminPath()) window.history.pushState({}, '', '/admin');
+    } else {
+      if (isAdminPath() || window.location.hash === '#admin') window.history.pushState({}, '', '/');
       if (isStorePath()) window.location.href = '/';
     }
   };
