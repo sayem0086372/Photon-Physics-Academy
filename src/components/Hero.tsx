@@ -29,12 +29,12 @@ export const Hero: React.FC<HeroProps> = ({ onOpenInquiry }) => {
           {/* Left Column: Headings, Value Proposition & Actions */}
           <div className="lg:col-span-7 space-y-6">
             <div className="space-y-3">
-              <span className="text-xs uppercase tracking-widest text-blue-700 font-bold flex items-center gap-2">
-                <Sparkles className="w-3.5 h-3.5" />
-                PHOTON PHYSICS ACADEMY
-              </span>
-              
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
+              <div className="text-3xl sm:text-4xl lg:text-[3.35rem] font-extrabold tracking-[-0.045em] leading-[1.08] text-blue-950">
+                PHOTON <span className="text-sky-600">PHYSICS</span>
+                <span className="block mt-1 text-[0.48em] sm:text-[0.46em] font-semibold tracking-[0.28em] text-slate-600 uppercase">Academy · Mymensingh</span>
+              </div>
+
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight leading-tight">
                 Feel the Power of <span className="text-blue-700">Physics...</span>
               </h1>
               
