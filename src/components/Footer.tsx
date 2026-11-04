@@ -71,17 +71,6 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin }) => {
                   ফলাফল নীতি (Results)
                 </a>
               </li>
-              {onOpenAdmin && (
-                <li>
-                  <button
-                    onClick={onOpenAdmin}
-                    className="hover:text-sky-400 transition-colors flex items-center gap-1.5 text-left font-bangla text-sky-400/90 font-medium pt-1"
-                  >
-                    <Shield className="w-3.5 h-3.5" />
-                    <span>অ্যাডমিন ড্যাশবোর্ড (Admin Panel)</span>
-                  </button>
-                </li>
-              )}
             </ul>
           </div>
 
@@ -119,8 +108,19 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin }) => {
 
         {/* Bottom Bar: Copyright & Back-to-Top */}
         <div className="mt-12 pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-slate-400">
-          <div>
-            © 2026 Photon Physics Academy. সর্বস্বত্ব সংরক্ষিত (All rights reserved).
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            <span>© 2026 Photon Physics Academy. সর্বস্বত্ব সংরক্ষিত (All rights reserved).</span>
+            {onOpenAdmin && (
+              <button
+                onClick={onOpenAdmin}
+                className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-slate-400 hover:text-sky-300 hover:bg-slate-800 transition-colors"
+                aria-label="Admin Login"
+                title="Admin Login"
+              >
+                <Shield className="w-3.5 h-3.5" />
+                <span>Admin Login</span>
+              </button>
+            )}
           </div>
 
           <div className="flex items-center gap-4">
