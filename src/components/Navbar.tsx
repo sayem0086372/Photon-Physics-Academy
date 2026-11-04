@@ -56,55 +56,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenInquiry, onOpenAdmin }) =>
             ))}
           </nav>
 
-          {/* Zone 3: Primary Action & Quick Phone */}
-          <div className="hidden md:flex items-center gap-2 shrink-0">
-            <a
-              href="tel:+8801312364499"
-              className="flex items-center gap-1.5 text-xs font-semibold text-blue-900 bg-sky-50 hover:bg-sky-100 border border-sky-200 px-3 py-2 rounded-lg transition-colors whitespace-nowrap"
-              title="Call Academy Directly"
-            >
-              <Phone className="w-3.5 h-3.5 text-blue-600" />
-              <span>01312-364499</span>
-            </a>
-
-            <button
-              onClick={() => onOpenInquiry()}
-              className="px-3 py-2 text-xs font-semibold text-white bg-blue-700 hover:bg-blue-800 rounded-lg shadow-sm transition-colors duration-200 whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
-            >
-              Admission Inquiry
-            </button>
-
-            {onOpenAdmin && (
-              <button
-                onClick={onOpenAdmin}
-                className="px-3 py-2 text-xs font-semibold text-slate-700 hover:text-blue-700 bg-slate-100 hover:bg-sky-50 border border-slate-200 rounded-lg flex items-center gap-1.5 transition-colors whitespace-nowrap shrink-0"
-                title="Open Admin Dashboard"
-              >
-                <Shield className="w-3.5 h-3.5 text-blue-600" />
-                <span>Admin</span>
-              </button>
-            )}
-          </div>
-
           {/* Mobile Hamburger Button */}
           <div className="flex md:hidden items-center gap-2">
-            <a
-              href="tel:+8801312364499"
-              className="p-2 rounded-lg bg-sky-50 border border-sky-200 text-blue-700 hover:bg-sky-100"
-              aria-label="Call Now"
-            >
-              <Phone className="w-4 h-4" />
-            </a>
-            {onOpenAdmin && (
-              <button
-                onClick={onOpenAdmin}
-                className="p-2 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 hover:text-blue-700 hover:bg-sky-50"
-                aria-label="Admin Login"
-                title="Admin Login"
-              >
-                <Shield className="w-4 h-4" />
-              </button>
-            )}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
