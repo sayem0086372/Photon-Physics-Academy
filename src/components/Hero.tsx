@@ -29,9 +29,9 @@ export const Hero: React.FC<HeroProps> = ({ onOpenInquiry }) => {
           {/* Left Column: Headings, Value Proposition & Actions */}
           <div className="lg:col-span-7 space-y-6">
             <div className="space-y-3">
-              <div className="text-3xl sm:text-4xl lg:text-[3.35rem] font-extrabold tracking-[-0.045em] leading-[1.08] text-blue-950">
-                PHOTON <span className="text-sky-600">PHYSICS</span>
-                <span className="block mt-1 text-[0.48em] sm:text-[0.46em] font-semibold tracking-[0.28em] text-slate-600 uppercase">Academy · Mymensingh</span>
+              <div className="font-sans text-3xl sm:text-4xl lg:text-[3.35rem] font-extrabold tracking-[-0.045em] leading-[1.08] text-blue-950">
+                <span className="block">PHOTON <span className="text-sky-600">PHYSICS</span></span>
+                <span className="mt-2 block text-[0.46em] font-bold tracking-[0.08em] leading-tight text-slate-600 uppercase">ACADEMY <span className="font-medium tracking-normal text-slate-500">· MYMENSINGH</span></span>
               </div>
 
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight leading-tight">
