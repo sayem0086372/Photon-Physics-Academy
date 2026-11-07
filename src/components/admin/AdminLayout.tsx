@@ -24,10 +24,11 @@ import { StoreManagementTab } from './tabs/StoreManagementTab';
 
 interface AdminLayoutProps {
   onExitAdmin: () => void;
-  session: Session | null;
+  session: Session;
+  onLogout: () => void;
 }
 
-export const AdminLayout: React.FC<AdminLayoutProps> = ({ onExitAdmin }) => {
+export const AdminLayout: React.FC<AdminLayoutProps> = ({ onExitAdmin, onLogout, session }) => {
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false);
@@ -35,12 +36,12 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onExitAdmin }) => {
 
   // Core administrative state
   const supabaseReady = isSupabaseConfigured();
-  const [students, setStudents] = useState<AdminStudent[]>(supabaseReady ? [] : INITIAL_STUDENTS);
-  const [payments, setPayments] = useState<AdminPaymentRecord[]>(supabaseReady ? [] : INITIAL_PAYMENTS);
-  const [notices, setNotices] = useState<AdminNoticeRecord[]>(supabaseReady ? [] : INITIAL_NOTICES);
-  const [batches, setBatches] = useState<AdminBatchRecord[]>(supabaseReady ? [] : INITIAL_BATCHES);
-  const [results, setResults] = useState<AdminExamResult[]>(supabaseReady ? [] : INITIAL_RESULTS);
-  const [loading, setLoading] = useState(supabaseReady);
+  const [students, setStudents] = useState<AdminStudent[]>([]);
+  const [payments, setPayments] = useState<AdminPaymentRecord[]>([]);
+  const [notices, setNotices] = useState<AdminNoticeRecord[]>([]);
+  const [batches, setBatches] = useState<AdminBatchRecord[]>([]);
+  const [results, setResults] = useState<AdminExamResult[]>([]);
+  const [loading, setLoading] = useState(true);
   const [dbError, setDbError] = useState('');
 
   const fail = (e: unknown) => {
@@ -69,8 +70,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onExitAdmin }) => {
   };
 
   useEffect(() => {
-    if (supabaseReady) refresh();
-  }, []);
+    if (supabaseReady && session) refresh();
+  }, [supabaseReady, session]);
 
   // Handlers — write to Supabase when configured, otherwise stay in local demo state
   const handleAddStudent = async (newStudent: Omit<AdminStudent, 'id' | 'joinedDate'>) => {
@@ -213,6 +214,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onExitAdmin }) => {
           activeTab={activeTab}
           onOpenMobileSidebar={() => setIsMobileSidebarOpen(true)}
           onExitAdmin={onExitAdmin}
+          onLogout={onLogout}
         />
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto overflow-y-auto">
