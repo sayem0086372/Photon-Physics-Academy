@@ -1,13 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { AdminTab, AdminStudent, AdminPaymentRecord, AdminNoticeRecord, AdminBatchRecord, AdminExamResult } from '../../types/admin';
-import {
-  INITIAL_STUDENTS,
-  INITIAL_PAYMENTS,
-  INITIAL_NOTICES,
-  INITIAL_BATCHES,
-  INITIAL_RESULTS,
-} from '../../data/adminMockData';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import * as db from '../../lib/db';
 import { AdminSidebar } from './AdminSidebar';
