@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, ExternalLink } from 'lucide-react';
+import { Menu, ExternalLink, LogOut } from 'lucide-react';
 import { AdminTab } from '../../types/admin';
 import { ADMIN_NAV } from './adminNav';
 
@@ -7,12 +7,14 @@ interface AdminHeaderProps {
   activeTab: AdminTab;
   onOpenMobileSidebar: () => void;
   onExitAdmin: () => void;
+  onLogout: () => void;
 }
 
 export const AdminHeader: React.FC<AdminHeaderProps> = ({
   activeTab,
   onOpenMobileSidebar,
   onExitAdmin,
+  onLogout,
 }) => {
   const title = ADMIN_NAV.find((n) => n.id === activeTab)?.label ?? '';
 
@@ -39,6 +41,15 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
             <div className="text-[10px] text-slate-500 leading-none mt-1">Administrator</div>
           </div>
         </div>
+
+        <button
+          onClick={onLogout}
+          className="p-2 sm:px-3 sm:py-1.5 rounded-lg text-xs font-semibold text-slate-700 hover:text-blue-700 hover:bg-sky-50 border border-slate-200 transition-colors flex items-center gap-1.5"
+          title="Log out"
+        >
+          <LogOut className="w-3.5 h-3.5" />
+          <span>Log out</span>
+        </button>
 
         <button
           onClick={onExitAdmin}
