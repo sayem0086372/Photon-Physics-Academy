@@ -64,7 +64,7 @@ export default function App() {
 
   return (
     <div className={`public-site min-h-screen bg-white text-slate-900 flex flex-col font-sans selection:bg-blue-500/20 selection:text-blue-900`}>
-      <Navbar onOpenInquiry={() => handleOpenInquiry()} onOpenAdmin={() => handleSetView('admin')} />
+      {!isStore && <Navbar onOpenInquiry={() => handleOpenInquiry()} onOpenAdmin={() => handleSetView('admin')} />}
       <main className="flex-1">
         {isStore ? (
           <>
