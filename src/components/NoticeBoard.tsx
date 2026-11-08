@@ -5,6 +5,7 @@ import { Notice } from '../types';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { loadPublishedNotices } from '../lib/db';
 import { NoticeModal } from './NoticeModal';
+import { Reveal } from './Reveal';
 
 export const NoticeBoard: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('সব নোটিশ');
@@ -102,8 +103,7 @@ export const NoticeBoard: React.FC = () => {
         {filteredNotices.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredNotices.map((notice) => (
-              <div
-                key={notice.id}
+              <Reveal key={notice.id} className="h-full"><div
                 className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white hover:border-blue-400 hover:shadow-xl transition-all duration-300 p-6 shadow-xs group"
               >
                 <div>
@@ -138,7 +138,7 @@ export const NoticeBoard: React.FC = () => {
                     <ChevronRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
-              </div>
+              </div></Reveal>
             ))}
           </div>
         ) : (
