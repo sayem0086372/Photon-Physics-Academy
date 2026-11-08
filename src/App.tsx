@@ -72,8 +72,6 @@ export default function App() {
           </>
         ) : (
           <>
-            <StoreBanner />
-            <NoticeBoard />
             <Hero onOpenInquiry={handleOpenInquiry} />
             <section aria-label="Our legacy" className="bg-white py-8 sm:py-10 border-y border-slate-200">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-8">
@@ -89,6 +87,8 @@ export default function App() {
             </section>
             <About onOpenInquiry={() => handleOpenInquiry()} />
             <Programs onSelectProgram={handleOpenInquiry} />
+            <StoreBanner />
+            <NoticeBoard />
             <Gallery />
             <Contact prefilledProgram={inquiryProgram} />
           </>
