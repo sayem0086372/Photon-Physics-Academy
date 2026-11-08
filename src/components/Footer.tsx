@@ -108,32 +108,37 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin }) => {
 
         {/* Bottom Bar: Copyright & Back-to-Top */}
         <div className="mt-12 pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-slate-400">
-          <div className="flex flex-col sm:flex-row items-center gap-3">
-            <span>© 2026 Photon Physics Academy. সর্বস্বত্ব সংরক্ষিত (All rights reserved).</span>
-            {onOpenAdmin && (
-              <button
-                onClick={onOpenAdmin}
-                className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-slate-400 hover:text-sky-300 hover:bg-slate-800 transition-colors"
-                aria-label="Admin Login"
-                title="Admin Login"
+          <div className="flex flex-col items-center sm:items-start gap-1.5">
+            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
+              <span>© 2026 Photon Physics Academy. সর্বস্বত্ব সংরক্ষিত (All rights reserved).</span>
+              {onOpenAdmin && (
+                <button
+                  onClick={onOpenAdmin}
+                  className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-slate-400 hover:text-sky-300 hover:bg-slate-800 transition-colors"
+                  aria-label="Admin Login"
+                  title="Admin Login"
+                >
+                  <Shield className="w-3.5 h-3.5" />
+                  <span>Admin Login</span>
+                </button>
+              )}
+            </div>
+            <p className="text-[10px] text-slate-500">
+              Designed and developed by{" "}
+              <a
+                href="https://github.com/oathwi1d"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="OATHWILD on GitHub"
+                className="font-bold tracking-[0.12em] text-sky-300 drop-shadow-[0_0_5px_rgba(56,189,248,0.85)] hover:drop-shadow-[0_0_8px_rgba(56,189,248,1)] transition-all"
               >
-                <Shield className="w-3.5 h-3.5" />
-                <span>Admin Login</span>
-              </button>
-            )}
+                OATHWILD
+              </a>{" "}
+              (Sayeem)
+            </p>
           </div>
 
           <div className="flex items-center gap-3">
-            <a
-              href="https://github.com/oathwi1d"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="OATHWILD on GitHub"
-              title="OATHWILD"
-              className="text-[9px] font-semibold tracking-[0.16em] text-slate-500 hover:text-sky-400 transition-colors"
-            >
-              OATHWILD
-            </a>
             <button
               onClick={scrollToTop}
               className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-colors flex items-center gap-1 text-[11px]"
