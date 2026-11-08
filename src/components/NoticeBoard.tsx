@@ -104,7 +104,7 @@ export const NoticeBoard: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredNotices.map((notice) => (
               <Reveal key={notice.id} className="h-full"><div
-                className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white hover:border-blue-400 hover:shadow-xl transition-all duration-300 p-6 shadow-xs group"
+                className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white hover:-translate-y-1 hover:border-blue-400 hover:shadow-md transition-all duration-200 p-6 shadow-xs group"
               >
                 <div>
                   {/* Unboxed Metadata */}
