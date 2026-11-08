@@ -138,7 +138,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin }) => {
         <div className="mt-5 text-center text-[10px] sm:text-[11px] text-slate-500 tracking-wide">
           Designed &amp; Developed by{' '}
           <a
-            href="https://github.com/sayem0086372"
+            href="https://github.com/oathwi1d"
             target="_blank"
             rel="noopener noreferrer"
             className="text-slate-400 hover:text-slate-300 underline-offset-2"
