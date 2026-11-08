@@ -135,15 +135,21 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin }) => {
           </div>
         </div>
 
-        <div className="mt-5 text-center text-[10px] sm:text-[11px] text-slate-500 tracking-wide">
-          Designed &amp; Developed by{' '}
+        <div className="mt-5 flex justify-end">
           <a
             href="https://github.com/oathwi1d"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-slate-400 hover:text-slate-300 underline-offset-2"
+            aria-label="Visit Sayeem's GitHub profile"
+            title="Visit GitHub profile"
+            className="inline-flex items-center justify-center rounded-md transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
           >
-            Sayeem
+            <img
+              src="/sayeem-signature-gold.svg"
+              alt="Sayeem signature"
+              className="block h-auto w-36 sm:w-44"
+              loading="lazy"
+            />
           </a>
         </div>
       </div>
