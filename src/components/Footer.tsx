@@ -123,7 +123,17 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin }) => {
             )}
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <a
+              href="https://github.com/oathwi1d"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="OATHWILD on GitHub"
+              title="OATHWILD"
+              className="text-[9px] font-semibold tracking-[0.16em] text-slate-500 hover:text-sky-400 transition-colors"
+            >
+              OATHWILD
+            </a>
             <button
               onClick={scrollToTop}
               className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-colors flex items-center gap-1 text-[11px]"
@@ -133,24 +143,6 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin }) => {
               <ArrowUp className="w-3.5 h-3.5" />
             </button>
           </div>
-        </div>
-
-        <div className="mt-5 flex justify-end">
-          <a
-            href="https://github.com/oathwi1d"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Visit Sayeem's GitHub profile"
-            title="Visit GitHub profile"
-            className="inline-flex items-center justify-center rounded-md transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
-          >
-            <img
-              src="/sayeem-signature-gold.svg"
-              alt="Sayeem signature"
-              className="block h-auto w-36 sm:w-44"
-              loading="lazy"
-            />
-          </a>
         </div>
       </div>
     </footer>
