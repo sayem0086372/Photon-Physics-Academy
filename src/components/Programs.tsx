@@ -40,7 +40,7 @@ export const Programs: React.FC<ProgramsProps> = ({ onSelectProgram }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {PROGRAMS_DATA.map((prog: Program) => (
             <Reveal key={prog.id} className="h-full"><div
-              className="overflow-hidden flex flex-col justify-between rounded-2xl border border-white/80 bg-white/65 backdrop-blur-md hover:border-blue-200 hover:bg-white/80 hover:shadow-lg transition-all duration-300 shadow-md group"
+              className="overflow-hidden flex flex-col justify-between rounded-2xl border border-white/80 bg-white/65 backdrop-blur-md hover:-translate-y-1 hover:border-blue-200 hover:bg-white/80 hover:shadow-md transition-all duration-200 shadow-md group"
             >
               <div>
                 <div className="relative overflow-hidden bg-slate-100">
