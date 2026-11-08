@@ -12,7 +12,7 @@ const route = () => window.location.pathname.replace(/\/$/,'') || '/';
 const slug = (b:StoreBook) => encodeURIComponent(b.id);
 const readCart = ():CartItem[] => { try { return JSON.parse(localStorage.getItem('ppa-store-cart') || '[]'); } catch { return []; } };
 const StoreWelcome:React.FC = () => (
- <div className="store-welcome relative isolate left-1/2 -ml-[50vw] -mt-8 mb-10 flex min-h-[calc(100svh-180px)] w-screen items-center overflow-hidden rounded-none border-x-0 border-y border-slate-200 bg-[linear-gradient(115deg,#071a35_0%,#0c3157_54%,#14527a_100%)] px-6 py-16 text-white shadow-[0_24px_70px_-35px_rgba(7,26,53,0.8)] sm:-mt-12 sm:px-10 sm:py-20 lg:px-[max(3.5rem,calc((100vw-80rem)/2))]">
+ <div className="store-welcome relative isolate left-1/2 -ml-[50vw] -mt-8 mb-10 flex min-h-[calc(100svh-180px)] w-screen items-center overflow-hidden rounded-none border-x-0 border-y border-slate-200 bg-[linear-gradient(115deg,#071a35_0%,#0c3157_54%,#14527a_100%)] px-6 py-16 text-white sm:-mt-12 sm:px-10 sm:py-20 lg:px-[max(3.5rem,calc((100vw-80rem)/2))]">
   <style>{`
    @keyframes storeWelcomeRise { from { opacity:0; transform:translateY(24px) } to { opacity:1; transform:translateY(0) } }
    @keyframes storeWelcomeFloat { 0%,100% { transform:translate3d(0,0,0) rotate(-5deg) } 50% { transform:translate3d(0,-13px,0) rotate(-1deg) } }
@@ -35,6 +35,7 @@ const StoreWelcome:React.FC = () => (
    <div className="absolute right-8 top-8 h-2 w-2 rounded-full bg-amber-300/80 shadow-[0_0_18px_5px_rgba(252,211,77,.45)]"/>
    <div className="absolute bottom-8 left-[42%] h-1.5 w-1.5 rounded-full bg-sky-200/80"/>
   </div>
+  <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-28 bg-gradient-to-b from-transparent via-[#eaf3fb]/75 to-[#eaf3fb] sm:h-36 lg:h-44"/>
   <div className="relative z-10 grid items-center gap-10 lg:grid-cols-[1.15fr_.85fr]">
    <div className="store-welcome-content max-w-2xl">
     <div className="inline-flex items-center gap-2 rounded-full border border-sky-100/25 bg-white/10 px-3.5 py-2 text-[11px] font-bold uppercase tracking-[.2em] text-sky-100 backdrop-blur-sm">
