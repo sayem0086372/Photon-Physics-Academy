@@ -185,3 +185,24 @@ pre, code {
   .public-site .text-3xl { font-size: 2.125rem; line-height: 2.55rem; }
   .public-site .text-4xl { font-size: 2.5rem; line-height: 1.15; }
 }
+
+
+/* Stage 1: subtle hero motion and reusable scroll reveals. */
+@keyframes ppaHeroRise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.ppa-hero-title { animation: ppaHeroRise 220ms ease-out both; }
+.ppa-hero-tagline { animation: ppaHeroRise 220ms 55ms ease-out both; }
+.ppa-hero-tagline-delayed { animation: ppaHeroRise 220ms 105ms ease-out both; }
+.ppa-cta-lift { transition-duration: 200ms; }
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .ppa-cta-lift:hover { transform: translateY(-2px); box-shadow: 0 5px 12px rgba(15, 23, 42, 0.10); }
+}
+.ppa-reveal { opacity: 0; transform: translateY(10px); transition: opacity 220ms ease-out, transform 220ms ease-out; }
+.ppa-reveal.is-visible { opacity: 1; transform: translateY(0); }
+@media (prefers-reduced-motion: reduce) {
+  .ppa-hero-title, .ppa-hero-tagline, .ppa-hero-tagline-delayed { animation: none !important; }
+  .ppa-reveal { opacity: 1; transform: none; transition: none; }
+  .ppa-cta-lift { transition: none !important; }
+}
