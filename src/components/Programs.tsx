@@ -2,6 +2,7 @@ import React from 'react';
 import { BookOpen, Compass, MessageCircle, Info, Sparkles } from 'lucide-react';
 import { PROGRAMS_DATA } from '../data/programs';
 import { Program } from '../types';
+import { Reveal } from './Reveal';
 
 interface ProgramsProps {
   onSelectProgram: (programName: string) => void;
@@ -38,8 +39,7 @@ export const Programs: React.FC<ProgramsProps> = ({ onSelectProgram }) => {
         {/* 2-Card Prominent Grid for Class 8, 9 and 10 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {PROGRAMS_DATA.map((prog: Program) => (
-            <div
-              key={prog.id}
+            <Reveal key={prog.id} className="h-full"><div
               className="overflow-hidden flex flex-col justify-between rounded-2xl border border-white/80 bg-white/65 backdrop-blur-md hover:border-blue-200 hover:bg-white/80 hover:shadow-lg transition-all duration-300 shadow-md group"
             >
               <div>
@@ -104,7 +104,7 @@ export const Programs: React.FC<ProgramsProps> = ({ onSelectProgram }) => {
                   <span>ব্যাচ ও সময়সূচি জানতে যোগাযোগ</span>
                 </button>
               </div>
-            </div>
+            </div></Reveal>
           ))}
         </div>
 
