@@ -29,15 +29,15 @@ export const Hero: React.FC<HeroProps> = ({ onOpenInquiry }) => {
           {/* Left Column: Headings, Value Proposition & Actions */}
           <div className="lg:col-span-7 space-y-6">
             <div className="space-y-3">
-              <div className="font-sans text-3xl sm:text-4xl lg:text-[3.35rem] font-extrabold tracking-[-0.045em] leading-tight text-blue-950">
+              <div className="ppa-hero-title font-sans text-3xl sm:text-4xl lg:text-[3.35rem] font-extrabold tracking-[-0.045em] leading-tight text-blue-950">
                 PHOTON <span className="text-sky-600">PHYSICS</span> <span className="text-blue-950">ACADEMY</span>
               </div>
 
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight leading-tight">
+              <h1 className="ppa-hero-tagline text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight leading-tight">
                 Feel the Power of <span className="text-blue-700">Physics...</span>
               </h1>
               
-              <h2 className="text-2xl sm:text-3xl font-bangla font-bold text-slate-800 leading-snug">
+              <h2 className="ppa-hero-tagline-delayed text-2xl sm:text-3xl font-bangla font-bold text-slate-800 leading-snug">
                 পদার্থবিজ্ঞানের ধারণা হোক সহজ ও আনন্দময়
               </h2>
             </div>
@@ -51,7 +51,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenInquiry }) => {
             <div className="flex flex-wrap items-center gap-3 pt-2">
               <a
                 href="#programs"
-                className="px-6 py-3.5 text-sm font-semibold text-white bg-blue-700 hover:bg-blue-800 rounded-lg shadow-sm transition-colors duration-200 flex items-center gap-2"
+                className="px-6 py-3.5 text-sm font-semibold text-white bg-blue-700 hover:bg-blue-800 rounded-lg shadow-sm ppa-cta-lift transition-[transform,background-color,box-shadow] duration-200 flex items-center gap-2"
               >
                 <span>Explore Programs</span>
                 <ArrowRight className="w-4 h-4" />
@@ -59,14 +59,14 @@ export const Hero: React.FC<HeroProps> = ({ onOpenInquiry }) => {
 
               <a
                 href="#contact"
-                className="px-6 py-3.5 text-sm font-semibold text-slate-800 bg-white hover:bg-sky-50 border border-slate-300 rounded-lg transition-colors flex items-center gap-2 shadow-xs"
+                className="px-6 py-3.5 text-sm font-semibold text-slate-800 bg-white hover:bg-sky-50 border border-slate-300 rounded-lg ppa-cta-lift transition-[transform,background-color,box-shadow] duration-200 flex items-center gap-2 shadow-xs"
               >
                 <span>যোগাযোগ করুন</span>
               </a>
 
               <button
                 onClick={() => onOpenInquiry()}
-                className="px-5 py-3.5 text-sm font-semibold text-blue-900 bg-sky-100/90 hover:bg-sky-200/90 border border-sky-300 rounded-lg transition-colors"
+                className="px-5 py-3.5 text-sm font-semibold text-blue-900 bg-sky-100/90 hover:bg-sky-200/90 border border-sky-300 rounded-lg ppa-cta-lift transition-[transform,background-color,box-shadow] duration-200"
               >
                 ভর্তি অনুসন্ধান
               </button>
