@@ -12,7 +12,7 @@ const route = () => window.location.pathname.replace(/\/$/,'') || '/';
 const slug = (b:StoreBook) => encodeURIComponent(b.id);
 const readCart = ():CartItem[] => { try { return JSON.parse(localStorage.getItem('ppa-store-cart') || '[]'); } catch { return []; } };
 const StoreWelcome:React.FC = () => (
- <div className="store-welcome relative isolate mb-10 overflow-hidden rounded-[2rem] border border-slate-200 bg-[linear-gradient(115deg,#071a35_0%,#0c3157_54%,#14527a_100%)] px-6 py-12 text-white shadow-[0_24px_70px_-35px_rgba(7,26,53,0.8)] sm:px-10 sm:py-16 lg:px-14">
+ <div className="store-welcome relative isolate left-1/2 -ml-[50vw] -mr-[50vw] -mt-8 mb-10 flex min-h-[calc(100svh-180px)] w-screen -translate-x-1/2 items-center overflow-hidden rounded-none border-x-0 border-y border-slate-200 bg-[linear-gradient(115deg,#071a35_0%,#0c3157_54%,#14527a_100%)] px-6 py-16 text-white shadow-[0_24px_70px_-35px_rgba(7,26,53,0.8)] sm:-mt-12 sm:px-10 sm:py-20 lg:px-[max(3.5rem,calc((100vw-80rem)/2))]">
   <style>{`
    @keyframes storeWelcomeRise { from { opacity:0; transform:translateY(24px) } to { opacity:1; transform:translateY(0) } }
    @keyframes storeWelcomeFloat { 0%,100% { transform:translate3d(0,0,0) rotate(-5deg) } 50% { transform:translate3d(0,-13px,0) rotate(-1deg) } }
