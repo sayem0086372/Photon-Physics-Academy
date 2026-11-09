@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - wordpress-migration
+      - wordpress-v2-restoration
     paths:
       - 'wp-content/themes/photon-physics-academy/**'
       - 'wp-content/plugins/ppa-academy-core/**'
