@@ -135,7 +135,7 @@ function ppa_ca_records($type,$limit=100) {
 }
 function ppa_ca_table($posts,$type,$tab) {
     if (!$posts) { echo '<div class="ppa-ca-empty">No records yet. Add your first record using the form below.</div>'; return; }
-    $columns = array('ppa_student'=>array('Student ID'=>'student_id','Guardian Mobile'=>'guardian_phone','Monthly Fee'=>'monthly_fee'),'ppa_batch'=>array('Class / Schedule'=>'record_details'),'ppa_fee_payment'=>array('Billing Month'=>'billing_month','Amount'=>'amount'),'ppa_exam_result'=>array('Exam'=>'exam_name','Marks / Grade'=>'marks'));
+    $columns = array('ppa_student'=>array('Student ID'=>'student_id','Class'=>'class_level','Batch'=>'batch_name','Guardian Mobile'=>'guardian_phone','Monthly Fee'=>'monthly_fee'),'ppa_batch'=>array('Class Level'=>'class_level','Schedule Days'=>'schedule_days','Class Time'=>'time_slot','Instructor'=>'instructor'),'ppa_fee_payment'=>array('Student ID'=>'student_id','Billing Month'=>'billing_month','Amount'=>'amount','Method'=>'payment_method','Payment Date'=>'payment_date'),'ppa_exam_result'=>array('Student ID'=>'student_id','Exam'=>'exam_name','Marks / Grade'=>'marks'));
     $meta_columns = isset($columns[$type]) ? $columns[$type] : array();
     echo '<div class="ppa-ca-table-wrap"><table class="ppa-ca-table"><thead><tr><th>Name / Title</th>';
     foreach($meta_columns as $label=>$key) echo '<th>'.esc_html($label).'</th>';
