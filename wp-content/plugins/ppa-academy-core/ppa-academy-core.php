@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Photon Physics Academy Core
  * Description: Persistent academy content types and core site features for Photon Physics Academy.
- * Version: 1.2.0
+ * Version: 2.0.0
  * Author: OATHWILD (Sayeem)
  * Text Domain: photon-physics-academy
  */
