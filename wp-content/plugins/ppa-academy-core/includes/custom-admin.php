@@ -101,7 +101,6 @@ function ppa_ca_handle_post() {
                 if (isset($_POST[$key]) && !($kind==='student' && $key==='student_id')) update_post_meta($id,'_ppa_'.$key,sanitize_text_field(wp_unslash($_POST[$key])));
             }
             if($kind==='student') update_post_meta($id,'_ppa_student_id',ppa_ca_next_student_id());
-            if(false) {}
             ppa_ca_redirect($tab,'created');
         }
         ppa_ca_redirect($tab,'error');
@@ -201,6 +200,15 @@ function ppa_ca_add_form($kind,$title,$fields,$tab) {
             echo '<textarea name="record_details" rows="3"></textarea>';
         } elseif($field==='student_id' && $kind==='student') {
             echo '<input name="student_id" type="text" value="'.esc_attr(ppa_ca_next_student_id()).'" readonly aria-readonly="true">';
+        } elseif($field==='student_id') {
+            $student_list=ppa_ca_records('ppa_student',500);
+            $list_id='ppa-student-options-'.esc_attr($kind);
+            echo '<input name="student_id" type="search" list="'.$list_id.'" placeholder="Search by student ID..." autocomplete="off"><datalist id="'.$list_id.'">';
+            foreach($student_list as $student_option) {
+                $code=get_post_meta($student_option->ID,'_ppa_student_id',true);
+                if($code!=='') echo '<option value="'.esc_attr($code).'">'.esc_html($student_option->post_title).'</option>';
+            }
+            echo '</datalist>';
         } elseif($field==='class_level') {
             echo '<select name="class_level" required><option value="">Select class</option><option value="Class 8">Class 8</option><option value="Class 9">Class 9</option><option value="Class 10">Class 10</option></select>';
         } elseif($field==='batch_name') {
