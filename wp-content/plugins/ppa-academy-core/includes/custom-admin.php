@@ -310,6 +310,56 @@ function ppa_ca_section_styles() { ?><style>
 .ppa-ca-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
 .ppa-ca-outline-link{font-size:11px;font-weight:700;text-decoration:none;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:8px;padding:9px 12px;white-space:nowrap}
 @media(max-width:680px){.ppa-ca-section-head{align-items:flex-start;flex-direction:column}.ppa-ca-section-head h2{font-size:19px}.ppa-ca-store-grid,.ppa-ca-sms-grid{grid-template-columns:1fr}.ppa-ca-notice-row{align-items:flex-start}.ppa-ca-notice-row time{padding-top:3px}.ppa-ca-info-panel{padding:15px}}
+/* Section-level parity: toolbar, filters, cards, tables, empty states and modal surfaces. */
+.ppa-ca-section-head{margin:0 0 20px;align-items:center}
+.ppa-ca-section-head h2{font-size:21px;font-weight:800;letter-spacing:-.035em}
+.ppa-ca-section-head p{font-size:12px;line-height:1.6}
+.ppa-ca-section-count,.ppa-ca-soft-badge{font-size:11px;padding:6px 10px;border-radius:999px}
+.ppa-ca-panel-head{align-items:center;margin-bottom:15px}
+.ppa-ca-panel-head h2{font-size:15px;font-weight:700}
+.ppa-ca-panel-head p{font-size:11px;color:#64748b;line-height:1.5}
+.ppa-ca-form{margin:20px 0;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:22px}
+.ppa-ca-form h3{font-size:18px;font-weight:750;color:#0f172a;margin:0 0 17px}
+.ppa-ca-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.ppa-ca-form-grid label{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:650;color:#334155}
+.ppa-ca-form-grid label.is-wide{grid-column:1/-1}
+.ppa-ca-form input,.ppa-ca-form select,.ppa-ca-form textarea{width:100%;min-height:42px;padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:9px;color:#0f172a;font:inherit;font-size:13px}
+.ppa-ca-form textarea{min-height:110px;line-height:1.6}
+.ppa-ca-form input:focus,.ppa-ca-form select:focus,.ppa-ca-form textarea:focus{outline:0;border-color:#3b82f6;background:#fff;box-shadow:0 0 0 3px rgba(59,130,246,.12)}
+.ppa-ca-form .ppa-ca-primary{margin-top:17px}
+.ppa-ca-primary{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:40px;padding:10px 16px;background:#2563eb;color:#fff;border:0;border-radius:9px;font-size:12px;font-weight:700;text-decoration:none;cursor:pointer}
+.ppa-ca-primary:hover{background:#1d4ed8}
+.ppa-ca-table-wrap{overflow-x:auto;border:1px solid #f1f5f9;border-radius:9px}
+.ppa-ca-table{width:100%;border-collapse:collapse;font-size:12px}
+.ppa-ca-table th{padding:13px 14px;background:#f8fafc;color:#64748b;font-size:10px;font-weight:700;letter-spacing:.04em;text-align:left;text-transform:uppercase;white-space:nowrap}
+.ppa-ca-table td{padding:13px 14px;border-top:1px solid #f1f5f9;color:#475569;vertical-align:middle}
+.ppa-ca-table tbody tr:hover{background:#f8fbff}
+.ppa-ca-table td strong{color:#0f172a;font-weight:700}
+.ppa-ca-empty{padding:34px 18px;border:1px dashed #e2e8f0;border-radius:10px;background:#f8fafc;color:#64748b;font-size:12px;line-height:1.8;text-align:center}
+.ppa-ca-shortcuts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.ppa-ca-shortcuts a{display:flex;align-items:center;justify-content:center;min-height:54px;padding:12px;border:1px solid #e2e8f0;border-radius:9px;background:#f8fafc;color:#334155;font-size:12px;font-weight:650;text-align:center;text-decoration:none}
+.ppa-ca-shortcuts a:hover{border-color:#bfdbfe;background:#eff6ff;color:#1d4ed8}
+.ppa-ca-stat-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.ppa-ca-stat-top i{display:grid;place-items:center;width:32px;height:32px;border-radius:9px;background:#eff6ff;color:#2563eb;font-size:16px;font-style:normal}
+.ppa-ca-overview-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.ppa-ca-recent-panel{min-width:0}
+.ppa-ca-view-all{font-size:11px;font-weight:700;color:#1d4ed8;text-decoration:none;white-space:nowrap}
+.ppa-ca-recent-list{display:grid}
+.ppa-ca-recent-row{display:flex;align-items:center;gap:11px;padding:12px 2px;border-top:1px solid #f1f5f9}
+.ppa-ca-recent-icon{display:grid;place-items:center;width:34px;height:34px;flex:0 0 34px;border-radius:9px;background:#eff6ff;color:#2563eb;font-size:15px}
+.ppa-ca-recent-row div{display:grid;gap:3px;min-width:0;flex:1}
+.ppa-ca-recent-row strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#0f172a;font-size:12px}
+.ppa-ca-recent-row small,.ppa-ca-recent-row time{font-size:10px;color:#94a3b8}
+.ppa-ca-recent-row time{white-space:nowrap}
+.ppa-ca-notice-row{gap:12px}
+.ppa-ca-notice-row form{margin-left:auto}
+.ppa-ca-delete{padding:7px 10px;border:1px solid #fecdd3;border-radius:7px;background:#fff1f2;color:#be123c;font-size:11px;font-weight:650;cursor:pointer}
+.ppa-ca-store-card{min-height:132px;border-radius:12px;box-shadow:none}
+.ppa-ca-coming-tag{font-size:10px;border-radius:6px;padding:5px 8px}
+.ppa-ca-sms-grid{gap:18px}
+.ppa-ca-info-panel{border-radius:12px}
+@media(max-width:900px){.ppa-ca-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ppa-ca-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:680px){.ppa-ca-form{padding:16px}.ppa-ca-form-grid{grid-template-columns:1fr;gap:12px}.ppa-ca-form-grid label.is-wide{grid-column:auto}.ppa-ca-overview-columns{grid-template-columns:1fr}.ppa-ca-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr))}.ppa-ca-section-head{align-items:flex-start;flex-direction:column}.ppa-ca-section-head h2{font-size:19px}.ppa-ca-notice-row{align-items:flex-start}.ppa-ca-notice-row time{padding-top:3px}.ppa-ca-store-grid,.ppa-ca-sms-grid{grid-template-columns:1fr}}
 /* Main-branch visual parity pass: keep the custom WordPress panel aligned with the React admin shell. */
 .ppa-ca-shell{font-family:'Plus Jakarta Sans',Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8fafc;color:#1e293b}
 .ppa-ca-sidebar{width:256px;flex:0 0 256px;height:100vh;background:#0f172a;box-shadow:none;border-right:1px solid #1e293b}
@@ -416,11 +466,21 @@ function ppa_ca_render_page() {
         if(isset($_GET['ppa_notice']) && $_GET['ppa_notice']!=='login_error') echo '<div class="ppa-ca-alert">'.esc_html(sanitize_text_field(wp_unslash($_GET['ppa_notice']))==='saved'?'Settings saved.':'Action completed.').'</div>';
         if($tab==='overview') {
             echo '<div class="ppa-ca-welcome"><h2>Welcome back, '.esc_html($user->display_name).'!</h2><p>Here is what is happening at Photon Physics Academy.</p></div><div class="ppa-ca-grid">';
-            $stats=array('Students'=>ppa_ca_count('ppa_student'),'Programs & Batches'=>ppa_ca_count('ppa_batch'),'Published Notices'=>ppa_ca_count('ppa_notice'),'Fee Payments'=>ppa_ca_count('ppa_fee_payment'));
-            foreach($stats as $label=>$number) echo '<div class="ppa-ca-card"><span>'.esc_html($label).'</span><strong>'.number_format_i18n($number).'</strong></div>';
-            echo '</div><section class="ppa-ca-panel"><h2>Quick Management</h2><div class="ppa-ca-shortcuts">';
-            foreach(array('students'=>'Manage Students','programs'=>'Programs & Batches','payments'=>'Record Fee Payment','notices'=>'Publish Notices','results'=>'Exam Results','store'=>'Store Orders') as $key=>$label) echo '<a href="'.esc_url(add_query_arg('ppa_tab',$key,home_url('/admin/'))).'">'.esc_html($label).'<span>Open management section →</span></a>';
-            echo '</div></section>';
+            $stats=array('Total Students'=>ppa_ca_count('ppa_student'),'Active Batches'=>ppa_ca_count('ppa_batch'),'Published Notices'=>ppa_ca_count('ppa_notice'),'Fee Payments'=>ppa_ca_count('ppa_fee_payment'));
+            $stat_icons=array('♙','▤','▣','৳');
+            $stat_index=0;
+            foreach($stats as $label=>$number) { echo '<div class="ppa-ca-card"><div class="ppa-ca-stat-top"><span>'.esc_html($label).'</span><i>'.esc_html($stat_icons[$stat_index]).'</i></div><strong>'.number_format_i18n($number).'</strong></div>'; $stat_index++; }
+            echo '</div><section class="ppa-ca-panel ppa-ca-quick-panel"><h2>Quick Actions</h2><div class="ppa-ca-shortcuts">';
+            foreach(array('students'=>'＋ Add Student','payments'=>'▤ Record Payment','notices'=>'♧ Publish Notice','results'=>'★ Add Exam Marks') as $key=>$label) echo '<a href="'.esc_url(add_query_arg('ppa_tab',$key,home_url('/admin/'))).'">'.esc_html($label).'</a>';
+            echo '</div></section><div class="ppa-ca-overview-columns">';
+            foreach(array('ppa_student'=>'Recent Students','ppa_fee_payment'=>'Recent Payments') as $type=>$heading) {
+                $recent=get_posts(array('post_type'=>$type,'post_status'=>'publish','numberposts'=>4,'orderby'=>'date','order'=>'DESC'));
+                echo '<section class="ppa-ca-panel ppa-ca-recent-panel"><div class="ppa-ca-panel-head"><div><h2>'.esc_html($heading).'</h2><p>Latest records added to the academy.</p></div><a class="ppa-ca-view-all" href="'.esc_url(add_query_arg('ppa_tab',$type==='ppa_student'?'students':'payments',home_url('/admin/'))).'">View all ↗</a></div>';
+                if($recent) { echo '<div class="ppa-ca-recent-list">'; foreach($recent as $item) { $detail=$type==='ppa_student'?get_post_meta($item->ID,'student_id',true):get_post_meta($item->ID,'billing_month',true); echo '<div class="ppa-ca-recent-row"><span class="ppa-ca-recent-icon">'.($type==='ppa_student'?'♙':'৳').'</span><div><strong>'.esc_html($item->post_title).'</strong><small>'.esc_html($detail?:get_the_date('d M Y',$item)).'</small></div><time>'.esc_html(get_the_date('d M',$item)).'</time></div>'; } echo '</div>'; }
+                else echo '<div class="ppa-ca-empty"><strong>No records yet</strong><br>New entries will appear here.</div>';
+                echo '</section>';
+            }
+            echo '</div>';
         } elseif($tab==='students') {
             echo '<section class="ppa-ca-panel"><h2>Students Management</h2>'; ppa_ca_table(ppa_ca_records('ppa_student'),'ppa_student',$tab); echo '</section>';
             ppa_ca_add_form('student','Add Student',array('record_title'=>'Student Name','student_id'=>'Student ID (5 digits, YYNNN)','class_level'=>'Class (8 / 9 / 10)','phone'=>'Student Mobile (Optional)','guardian_phone'=>'Guardian Mobile','whatsapp_phone'=>'WhatsApp Number (Optional)','monthly_fee'=>'Monthly Fee (৳)','batch_name'=>'Batch','record_details'=>'Additional Details'),$tab);
