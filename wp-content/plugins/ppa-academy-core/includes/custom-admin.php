@@ -26,13 +26,13 @@ function ppa_ca_tabs() {
     return array(
         'overview'=>array('Dashboard Overview','▦'),
         'students'=>array('Student Management','♙'),
-        'programs'=>array('Programs & Batches','▤'),
         'payments'=>array('Fees & Payments','৳'),
         'notices'=>array('Notice Management','▣'),
+        'programs'=>array('Programs & Batches','▤'),
         'results'=>array('Results & Exams','✓'),
         'sms'=>array('SMS Management','✉'),
-        'settings'=>array('Settings','⚙'),
         'store'=>array('Store Management','▧'),
+        'settings'=>array('Settings','⚙'),
     );
 }
 function ppa_ca_count($type) {
@@ -160,7 +160,7 @@ function ppa_ca_render_page() {
         echo '<div class="ppa-ca-shell"><aside class="ppa-ca-sidebar"><div class="ppa-ca-brand"><div class="ppa-ca-brand-mark"><img src="https://cdn.phototourl.com/member/2026-10-26-00b8c0d9-38d9-4d60-a377-dfd8928013de.png" alt="Photon Physics Academy"></div><div><strong>PHOTON</strong><small>Admin Panel</small></div></div><nav class="ppa-ca-nav">';
         foreach($tabs as $key=>$item) echo '<a class="'.($tab===$key?'is-active':'').'" href="'.esc_url(add_query_arg('ppa_tab',$key,home_url('/admin/'))).'"><i>'.esc_html($item[1]).'</i><span>'.esc_html($item[0]).'</span></a>';
         echo '</nav><div class="ppa-ca-side-bottom"><a href="'.esc_url(home_url('/')).'">← Back to Website</a></div></aside>';
-        echo '<div class="ppa-ca-main"><header class="ppa-ca-header"><h1>'.esc_html($tabs[$tab][0]).'</h1><div class="ppa-ca-user"><div class="ppa-ca-avatar">'.esc_html(strtoupper(substr($user->display_name,0,1))).'</div><span class="ppa-ca-user-label">'.esc_html($user->display_name).' · Administrator</span><form method="post">';
+        echo '<div class="ppa-ca-main"><header class="ppa-ca-header"><h1>'.esc_html($tabs[$tab][0]).'</h1><div class="ppa-ca-user"><div class="ppa-ca-avatar">'.esc_html('JS').'</div><span class="ppa-ca-user-label">'.esc_html('Jewel Sir').' · Administrator</span><form method="post">';
         wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
         echo '<input type="hidden" name="ppa_ca_action" value="logout"><button class="ppa-ca-logout" type="submit">Log out</button></form></div></header><main class="ppa-ca-content">';
         if(isset($_GET['ppa_notice']) && $_GET['ppa_notice']!=='login_error') echo '<div class="ppa-ca-alert">'.esc_html(sanitize_text_field(wp_unslash($_GET['ppa_notice']))==='saved'?'Settings saved.':'Action completed.').'</div>';
