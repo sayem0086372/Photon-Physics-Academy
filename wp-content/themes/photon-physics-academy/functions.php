@@ -46,7 +46,7 @@ function ppa_fallback_menu() {
         'About' => home_url('/#about'),
         'Programs' => home_url('/#programs'),
         'Classroom' => home_url('/#gallery'),
-        'Book Store' => home_url('/store/'),
+        'Book Store' => home_url('/shop/'),
         'Notices' => home_url('/#notices'),
         'Results' => home_url('/#results'),
         'Resources' => home_url('/#resources'),
