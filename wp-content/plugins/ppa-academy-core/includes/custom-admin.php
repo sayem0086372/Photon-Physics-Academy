@@ -35,6 +35,20 @@ function ppa_ca_tabs() {
         'settings'=>array('Settings','⚙'),
     );
 }
+function ppa_ca_icon_svg($name) {
+    $icons=array(
+        'overview'=>'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>',
+        'students'=>'<path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M20 8v6m3-3h-6"/>',
+        'payments'=>'<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/>',
+        'notices'=>'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/>',
+        'programs'=>'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
+        'results'=>'<path d="M8 21h8m-4-4v4M7 4h10v4a5 5 0 0 1-10 0V4z"/><path d="M7 6H4v2a4 4 0 0 0 4 4m9-6h3v2a4 4 0 0 1-4 4"/>',
+        'sms'=>'<path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.9-5.5a9 9 0 0 1-.9-4A8.5 8.5 0 0 1 12.5 3h.5a8.5 8.5 0 0 1 8 8v.5z"/>',
+        'store'=>'<path d="M6 7V6a6 6 0 0 1 12 0v1"/><path d="M3 7h18l-1 14H4L3 7z"/><path d="M9 11v1m6-1v1"/>',
+        'settings'=>'<circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.6a8 8 0 0 1-1.5.9l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.5-.9l-1.7.6-1.4-2.4 1.4-1.1a8 8 0 0 1 0-1.8l-1.4-1.1 1.4-2.4 1.7.6a8 8 0 0 1 1.5-.9l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.5.9l1.7-.6 1.4 2.4-1.4 1.1a8 8 0 0 1 0 1.7z"/>'
+    );
+    return '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'.(isset($icons[$name])?$icons[$name]:'').'</svg>';
+}
 function ppa_ca_count($type) {
     $counts=wp_count_posts($type);
     return $counts ? (int)$counts->publish : 0;
@@ -544,6 +558,7 @@ document.addEventListener('DOMContentLoaded',function(){
 <?php }
 
 function ppa_ca_visual_parity_styles() { ?><style>
+.ppa-ca-nav a i{display:inline-flex;align-items:center;justify-content:center}.ppa-ca-nav a i svg{display:block;width:16px;height:16px;flex:0 0 16px}
 .ppa-ca-balance-card{display:flex;align-items:center;gap:13px;padding:17px;border-radius:12px;background:#f0fdf4;border:1px solid #dcfce7;margin:15px 0}.ppa-ca-balance-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:#dcfce7;color:#15803d;font-size:19px;font-weight:900}.ppa-ca-balance-card small,.ppa-ca-balance-card em{display:block;color:#64748b;font-size:10px;font-style:normal}.ppa-ca-balance-card strong{display:block;margin:3px 0;color:#14532d;font-size:18px}.ppa-ca-recipient-options{display:grid;gap:9px;padding:13px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px}.ppa-ca-recipient-options small{color:#94a3b8;font-weight:400}.ppa-ca-recipient-count{display:flex;align-items:center;gap:10px;padding:12px;border-radius:10px;background:#eff6ff;color:#1e40af}.ppa-ca-recipient-count strong{font-size:20px}.ppa-ca-recipient-count span{font-size:10px;color:#64748b}.ppa-ca-message-footer{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:14px}.ppa-ca-message-footer>span{font-size:10px;color:#94a3b8}.ppa-ca-store-tabs{display:flex;gap:5px;overflow-x:auto;padding:5px;margin:0 0 18px;border-bottom:1px solid #e2e8f0}.ppa-ca-store-tabs a{white-space:nowrap;padding:10px 13px;border-radius:9px 9px 0 0;color:#64748b;text-decoration:none;font-size:12px;font-weight:700;border-bottom:2px solid transparent}.ppa-ca-store-tabs a:hover{background:#f8fafc;color:#1e40af}.ppa-ca-store-tabs a.is-active{color:#2563eb;border-bottom-color:#2563eb;background:#eff6ff}.ppa-ca-store-workspace{margin-top:18px}.ppa-ca-store-empty{display:grid;justify-items:center;text-align:center;padding:36px 20px;border:1px dashed #cbd5e1;border-radius:12px;background:#f8fafc}.ppa-ca-store-empty>span{width:48px;height:48px;display:grid;place-items:center;border-radius:14px;background:#eff6ff;color:#2563eb;font-size:22px}.ppa-ca-store-empty strong{margin-top:12px;color:#0f172a;font-size:14px}.ppa-ca-store-empty p{max-width:430px;margin:5px 0 0;color:#64748b;font-size:12px;line-height:1.6}
 @media(max-width:680px){.ppa-ca-message-footer{align-items:flex-start;flex-direction:column}.ppa-ca-store-tabs a{padding:9px 10px;font-size:11px}.ppa-ca-recipient-count{align-items:flex-start}}
 
@@ -577,7 +592,7 @@ function ppa_ca_render_page() {
         echo ppa_ca_login_screen();
     } else {
         echo '<div class="ppa-ca-shell"><aside class="ppa-ca-sidebar"><div class="ppa-ca-brand"><div class="ppa-ca-brand-mark"><img src="https://cdn.phototourl.com/member/2026-10-26-00b8c0d9-38d9-4d60-a377-dfd8928013de.png" alt="Photon Physics Academy"></div><div><strong>PHOTON</strong><small>Admin Panel</small></div></div><nav class="ppa-ca-nav">';
-        foreach($tabs as $key=>$item) echo '<a class="'.($tab===$key?'is-active':'').'" href="'.esc_url(add_query_arg('ppa_tab',$key,home_url('/admin/'))).'"><i>'.esc_html($item[1]).'</i><span>'.esc_html($item[0]).'</span></a>';
+        foreach($tabs as $key=>$item) echo '<a class="'.($tab===$key?'is-active':'').'" href="'.esc_url(add_query_arg('ppa_tab',$key,home_url('/admin/'))).'"><i>'.ppa_ca_icon_svg($key).'</i><span>'.esc_html($item[0]).'</span></a>';
         echo '</nav><div class="ppa-ca-side-bottom"><a href="'.esc_url(home_url('/')).'">← Back to Website</a></div></aside>';
         echo '<div class="ppa-ca-main"><header class="ppa-ca-header"><button type="button" class="ppa-ca-mobile-toggle" aria-label="Open admin navigation" aria-expanded="false">☰</button><h1>'.esc_html($tabs[$tab][0]).'</h1><div class="ppa-ca-user"><div class="ppa-ca-avatar">'.esc_html('JS').'</div><span class="ppa-ca-user-label">'.esc_html('Jewel Sir').' · Administrator</span><form method="post">';
         wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
