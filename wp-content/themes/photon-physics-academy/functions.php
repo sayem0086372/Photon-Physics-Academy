@@ -6,7 +6,7 @@
  */
 if (!defined('ABSPATH')) { exit; }
 
-define('PPA_THEME_VERSION', '1.0.2');
+define('PPA_THEME_VERSION', '2.0.0');
 
 function ppa_theme_setup() {
     load_theme_textdomain('photon-physics-academy', get_template_directory() . '/languages');
