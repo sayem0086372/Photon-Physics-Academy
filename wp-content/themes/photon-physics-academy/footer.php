@@ -31,7 +31,7 @@
     </div>
     <div class="ppa-footer-bottom">
       <div>© <?php echo esc_html(wp_date('Y')); ?> Photon Physics Academy. সর্বস্বত্ব সংরক্ষিত (All rights reserved).
-        <p class="ppa-credit">Designed and developed by <a href="https://github.com/oathwi1d" target="_blank" rel="noopener noreferrer">OATHWILD</a> (Sayeem)</p>
+        <p class="ppa-credit">designed and developed by <a href="https://github.com/oathwi1d" target="_blank" rel="noopener noreferrer">oathwild</a> (sayeem)</p>
       </div>
       <a href="#top" class="ppa-button" style="padding:8px 13px">উপরে যান ↑</a>
     </div>
