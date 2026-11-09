@@ -307,3 +307,29 @@ button,input,textarea,select{font:inherit}
 .ppa-course-inline-content p{margin:0 0 9px}
 .ppa-course-inline-content ul{margin:5px 0 12px;padding-left:20px}
 .ppa-course-inline-content li{padding:2px 0}
+
+
+/* Homepage course cards — faithful to the supplied three-column reference. */
+.ppa-programs-section{background:#f3f6fa}
+.ppa-course-reference-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px;align-items:stretch}
+.ppa-course-reference-card{display:flex;flex-direction:column;min-width:0;overflow:hidden;border:1px solid #e4eaf1;border-radius:15px;background:#fff;box-shadow:0 5px 18px rgba(20,36,58,.055)}
+.ppa-course-reference-image{height:177px;overflow:hidden;background:#eaf0f7}
+.ppa-course-reference-image img{width:100%;height:100%;object-fit:cover;transition:transform .35s ease}
+.ppa-course-reference-card:hover .ppa-course-reference-image img{transform:scale(1.025)}
+.ppa-course-reference-body{flex:1;padding:26px 27px 22px}
+.ppa-course-reference-badge{display:table;margin:0 0 13px auto;padding:5px 13px;border:1px solid #c7e2f3;border-radius:999px;background:#e5f5ff;color:#214a76;font-family:"Plus Jakarta Sans","Hind Siliguri",sans-serif;font-size:12px;font-weight:600;line-height:1.5}
+.ppa-course-reference-body h3{margin:0 0 5px;color:#111c2d;font-size:26px;font-weight:800;line-height:1.45}
+.ppa-course-reference-subtitle{min-height:48px;margin:0 0 16px;color:#758392;font-size:15px;line-height:1.65}
+.ppa-course-reference-audience{margin:0 0 14px;padding:11px 12px;border:1px solid #edf0f3;border-radius:8px;background:#fff;color:#758392;font-size:13px;line-height:1.75;box-shadow:0 2px 4px rgba(15,23,42,.035)}
+.ppa-course-reference-audience strong{color:#182334;font-weight:700}
+.ppa-course-reference-features{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.ppa-course-reference-features li{position:relative;padding-left:18px;color:#465466;font-size:16px;line-height:1.75}
+.ppa-course-reference-features li:before{position:absolute;top:.08em;left:0;color:#2468d9;content:"•";font-size:23px;font-weight:800;line-height:1}
+.ppa-course-reference-footer{margin-top:auto;padding:17px 27px 22px;border-top:1px solid #edf0f3;background:#fbfcfe}
+.ppa-course-reference-footer p{display:flex;gap:9px;align-items:flex-start;margin:0 0 13px;color:#7a8796;font-size:13px;line-height:1.6}
+.ppa-course-reference-footer p span{color:#2c68b6}
+.ppa-course-reference-button{display:flex;min-height:47px;align-items:center;justify-content:center;gap:9px;padding:11px 14px;border-radius:10px;background:#1760ed;color:#fff;font-size:14px;font-weight:700;text-align:center;box-shadow:0 3px 7px rgba(23,96,237,.17)}
+.ppa-course-reference-button:hover{background:#124fc9;color:#fff}
+@media(max-width:900px){.ppa-course-reference-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}.ppa-course-reference-body{padding:22px}.ppa-course-reference-footer{padding:16px 22px 20px}}
+@media(max-width:620px){.ppa-course-reference-grid{grid-template-columns:1fr;max-width:480px;margin-inline:auto}.ppa-course-reference-image{height:205px}.ppa-course-reference-body{padding:22px 23px}.ppa-course-reference-body h3{font-size:23px}.ppa-course-reference-subtitle{min-height:0}.ppa-course-reference-footer{padding:16px 23px 20px}}
+@media(prefers-reduced-motion:reduce){.ppa-course-reference-image img{transition:none}}
