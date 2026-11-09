@@ -2,11 +2,55 @@
 /**
  * Plugin Name: Photon Physics Academy Core
  * Description: Persistent academy content types and core site features for Photon Physics Academy.
- * Version: 1.1.1
+ * Version: 1.2.0
  * Author: OATHWILD (Sayeem)
  * Text Domain: photon-physics-academy
  */
 if (!defined('ABSPATH')) { exit; }
+
+
+// Notice categories mirror the original site's interactive notice filters.
+function ppa_core_register_notice_taxonomy() {
+    register_taxonomy('ppa_notice_category', array('ppa_notice'), array(
+        'labels' => array('name'=>__('Notice Categories','photon-physics-academy'),'singular_name'=>__('Notice Category','photon-physics-academy')),
+        'public'=>false,'show_ui'=>true,'show_admin_column'=>true,'show_in_rest'=>true,'hierarchical'=>true,
+    ));
+}
+add_action('init','ppa_core_register_notice_taxonomy',11);
+
+// Store admission/contact enquiries in WordPress for the academy team.
+function ppa_core_register_inquiry_type() {
+    register_post_type('ppa_inquiry', array(
+        'labels'=>array('name'=>__('Admission Inquiries','photon-physics-academy'),'singular_name'=>__('Admission Inquiry','photon-physics-academy'),'all_items'=>__('All Inquiries','photon-physics-academy')),
+        'public'=>false,'show_ui'=>true,'show_in_menu'=>true,'show_in_rest'=>false,'supports'=>array('title','editor'),
+        'menu_icon'=>'dashicons-email-alt',
+    ));
+}
+add_action('init','ppa_core_register_inquiry_type',12);
+
+function ppa_core_handle_public_inquiry() {
+    $redirect = wp_get_referer() ? wp_get_referer() : home_url('/');
+    if (!isset($_POST['ppa_inquiry_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['ppa_inquiry_nonce'])),'ppa_submit_inquiry')) {
+        wp_safe_redirect(add_query_arg('ppa_inquiry','error',$redirect).'#contact'); exit;
+    }
+    if (!empty($_POST['website'])) { wp_safe_redirect(add_query_arg('ppa_inquiry','sent',$redirect).'#contact'); exit; }
+    $name = isset($_POST['inquiry_name']) ? sanitize_text_field(wp_unslash($_POST['inquiry_name'])) : '';
+    $phone = isset($_POST['inquiry_phone']) ? sanitize_text_field(wp_unslash($_POST['inquiry_phone'])) : '';
+    $course = isset($_POST['inquiry_course']) ? sanitize_text_field(wp_unslash($_POST['inquiry_course'])) : '';
+    $message = isset($_POST['inquiry_message']) ? sanitize_textarea_field(wp_unslash($_POST['inquiry_message'])) : '';
+    if (!$name || !$phone || strlen($phone) > 24) { wp_safe_redirect(add_query_arg('ppa_inquiry','error',$redirect).'#contact'); exit; }
+    $post_id = wp_insert_post(array(
+        'post_type'=>'ppa_inquiry','post_status'=>'private',
+        'post_title'=>sprintf('%s — %s', $name, $phone),
+        'post_content'=>"Phone: {$phone}\nCourse: {$course}\n\n{$message}",
+    ), true);
+    if (is_wp_error($post_id)) { wp_safe_redirect(add_query_arg('ppa_inquiry','error',$redirect).'#contact'); exit; }
+    $admin_email = get_option('admin_email');
+    wp_mail($admin_email, 'New Photon Physics Academy inquiry', "Name: {$name}\nPhone: {$phone}\nCourse: {$course}\nMessage: {$message}");
+    wp_safe_redirect(add_query_arg('ppa_inquiry','sent',$redirect).'#contact'); exit;
+}
+add_action('admin_post_nopriv_ppa_submit_inquiry','ppa_core_handle_public_inquiry');
+add_action('admin_post_ppa_submit_inquiry','ppa_core_handle_public_inquiry');
 
 /** Register academy notices and structured course pages independently of the active theme. */
 function ppa_core_register_content_types() {
@@ -95,9 +139,9 @@ add_action('init', 'ppa_core_seed_default_courses', 30);
 
 /** Refresh rewrite rules once after a plugin upgrade adds the course permalink type. */
 function ppa_core_upgrade_rewrites() {
-    if (get_option('ppa_core_version') !== '1.1.1') {
+    if (get_option('ppa_core_version') !== '1.2.0') {
         flush_rewrite_rules(false);
-        update_option('ppa_core_version', '1.1.1');
+        update_option('ppa_core_version', '1.2.0');
     }
 }
 add_action('init', 'ppa_core_upgrade_rewrites', 99);
