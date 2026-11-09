@@ -194,9 +194,16 @@ function ppa_ca_table($posts,$type,$tab) {
                 $value=($due<=0 && $payable>0 && $paid>0)?'Paid':(($paid>0)?'Partial':'Due');
             }
             if(in_array($key,array('amount','payable_amount','paid_amount','due_amount'),true) && $value!=='') $value='৳'.number_format_i18n((float)$value);
-            echo '<td>'.esc_html($value!=='' ? $value : '—').'</td>';
+            if($key==='payment_status') {
+                $status_class=$value==='Paid'?'is-paid':($value==='Partial'?'is-partial':'is-due');
+                echo '<td><span class="ppa-ca-payment-status '.esc_attr($status_class).'">'.esc_html($value).'</span></td>';
+            } else {
+                echo '<td>'.esc_html($value!=='' ? $value : '—').'</td>';
+            }
         }
-        echo '<td>'.esc_html(wp_trim_words(wp_strip_all_tags($p->post_content),16)).'</td><td>'.esc_html(get_the_date('d M Y',$p)).'</td><td><form method="post" onsubmit="return confirm(\'Delete this record?\')">';
+        echo '<td>'.esc_html(wp_trim_words(wp_strip_all_tags($p->post_content),16)).'</td><td>'.esc_html(get_the_date('d M Y',$p)).'</td><td>';
+        if($type==='ppa_fee_payment') echo '<button type="button" class="ppa-ca-message-button" disabled title="SMS actions will be enabled after gateway integration">Send Message</button> ';
+        echo '<form method="post" onsubmit="return confirm(\'Delete this record?\')" style="display:inline-block">';
         wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
         echo '<input type="hidden" name="ppa_ca_action" value="delete_record"><input type="hidden" name="record_id" value="'.(int)$p->ID.'"><input type="hidden" name="return_tab" value="'.esc_attr($tab).'"><button class="ppa-ca-delete" type="submit">Delete</button></form></td></tr>';
     }
@@ -207,7 +214,7 @@ function ppa_ca_filter_records($posts,$query) {
     if ($query==='') return $posts;
     return array_values(array_filter($posts,function($post) use ($query) {
         $haystack=strtolower($post->post_title.' '.wp_strip_all_tags($post->post_content));
-        foreach(array('student_id','guardian_phone','phone','billing_month','billing_year','amount','payable_amount','paid_amount','due_amount','exam_name','chapter','marks','total_marks','highest_marks','grade','class_level','batch_name') as $key) $haystack.=' '.strtolower((string)get_post_meta($post->ID,'_ppa_'.$key,true));
+        foreach(array('student_id','guardian_name','guardian_phone','phone','whatsapp_phone','institution','bangla_name','billing_month','billing_year','amount','payable_amount','paid_amount','due_amount','exam_name','chapter','marks','total_marks','highest_marks','grade','class_level','batch_name') as $key) $haystack.=' '.strtolower((string)get_post_meta($post->ID,'_ppa_'.$key,true));
         return strpos($haystack,$query)!==false;
     }));
 }
@@ -573,6 +580,7 @@ document.addEventListener('DOMContentLoaded',function(){
 <?php }
 
 function ppa_ca_visual_parity_styles() { ?><style>
+.ppa-ca-payment-status{display:inline-block;padding:5px 8px;border-radius:6px;font-size:10px;font-weight:750;white-space:nowrap}.ppa-ca-payment-status.is-paid{background:#ecfdf5;color:#047857}.ppa-ca-payment-status.is-partial{background:#fffbeb;color:#b45309}.ppa-ca-payment-status.is-due{background:#fff7ed;color:#c2410c}.ppa-ca-message-button{padding:6px 8px;border:1px solid #dbeafe;border-radius:7px;background:#eff6ff;color:#1d4ed8;font-size:10px;font-weight:700;opacity:.55;cursor:not-allowed}
 .ppa-ca-program-enrollment{margin-top:16px;padding-top:13px;border-top:1px solid #f1f5f9}.ppa-ca-program-enrollment>div:first-child{display:flex;align-items:center;justify-content:space-between;gap:8px}.ppa-ca-program-enrollment strong{color:#334155;font-size:11px}.ppa-ca-program-enrollment>div:first-child span{color:#94a3b8;font-size:10px}.ppa-ca-program-progress{height:7px;margin:9px 0 6px;border-radius:99px;background:#f1f5f9;overflow:hidden}.ppa-ca-program-progress span{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#2563eb,#38bdf8)}.ppa-ca-program-enrollment small{color:#059669;font-size:10px;font-weight:700}.ppa-ca-program-enrollment small.is-full{color:#be123c}
 .ppa-ca-notice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.ppa-ca-notice-card{display:flex;flex-direction:column;min-width:0;padding:18px;border:1px solid #e2e8f0;border-radius:12px;background:#fff}.ppa-ca-notice-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:13px}.ppa-ca-notice-category{padding:5px 8px;border:1px solid #dbeafe;border-radius:6px;background:#eff6ff;color:#1d4ed8;font-size:10px;font-weight:750}.ppa-ca-notice-card time{color:#94a3b8;font-size:10px}.ppa-ca-notice-card h3{margin:0 0 7px;color:#0f172a;font-size:14px;font-weight:800;line-height:1.5}.ppa-ca-notice-card>p{flex:1;margin:0 0 16px;color:#64748b;font-size:11px;line-height:1.7}.ppa-ca-notice-card-actions{display:flex;align-items:center;gap:8px;padding-top:12px;border-top:1px solid #f1f5f9}.ppa-ca-notice-card-actions form{margin:0}.ppa-ca-notice-status{margin-right:auto;padding:5px 8px;border-radius:6px;font-size:10px;font-weight:750}.ppa-ca-notice-status.is-published{background:#ecfdf5;color:#047857}.ppa-ca-notice-status.is-draft{background:#f1f5f9;color:#64748b}.ppa-ca-notice-toggle{padding:7px 10px;border:1px solid #bfdbfe;border-radius:7px;background:#eff6ff;color:#1d4ed8;font-size:10px;font-weight:750;cursor:pointer}.ppa-ca-notice-toggle:hover{background:#dbeafe}
 @media(max-width:680px){.ppa-ca-notice-grid{grid-template-columns:1fr}}
