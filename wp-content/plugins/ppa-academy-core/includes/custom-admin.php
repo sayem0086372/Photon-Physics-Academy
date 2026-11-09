@@ -145,6 +145,116 @@ body.ppa-ca-body{background:#f8fafc!important;color:#1e293b}body.ppa-ca-body #wp
 @media(max-width:680px){.ppa-ca-shell{display:block}.ppa-ca-sidebar{width:100%;height:auto;position:relative}.ppa-ca-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));padding:8px}.ppa-ca-nav a{font-size:11px;padding:9px}.ppa-ca-side-bottom{display:none}.ppa-ca-header{height:58px;padding:0 14px}.ppa-ca-header h1{font-size:15px}.ppa-ca-user .ppa-ca-user-label{display:none}.ppa-ca-content{padding:16px}.ppa-ca-grid{gap:10px}.ppa-ca-card{padding:14px}.ppa-ca-card strong{font-size:24px}.ppa-ca-form-grid{grid-template-columns:1fr}.ppa-ca-form label.is-wide{grid-column:auto}.ppa-ca-shortcuts{grid-template-columns:1fr}}
 </style>
 <?php }
+
+/**
+ * UI refinement layer. Kept separate from the data model so the interface
+ * can be reviewed before the WordPress data schema is finalized.
+ */
+function ppa_ca_enhanced_styles() { ?>
+<style>
+.ppa-ca-shell{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#f1f5f9}
+.ppa-ca-sidebar{box-shadow:5px 0 24px rgba(15,23,42,.08);z-index:30}
+.ppa-ca-brand{height:72px;padding:0 18px}
+.ppa-ca-brand-mark{width:40px;height:40px;background:#fff;border-radius:10px;padding:2px}
+.ppa-ca-brand-mark img{mix-blend-mode:multiply}
+.ppa-ca-brand strong{font-size:14px;letter-spacing:.8px}
+.ppa-ca-nav{padding:18px 12px}
+.ppa-ca-nav a{min-height:42px;margin:4px 0;padding:11px 13px;border:1px solid transparent;transition:background .18s,border-color .18s,transform .18s}
+.ppa-ca-nav a:hover{transform:translateX(2px);background:#1e293b}
+.ppa-ca-nav a.is-active{background:linear-gradient(110deg,#2563eb,#1d4ed8);box-shadow:0 5px 14px rgba(37,99,235,.25);border-color:rgba(147,197,253,.2)}
+.ppa-ca-nav a i{font-size:16px;opacity:.95}
+.ppa-ca-side-bottom{padding:14px}
+.ppa-ca-side-bottom a{padding:11px;border:1px solid #334155;transition:.18s}
+.ppa-ca-side-bottom a:hover{background:#334155}
+.ppa-ca-header{height:72px;padding:0 30px;box-shadow:0 2px 8px rgba(15,23,42,.025)}
+.ppa-ca-header h1{font-size:18px;font-weight:750;letter-spacing:-.02em}
+.ppa-ca-user{gap:12px}
+.ppa-ca-avatar{width:36px;height:36px;border-radius:10px;font-size:12px}
+.ppa-ca-content{max-width:1360px;padding:30px 32px 48px}
+.ppa-ca-welcome{padding:2px 0 3px}
+.ppa-ca-welcome h2{font-size:23px;font-weight:800;letter-spacing:-.035em;color:#0f172a}
+.ppa-ca-welcome p{font-size:13px}
+.ppa-ca-grid{gap:18px;margin:22px 0 28px}
+.ppa-ca-card,.ppa-ca-panel,.ppa-ca-form{border-radius:14px;border-color:#e2e8f0;box-shadow:0 2px 8px rgba(15,23,42,.025);transition:box-shadow .18s,border-color .18s}
+.ppa-ca-card{padding:21px 22px;position:relative;overflow:hidden}
+.ppa-ca-card:after{content:"";position:absolute;right:-24px;top:-28px;width:90px;height:90px;border-radius:50%;background:#eff6ff;opacity:.75}
+.ppa-ca-card span{position:relative;z-index:1;font-size:12px;letter-spacing:.01em}
+.ppa-ca-card strong{position:relative;z-index:1;font-size:32px;letter-spacing:-.04em;color:#0f2b50}
+.ppa-ca-panel{padding:22px;margin:20px 0}
+.ppa-ca-panel h2{font-size:15px;font-weight:750;letter-spacing:-.01em}
+.ppa-ca-table{font-size:12px}
+.ppa-ca-table th{background:#f8fafc;color:#64748b;font-size:10px;letter-spacing:.07em;padding:13px 14px}
+.ppa-ca-table td{padding:14px;color:#475569}
+.ppa-ca-table tbody tr:hover{background:#f8fbff}
+.ppa-ca-table td strong{color:#0f172a;font-weight:700}
+.ppa-ca-empty{background:#f8fafc;text-align:center;padding:30px}
+.ppa-ca-form{padding:23px}
+.ppa-ca-form h3{font-size:16px;font-weight:750}
+.ppa-ca-form label{font-size:11px;letter-spacing:.01em;gap:7px}
+.ppa-ca-form input,.ppa-ca-form textarea,.ppa-ca-form select{box-sizing:border-box;min-height:40px;border-color:#cbd5e1;border-radius:9px;padding:10px 12px;font-size:13px;transition:border-color .15s,box-shadow .15s}
+.ppa-ca-form input:focus,.ppa-ca-form textarea:focus,.ppa-ca-form select:focus,.ppa-ca-login-card input:focus{outline:0;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.12)}
+.ppa-ca-primary{border-radius:9px;padding:11px 17px;box-shadow:0 3px 8px rgba(37,99,235,.15);transition:background .15s,transform .15s,box-shadow .15s}
+.ppa-ca-primary:hover{background:#1d4ed8;transform:translateY(-1px);box-shadow:0 5px 12px rgba(37,99,235,.2)}
+.ppa-ca-shortcuts{gap:13px}
+.ppa-ca-shortcuts a{border-radius:12px;padding:17px;transition:.18s}
+.ppa-ca-shortcuts a:hover{border-color:#93c5fd;background:#f8fbff;transform:translateY(-2px);box-shadow:0 7px 18px rgba(15,23,42,.05)}
+.ppa-ca-alert{border:1px solid #bfdbfe}
+.ppa-ca-login{background:radial-gradient(ellipse at top,#eff6ff 0%,#f8fafc 56%)}
+.ppa-ca-login-card{border-radius:20px;padding:34px;box-shadow:0 22px 65px rgba(15,23,42,.10)}
+.ppa-ca-login-card .ppa-ca-brand-mark{width:52px;height:52px;padding:3px;border:1px solid #dbeafe}
+.ppa-ca-login-card .ppa-ca-brand-mark img{width:100%;height:100%;object-fit:contain}
+.ppa-ca-login-card h1{font-size:27px;letter-spacing:-.04em}
+.ppa-ca-login-card input:not([type=checkbox]){box-sizing:border-box;min-height:44px;border-radius:9px}
+.ppa-ca-login-card .ppa-ca-primary{min-height:44px}
+.ppa-ca-mobile-toggle{display:none}
+@media(max-width:900px){
+ .ppa-ca-sidebar{width:236px;flex-basis:236px}
+ .ppa-ca-content{padding:24px}
+ .ppa-ca-header{padding:0 22px}
+}
+@media(max-width:680px){
+ .ppa-ca-shell{display:flex;min-height:100vh;position:relative}
+ .ppa-ca-sidebar{position:fixed;left:0;top:0;bottom:0;height:100dvh;width:min(290px,84vw);flex-basis:auto;transform:translateX(-105%);transition:transform .22s ease;box-shadow:12px 0 40px rgba(15,23,42,.2)}
+ .ppa-ca-shell.is-nav-open .ppa-ca-sidebar{transform:translateX(0)}
+ .ppa-ca-shell.is-nav-open:after{content:"";position:fixed;inset:0;background:rgba(15,23,42,.48);z-index:25}
+ .ppa-ca-nav{display:block;padding:14px 12px;overflow:auto}
+ .ppa-ca-nav a{font-size:13px;padding:12px 13px}
+ .ppa-ca-side-bottom{display:block}
+ .ppa-ca-main{width:100%;min-height:100vh}
+ .ppa-ca-header{height:62px;padding:0 14px;gap:10px;z-index:20}
+ .ppa-ca-header h1{font-size:15px;flex:1}
+ .ppa-ca-mobile-toggle{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border:1px solid #e2e8f0;border-radius:9px;background:#fff;color:#334155;font-size:19px;cursor:pointer}
+ .ppa-ca-user{gap:7px}
+ .ppa-ca-avatar{width:32px;height:32px}
+ .ppa-ca-logout{padding:7px 9px;font-size:11px}
+ .ppa-ca-content{padding:18px 14px 32px}
+ .ppa-ca-welcome h2{font-size:20px}
+ .ppa-ca-grid{gap:10px;margin:16px 0 20px}
+ .ppa-ca-card{padding:15px}
+ .ppa-ca-card strong{font-size:25px}
+ .ppa-ca-panel{padding:16px;margin:14px 0}
+ .ppa-ca-form{padding:16px;margin:14px 0}
+ .ppa-ca-form-grid{grid-template-columns:1fr;gap:12px}
+ .ppa-ca-form label.is-wide{grid-column:auto}
+ .ppa-ca-shortcuts{grid-template-columns:1fr}
+ .ppa-ca-table{min-width:640px}
+ .ppa-ca-login-card{padding:25px}
+}
+@media(prefers-reduced-motion:reduce){.ppa-ca-sidebar,.ppa-ca-nav a,.ppa-ca-shortcuts a,.ppa-ca-primary{transition:none}}
+</style>
+<?php }
+function ppa_ca_admin_script() { ?>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+ const shell=document.querySelector('.ppa-ca-shell');
+ const toggle=document.querySelector('.ppa-ca-mobile-toggle');
+ if(toggle&&shell){toggle.addEventListener('click',function(){shell.classList.toggle('is-nav-open');toggle.setAttribute('aria-expanded',shell.classList.contains('is-nav-open')?'true':'false');});}
+ document.querySelectorAll('.ppa-ca-nav a').forEach(function(link){link.addEventListener('click',function(){if(shell)shell.classList.remove('is-nav-open');});});
+ document.addEventListener('keydown',function(e){if(e.key==='Escape'&&shell)shell.classList.remove('is-nav-open');});
+});
+</script>
+<?php }
+
 function ppa_ca_render_page() {
     status_header(200); nocache_headers();
     $user=wp_get_current_user();
@@ -154,13 +264,14 @@ function ppa_ca_render_page() {
     wp_head();
     echo '</head><body class="ppa-ca-body"><div class="ppa-ca-app">';
     ppa_ca_styles();
+    ppa_ca_enhanced_styles();
     if(!is_user_logged_in() || !current_user_can('manage_options')) {
         echo ppa_ca_login_screen();
     } else {
         echo '<div class="ppa-ca-shell"><aside class="ppa-ca-sidebar"><div class="ppa-ca-brand"><div class="ppa-ca-brand-mark"><img src="https://cdn.phototourl.com/member/2026-10-26-00b8c0d9-38d9-4d60-a377-dfd8928013de.png" alt="Photon Physics Academy"></div><div><strong>PHOTON</strong><small>Admin Panel</small></div></div><nav class="ppa-ca-nav">';
         foreach($tabs as $key=>$item) echo '<a class="'.($tab===$key?'is-active':'').'" href="'.esc_url(add_query_arg('ppa_tab',$key,home_url('/admin/'))).'"><i>'.esc_html($item[1]).'</i><span>'.esc_html($item[0]).'</span></a>';
         echo '</nav><div class="ppa-ca-side-bottom"><a href="'.esc_url(home_url('/')).'">← Back to Website</a></div></aside>';
-        echo '<div class="ppa-ca-main"><header class="ppa-ca-header"><h1>'.esc_html($tabs[$tab][0]).'</h1><div class="ppa-ca-user"><div class="ppa-ca-avatar">'.esc_html('JS').'</div><span class="ppa-ca-user-label">'.esc_html('Jewel Sir').' · Administrator</span><form method="post">';
+        echo '<div class="ppa-ca-main"><header class="ppa-ca-header"><button type="button" class="ppa-ca-mobile-toggle" aria-label="Open admin navigation" aria-expanded="false">☰</button><h1>'.esc_html($tabs[$tab][0]).'</h1><div class="ppa-ca-user"><div class="ppa-ca-avatar">'.esc_html('JS').'</div><span class="ppa-ca-user-label">'.esc_html('Jewel Sir').' · Administrator</span><form method="post">';
         wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
         echo '<input type="hidden" name="ppa_ca_action" value="logout"><button class="ppa-ca-logout" type="submit">Log out</button></form></div></header><main class="ppa-ca-content">';
         if(isset($_GET['ppa_notice']) && $_GET['ppa_notice']!=='login_error') echo '<div class="ppa-ca-alert">'.esc_html(sanitize_text_field(wp_unslash($_GET['ppa_notice']))==='saved'?'Settings saved.':'Action completed.').'</div>';
@@ -208,6 +319,7 @@ function ppa_ca_render_page() {
         echo '</main></div></div>';
     }
     echo '</div>';
+    ppa_ca_admin_script();
     wp_footer();
     echo '</body></html>';
 }
