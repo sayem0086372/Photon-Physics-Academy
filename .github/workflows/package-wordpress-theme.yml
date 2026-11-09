@@ -16,8 +16,10 @@ jobs:
         uses: actions/checkout@v4
       - name: Package theme and companion plugin
         run: |
-          zip -r photon-physics-academy-theme.zip wp-content/themes/photon-physics-academy
-          zip -r ppa-academy-core-plugin.zip wp-content/plugins/ppa-academy-core
+          cd wp-content/themes
+          zip -r "$GITHUB_WORKSPACE/photon-physics-academy-theme.zip" photon-physics-academy
+          cd "$GITHUB_WORKSPACE/wp-content/plugins"
+          zip -r "$GITHUB_WORKSPACE/ppa-academy-core-plugin.zip" ppa-academy-core
       - name: Upload installable ZIPs
         uses: actions/upload-artifact@v4
         with:
