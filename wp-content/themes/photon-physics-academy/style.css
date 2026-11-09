@@ -164,3 +164,131 @@ button,input,textarea,select{font:inherit}
  .ppa-footer-bottom{align-items:flex-start;flex-direction:column}.ppa-footer-bottom .ppa-button{align-self:flex-end}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+
+/* 1.1 visual refinement — editorial spacing, stronger hierarchy and course discovery. */
+.ppa-header{box-shadow:0 5px 22px rgba(12,35,62,.055)}
+.ppa-header-inner{min-height:82px}
+.ppa-nav ul,.ppa-nav-list{gap:clamp(12px,1.55vw,22px)}
+.ppa-nav a{font-size:13px;font-weight:700;letter-spacing:-.01em}
+.ppa-nav li:last-child a{display:inline-flex;align-items:center;padding:10px 16px;background:var(--ppa-navy);color:#fff}
+.ppa-nav li:last-child a:hover{background:var(--ppa-accent)}
+.ppa-store-box{border-radius:12px;box-shadow:0 8px 24px rgba(16,43,78,.045)}
+.ppa-store-button,.ppa-button{border-radius:7px;box-shadow:0 3px 8px rgba(16,43,78,.08)}
+.ppa-hero{position:relative;overflow:hidden;padding:76px 0 82px;background:radial-gradient(ellipse at 88% 18%,rgba(55,133,195,.12),transparent 32%),linear-gradient(112deg,#f2f6fa 0%,#fff 68%)}
+.ppa-hero:before{content:"";position:absolute;inset:0 auto 0 0;width:5px;background:linear-gradient(180deg,#2c79b8,#173c68)}
+.ppa-hero-grid{position:relative;gap:clamp(34px,5vw,68px)}
+.ppa-kicker{font-weight:600;letter-spacing:.01em}
+.ppa-hero h1{font-size:clamp(38px,4.6vw,62px);letter-spacing:-.055em}
+.ppa-hero h2{letter-spacing:-.025em}
+.ppa-hero p{font-size:16px;line-height:1.95}
+.ppa-hero-photo{padding:0;border:0;border-radius:15px;overflow:hidden;box-shadow:0 24px 60px rgba(16,43,78,.17)}
+.ppa-hero-photo img{height:430px}
+.ppa-hero-photo figcaption{padding:12px 16px;background:#fff}
+.ppa-section{padding:84px 0}
+.ppa-section-heading-row{display:flex;align-items:flex-end;justify-content:space-between;gap:32px;margin-bottom:34px}
+.ppa-section-heading-row .ppa-lead{margin-bottom:0}
+.ppa-program-note{max-width:310px;flex:0 0 290px;padding:17px 19px;border-left:3px solid #4d8fc2;background:#edf4fa;border-radius:0 9px 9px 0}
+.ppa-program-note strong{display:block;margin-bottom:4px;color:var(--ppa-navy);font-size:15px}
+.ppa-program-note p{margin:0;color:#607185;font-size:13px;line-height:1.7}
+.ppa-program-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
+.ppa-program-card{display:flex;flex-direction:column;min-width:0;overflow:hidden;background:#fff;border:1px solid #dce5ee;border-radius:13px;box-shadow:0 8px 24px rgba(15,43,72,.055);transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease}
+@media(hover:hover) and (prefers-reduced-motion:no-preference){.ppa-program-card:hover{transform:translateY(-5px);border-color:#b8cfe2;box-shadow:0 18px 38px rgba(15,43,72,.12)}}
+.ppa-program-image{position:relative;display:block;overflow:hidden;background:#e9f0f6}
+.ppa-program-image img{width:100%;height:205px;object-fit:cover;transition:transform .45s ease}
+@media(hover:hover){.ppa-program-card:hover .ppa-program-image img{transform:scale(1.035)}}
+.ppa-program-level{position:absolute;left:16px;bottom:14px;padding:6px 10px;border-radius:4px;background:rgba(12,37,66,.88);color:#fff;font:700 9px/1.2 "Plus Jakarta Sans",sans-serif;letter-spacing:.12em}
+.ppa-program-image-fallback{display:flex;align-items:center;justify-content:center;height:205px;color:#456887;font:800 24px/1.4 "Plus Jakarta Sans",sans-serif;letter-spacing:.08em;text-align:center}
+.ppa-program-body{display:flex;flex:1;flex-direction:column;padding:23px 23px 20px}
+.ppa-program-body h3{margin:0 0 7px;color:var(--ppa-navy);font-size:23px;font-weight:800;line-height:1.35}
+.ppa-program-body h3 a{color:inherit}
+.ppa-program-body h3 a:hover{color:var(--ppa-accent)}
+.ppa-program-subtitle{min-height:48px;margin:0 0 16px;color:#68788a;font-size:14px;line-height:1.7}
+.ppa-program-audience{padding:11px 13px;margin-bottom:15px;background:#f3f7fa;border:1px solid #e3ebf2;border-radius:7px}
+.ppa-program-audience span{display:block;margin-bottom:3px;color:#788798;font-size:11px}
+.ppa-program-audience strong{color:#2d455e;font-size:13px}
+.ppa-program-highlights{display:grid;gap:9px;list-style:none;margin:0 0 20px;padding:0}
+.ppa-program-highlights li{position:relative;padding-left:18px;color:#536477;font-size:13px;line-height:1.7}
+.ppa-program-highlights li:before{content:"";position:absolute;left:0;top:.72em;width:6px;height:6px;border-radius:50%;background:#3979ad}
+.ppa-program-link{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto;padding-top:15px;border-top:1px solid #e8edf2;color:var(--ppa-blue);font-size:13px;font-weight:800}
+.ppa-program-link span{font-size:20px;transition:transform .2s}
+.ppa-program-link:hover span{transform:translateX(4px)}
+.ppa-results-section{padding:54px 0}
+.ppa-results-panel,.ppa-resources-panel{display:flex;align-items:center;justify-content:space-between;gap:28px;padding:34px 38px;border:1px solid #dbe5ee;border-radius:13px;background:linear-gradient(115deg,#f4f8fb,#fff)}
+.ppa-results-panel h2,.ppa-resources-panel h2{margin-bottom:7px;font-size:clamp(24px,2.6vw,32px)}
+.ppa-results-panel p:not(.ppa-eyebrow),.ppa-resources-panel p:not(.ppa-eyebrow){max-width:650px;margin:0;color:var(--ppa-muted);font-size:14px}
+.ppa-resources-panel{background:#fff}
+.ppa-course-hero{padding:52px 0 58px;background:linear-gradient(115deg,#f1f6fa,#fff 72%);border-bottom:1px solid var(--ppa-border)}
+.ppa-back-link{display:inline-flex;margin-bottom:26px;color:#526b82;font-size:13px;font-weight:700}
+.ppa-course-hero-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(300px,.95fr);align-items:center;gap:54px}
+.ppa-course-intro h1{margin:0 0 12px;color:var(--ppa-navy);font-size:clamp(34px,4vw,52px);font-weight:800;line-height:1.25}
+.ppa-course-subtitle{margin:0 0 22px;color:#607287;font-size:18px}
+.ppa-course-audience{display:grid;gap:3px;max-width:470px;padding:14px 17px;border-left:3px solid var(--ppa-accent);background:#eaf2f8}
+.ppa-course-audience span{color:#718296;font-size:11px}
+.ppa-course-audience strong{color:#203d5c;font-size:15px}
+.ppa-course-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+.ppa-course-image{margin:0;overflow:hidden;border-radius:14px;box-shadow:0 22px 55px rgba(16,43,78,.16)}
+.ppa-course-image img{width:100%;height:350px;object-fit:cover}
+.ppa-course-content-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:54px;align-items:start}
+.ppa-course-content .entry-content{font-size:16px;line-height:2}
+.ppa-course-content .entry-content h2{margin:32px 0 12px;color:var(--ppa-navy);font-size:25px}
+.ppa-course-content .entry-content ul{padding-left:22px}
+.ppa-course-content .entry-content li{padding:4px 0}
+.ppa-course-sidebar{position:sticky;top:110px;padding:25px;border:1px solid var(--ppa-border);border-radius:12px;background:#f7f9fb}
+.ppa-course-sidebar h2{margin:0 0 16px;color:var(--ppa-navy);font-size:21px}
+.ppa-course-sidebar ul{display:grid;gap:12px;margin:0;padding:0;list-style:none}
+.ppa-course-sidebar li{position:relative;padding-left:20px;color:#526477;font-size:13px;line-height:1.7}
+.ppa-course-sidebar li:before{content:"✓";position:absolute;left:0;color:#2674ad;font-weight:800}
+.ppa-sidebar-contact{display:grid;gap:6px;margin-top:24px;padding-top:19px;border-top:1px solid var(--ppa-border)}
+.ppa-sidebar-contact span{color:#7a8998;font-size:9px;font-weight:800;letter-spacing:.12em}
+.ppa-sidebar-contact strong{color:var(--ppa-navy);font-size:19px}
+.ppa-sidebar-contact a{font-size:13px;font-weight:800}
+.ppa-course-cta{padding:38px 0;background:var(--ppa-navy);color:#fff}
+.ppa-course-cta>.ppa-container{display:flex;align-items:center;justify-content:space-between;gap:24px}
+.ppa-course-cta .ppa-eyebrow{color:#9dc7e9}
+.ppa-course-cta h2{margin:0 0 5px;color:#fff;font-size:27px}
+.ppa-course-cta p:not(.ppa-eyebrow){margin:0;color:#d1deeb;font-size:14px}
+.ppa-button-light{box-shadow:none}
+.ppa-notice-card{border-radius:10px;box-shadow:0 8px 24px rgba(15,43,72,.045)}
+.ppa-card{border-radius:12px;box-shadow:0 8px 24px rgba(15,43,72,.05);transition:transform .2s ease,box-shadow .2s ease}
+@media(hover:hover) and (prefers-reduced-motion:no-preference){.ppa-card:hover{transform:translateY(-3px);box-shadow:0 15px 30px rgba(15,43,72,.1)}}
+.ppa-contact-card{border-radius:11px}
+.ppa-footer{background:linear-gradient(145deg,#0b2038,#102d4d)}
+@media(max-width:900px){
+ .ppa-section-heading-row{align-items:flex-start;flex-direction:column}
+ .ppa-program-note{max-width:100%;flex-basis:auto}
+ .ppa-program-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .ppa-course-hero-grid{gap:30px}
+ .ppa-course-content-grid{grid-template-columns:minmax(0,1fr) 280px;gap:30px}
+}
+@media(max-width:700px){
+ .ppa-section{padding:62px 0}
+ .ppa-hero{padding:52px 0 58px}
+ .ppa-hero-photo img{height:310px}
+ .ppa-program-grid{grid-template-columns:1fr;max-width:520px;margin-inline:auto}
+ .ppa-program-image img{height:220px}
+ .ppa-program-subtitle{min-height:0}
+ .ppa-results-panel,.ppa-resources-panel{align-items:flex-start;flex-direction:column;padding:25px}
+ .ppa-course-hero{padding:35px 0 42px}
+ .ppa-course-hero-grid,.ppa-course-content-grid{grid-template-columns:1fr}
+ .ppa-course-image{grid-row:1}
+ .ppa-course-image img{height:250px}
+ .ppa-course-sidebar{position:static}
+ .ppa-course-cta>.ppa-container{align-items:flex-start;flex-direction:column}
+}
+@media(max-width:560px){
+ .ppa-hero h1{font-size:35px}
+ .ppa-hero-photo img{height:245px}
+ .ppa-section-heading-row{gap:15px}
+ .ppa-program-body{padding:20px}
+ .ppa-program-body h3{font-size:21px}
+ .ppa-course-intro h1{font-size:32px}
+ .ppa-course-subtitle{font-size:16px}
+ .ppa-course-actions{display:grid;grid-template-columns:1fr}
+ .ppa-course-actions a{width:100%}
+ .ppa-course-content .entry-content h2{font-size:22px}
+ .ppa-course-cta h2{font-size:23px}
+}
+@media(prefers-reduced-motion:reduce){
+ .ppa-program-card,.ppa-program-image img,.ppa-card{transition:none!important}
+}
