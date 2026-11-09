@@ -333,3 +333,50 @@ button,input,textarea,select{font:inherit}
 @media(max-width:900px){.ppa-course-reference-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}.ppa-course-reference-body{padding:22px}.ppa-course-reference-footer{padding:16px 22px 20px}}
 @media(max-width:620px){.ppa-course-reference-grid{grid-template-columns:1fr;max-width:480px;margin-inline:auto}.ppa-course-reference-image{height:205px}.ppa-course-reference-body{padding:22px 23px}.ppa-course-reference-body h3{font-size:23px}.ppa-course-reference-subtitle{min-height:0}.ppa-course-reference-footer{padding:16px 23px 20px}}
 @media(prefers-reduced-motion:reduce){.ppa-course-reference-image img{transition:none}}
+
+
+/* Version 2 restoration: interactive notices, gallery, inquiry and bookstore. */
+.ppa-notice-filters{display:flex;gap:9px;overflow-x:auto;padding:3px 0 12px;margin:0 0 18px;scrollbar-width:thin}
+.ppa-notice-filters button{flex:0 0 auto;border:1px solid var(--ppa-border);border-radius:999px;background:#fff;color:#33465d;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer}
+.ppa-notice-filters button.is-active,.ppa-notice-filters button:hover{background:var(--ppa-navy);border-color:var(--ppa-navy);color:#fff}
+.ppa-notice-card[hidden],.ppa-notice-empty[hidden]{display:none!important}
+.ppa-notice-open{margin-top:16px;cursor:pointer}
+.ppa-modal{width:min(720px,calc(100% - 28px));max-height:min(82vh,760px);padding:0;border:0;border-radius:18px;box-shadow:0 24px 90px rgba(4,18,36,.3)}
+.ppa-modal::backdrop{background:rgba(8,24,44,.72);backdrop-filter:blur(5px)}
+.ppa-modal-inner{position:relative;padding:34px}
+.ppa-modal-close{position:absolute;right:14px;top:12px;width:38px;height:38px;border:0;border-radius:50%;background:#edf2f7;color:#1e293b;font-size:26px;cursor:pointer}
+.ppa-modal-inner h2{padding-right:38px}
+.ppa-modal-inner time{display:block;color:var(--ppa-muted);font-size:13px;margin:0 0 20px}
+#ppa-notice-modal-content{white-space:pre-line;line-height:1.9;color:#334155}
+.ppa-gallery-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:28px}
+.ppa-gallery-item{position:relative;overflow:hidden;border:1px solid var(--ppa-border);border-radius:14px;background:#eef3f8;padding:0;cursor:zoom-in;aspect-ratio:5/4}
+.ppa-gallery-item img{width:100%;height:100%;object-fit:cover;transition:transform .35s ease}
+.ppa-gallery-item:hover img{transform:scale(1.06)}
+.ppa-gallery-item span{position:absolute;right:10px;bottom:10px;width:34px;height:34px;display:grid;place-items:center;border-radius:50%;background:#fff;color:var(--ppa-navy);font-size:22px;box-shadow:0 3px 12px #0002}
+.ppa-lightbox{width:min(1000px,calc(100% - 24px));background:#0b1728;color:#fff;overflow:visible}
+.ppa-lightbox-inner{position:relative;display:grid;grid-template-columns:48px minmax(0,1fr) 48px;align-items:center;gap:10px;padding:56px 18px 18px}
+.ppa-lightbox-inner>img{max-height:72vh;width:100%;object-fit:contain}
+.ppa-lightbox-inner p{grid-column:1/-1;text-align:center;margin:4px 0 0;color:#dbeafe;font-size:13px}
+.ppa-lightbox .ppa-modal-close{z-index:2}
+.ppa-lightbox-prev,.ppa-lightbox-next{width:42px;height:48px;border:0;border-radius:10px;background:#ffffff1c;color:#fff;font-size:34px;cursor:pointer}
+.ppa-inquiry-form{display:grid;gap:13px;margin-top:14px}
+.ppa-inquiry-form label{display:grid;gap:6px;font-weight:700;font-size:13px}
+.ppa-inquiry-form input,.ppa-inquiry-form textarea,.ppa-inquiry-form select{width:100%;min-height:44px;border:1px solid var(--ppa-border);border-radius:9px;padding:10px 12px;background:#fff;color:var(--ppa-ink)}
+.ppa-inquiry-form textarea{resize:vertical}
+.ppa-honeypot{position:absolute!important;left:-10000px!important;width:1px;height:1px;overflow:hidden}
+.ppa-form-success,.ppa-form-error{padding:12px 14px;border-radius:10px;font-weight:700}
+.ppa-form-success{background:#ecfdf5;color:#047857}.ppa-form-error{background:#fff1f2;color:#be123c}
+.ppa-footer-actions{display:flex;align-items:center;gap:16px}
+.ppa-admin-login{font-size:12px;color:#cbd5e1;text-decoration:underline;text-underline-offset:4px}
+.ppa-admin-login:hover{color:#fff}
+.ppa-bookstore-hero{display:grid;grid-template-columns:1.1fr .9fr;align-items:center;gap:35px;min-height:370px;margin:0 0 52px;padding:34px 44px;border:1px solid #dce7f2;border-radius:24px;background:radial-gradient(circle at 78% 40%,#dbeafe 0,transparent 38%),linear-gradient(125deg,#f7faff,#edf4fc);overflow:hidden}
+.ppa-bookstore-copy h1{font-size:clamp(30px,4vw,48px);line-height:1.25;color:var(--ppa-navy);margin:0 0 14px}
+.ppa-bookstore-copy>p:not(.ppa-eyebrow){max-width:540px;color:#526276;line-height:1.9;margin:0 0 22px}
+.ppa-floating-books{position:relative;min-height:300px;display:flex;align-items:center;justify-content:center;perspective:900px}
+.ppa-floating-books img{position:absolute;width:min(48%,220px);height:285px;object-fit:contain;filter:drop-shadow(0 22px 18px rgba(15,35,60,.2));animation:ppa-book-float 5s ease-in-out infinite}
+.ppa-floating-books .ppa-book-one{left:15%;transform:rotate(-9deg);z-index:2}
+.ppa-floating-books .ppa-book-two{right:12%;transform:rotate(9deg);animation-delay:-2.5s}
+@keyframes ppa-book-float{0%,100%{translate:0 0;rotate:0deg}50%{translate:0 -15px;rotate:2deg}}
+.ppa-store-catalogue{scroll-margin-top:100px}
+@media(max-width:760px){.ppa-bookstore-hero{grid-template-columns:1fr;padding:26px 22px;gap:8px}.ppa-floating-books{min-height:240px}.ppa-floating-books img{height:225px}.ppa-gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ppa-lightbox-inner{grid-template-columns:34px minmax(0,1fr) 34px;padding:55px 8px 12px}.ppa-lightbox-prev,.ppa-lightbox-next{width:32px;height:42px}.ppa-modal-inner{padding:28px 22px}}
+@media(max-width:520px){.ppa-footer-actions{flex-wrap:wrap}.ppa-bookstore-hero{margin-bottom:35px}.ppa-floating-books{min-height:205px}.ppa-floating-books img{height:195px}}
