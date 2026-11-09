@@ -6,7 +6,7 @@
  */
 if (!defined('ABSPATH')) { exit; }
 
-define('PPA_THEME_VERSION', '1.0.1');
+define('PPA_THEME_VERSION', '1.0.2');
 
 function ppa_theme_setup() {
     load_theme_textdomain('photon-physics-academy', get_template_directory() . '/languages');
@@ -49,6 +49,7 @@ function ppa_fallback_menu() {
         'Book Store' => home_url('/store/'),
         'Notices' => home_url('/#notices'),
         'Results' => home_url('/#results'),
+        'Resources' => home_url('/#resources'),
         'Contact' => home_url('/#contact'),
     );
     echo '<ul class="ppa-nav-list">';
