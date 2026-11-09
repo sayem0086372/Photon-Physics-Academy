@@ -218,6 +218,6 @@ function ppa_ca_register_route() {
 add_action('init','ppa_ca_register_route',99);
 add_action('init',function(){ if(get_option('ppa_ca_rewrite_version')!=='1') { flush_rewrite_rules(false); update_option('ppa_ca_rewrite_version','1'); } },100);
 add_filter('query_vars',function($vars){$vars[]='ppa_custom_admin';return $vars;});
-add_action('template_redirect',function(){if(get_query_var('ppa_custom_admin')) { ppa_ca_render_page(); exit; }},0);
+add_action('template_redirect',function(){if(get_query_var('ppa_custom_admin')) { ppa_ca_render_page(); exit; }},20);
 add_filter('body_class',function($classes){if(get_query_var('ppa_custom_admin')) $classes[]='ppa-ca-body';return $classes;});
 add_filter('login_url',function($url,$redirect,$force_reauth){return home_url('/admin/');},10,3);
