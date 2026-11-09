@@ -6,7 +6,7 @@
  */
 if (!defined('ABSPATH')) { exit; }
 
-define('PPA_THEME_VERSION', '1.0.0');
+define('PPA_THEME_VERSION', '1.0.1');
 
 function ppa_theme_setup() {
     load_theme_textdomain('photon-physics-academy', get_template_directory() . '/languages');
@@ -21,8 +21,8 @@ add_action('after_setup_theme', 'ppa_theme_setup');
 
 function ppa_enqueue_assets() {
     wp_enqueue_style('ppa-google-fonts', 'https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&display=swap', array(), null);
-    wp_enqueue_style('ppa-theme', get_stylesheet_uri(), array('ppa-google-fonts'), PPA_THEME_VERSION);
-    wp_enqueue_script('ppa-theme', get_template_directory_uri() . '/assets/js/theme.js', array(), PPA_THEME_VERSION, true);
+    wp_enqueue_style('ppa-theme', get_stylesheet_uri(), array('ppa-google-fonts'), file_exists(get_stylesheet_directory() . '/style.css') ? filemtime(get_stylesheet_directory() . '/style.css') : PPA_THEME_VERSION);
+    wp_enqueue_script('ppa-theme', get_template_directory_uri() . '/assets/js/theme.js', array(), file_exists(get_template_directory() . '/assets/js/theme.js') ? filemtime(get_template_directory() . '/assets/js/theme.js') : PPA_THEME_VERSION, true);
 }
 add_action('wp_enqueue_scripts', 'ppa_enqueue_assets');
 
