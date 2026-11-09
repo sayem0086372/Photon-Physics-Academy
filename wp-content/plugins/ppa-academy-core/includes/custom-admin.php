@@ -726,11 +726,12 @@ function ppa_ca_render_page() {
             ppa_ca_metric_cards(array(array('Total Students',(string)count($student_posts),'All registered students'),array('Active Classes','8 · 9 · 10','Academy class levels'),array('Student ID Format','YYNNN','Five-digit student codes')));
             echo '<section class="ppa-ca-panel ppa-ca-data-panel"><div class="ppa-ca-panel-head"><div><h2>All Students</h2><p>Student profiles, guardian contacts and monthly fee information.</p></div><span class="ppa-ca-soft-badge">Student directory</span></div>';
             ppa_ca_search_toolbar('Search by student name, ID or phone number...');
-            ppa_ca_table($student_posts,'ppa_student',$tab); echo '</section>';
             ppa_ca_add_form('student','Add New Student',array('record_title'=>'Student Name','student_id'=>'Student ID (5 digits, YYNNN)','class_level'=>'Class (8 / 9 / 10)','batch_name'=>'Batch (Optional)','bangla_name'=>'Student Name (Bangla, Optional)','institution'=>'Institution (Optional)','phone'=>'Student Mobile (Optional)','guardian_name'=>'Guardian Name (Optional)','guardian_phone'=>'Guardian Mobile','whatsapp_phone'=>'WhatsApp Number (Optional)','monthly_fee'=>'Monthly Fee (৳)','record_details'=>'Additional Details'),$tab);
+            ppa_ca_table($student_posts,'ppa_student',$tab); echo '</section>';
         } elseif($tab==='programs') {
             $batch_posts=ppa_ca_records('ppa_batch');
             ppa_ca_section_intro('Programs & Batches','Organize class groups, schedules and teaching information.',number_format_i18n(count($batch_posts)).' batches');
+            ppa_ca_add_form('batch','Create New Batch',array('record_title'=>'Batch Name','class_level'=>'Class Level','max_capacity'=>'Maximum Capacity','schedule_days'=>'Schedule Days','time_slot'=>'Class Time','instructor'=>'Instructor','record_details'=>'Batch details / class schedule'),$tab);
             echo '<div class="ppa-ca-program-grid">';
             if($batch_posts){
                 $all_students=ppa_ca_records('ppa_student',1000);
@@ -748,7 +749,6 @@ function ppa_ca_render_page() {
                 }
             } else echo '<div class="ppa-ca-empty">No batches have been created yet.</div>';
             echo '</div>';
-            ppa_ca_add_form('batch','Create New Batch',array('record_title'=>'Batch Name','class_level'=>'Class Level','max_capacity'=>'Maximum Capacity','schedule_days'=>'Schedule Days','time_slot'=>'Class Time','instructor'=>'Instructor','record_details'=>'Batch details / class schedule'),$tab);
             echo '<section class="ppa-ca-panel ppa-ca-info-panel"><div class="ppa-ca-info-icon">▤</div><div><strong>Course pages</strong><p>Course page editing will be brought into this custom panel. The public course content and existing pages will be preserved during the database integration stage.</p></div></section>';
         } elseif($tab==='payments') {
             $payment_posts=ppa_ca_records('ppa_fee_payment');
@@ -769,8 +769,8 @@ function ppa_ca_render_page() {
             ppa_ca_metric_cards(array(array('Total Payable',$has_payable_data?'৳'.number_format_i18n($total_payable):'—','From saved monthly fee entries'),array('Total Collected','৳'.number_format_i18n($total_collected),'From recorded payments'),array('Total Due',$has_due_data?'৳'.number_format_i18n($total_due):'—','Outstanding amount')));
             echo '<section class="ppa-ca-panel ppa-ca-data-panel"><div class="ppa-ca-panel-head"><div><h2>Payment Records</h2><p>Review recent payments and their billing details.</p></div><span class="ppa-ca-soft-badge">Fee ledger</span></div>';
             ppa_ca_search_toolbar('Search student, ID, billing month or amount...');
-            ppa_ca_table($payment_posts,'ppa_fee_payment',$tab); echo '</section>';
             ppa_ca_add_form('payment','Record a Fee Payment',array('record_title'=>'Student Name / ID','student_id'=>'Find Student by ID','billing_month'=>'Billing Month','billing_year'=>'Billing Year','payment_method'=>'Payment Method','payable_amount'=>'Payable Amount (৳)','paid_amount'=>'Paid Amount (৳)','due_amount'=>'Due Amount (৳)','payment_date'=>'Payment Date','record_details'=>'Payment note'),$tab);
+            ppa_ca_table($payment_posts,'ppa_fee_payment',$tab); echo '</section>';
         } elseif($tab==='notices') {
             $notice_posts=ppa_ca_records('ppa_notice',50);
             $notice_terms=get_terms(array('taxonomy'=>'ppa_notice_category','hide_empty'=>false));
@@ -806,8 +806,8 @@ function ppa_ca_render_page() {
             ppa_ca_metric_cards(array(array('Published Results',(string)count($result_posts),'Saved exam records'),array('Assessment Records','Exams','Student performance'),array('Result Format','Marks / Grade','Flexible result entry')));
             echo '<section class="ppa-ca-panel ppa-ca-data-panel"><div class="ppa-ca-panel-head"><div><h2>Exam Results</h2><p>Student-wise examination and assessment records.</p></div><span class="ppa-ca-soft-badge">Academic results</span></div>';
             ppa_ca_search_toolbar('Search student, exam or marks...');
-            ppa_ca_table($result_posts,'ppa_exam_result',$tab); echo '</section>';
             ppa_ca_add_form('result','Add Exam Result',array('record_title'=>'Student Name / ID','student_id'=>'Find Student by ID','exam_name'=>'Exam Name','chapter'=>'Chapter / Topic','total_marks'=>'Total Marks','marks'=>'Obtained Marks','highest_marks'=>'Highest Marks','grade'=>'Grade','exam_date'=>'Exam Date','record_details'=>'Result details'),$tab);
+            ppa_ca_table($result_posts,'ppa_exam_result',$tab); echo '</section>';
         } elseif($tab==='sms') {
             echo '<div class="ppa-ca-section-head"><div><h2>SMS Management</h2><p>Send academy updates to students and guardians through the SMS gateway.</p></div><a class="ppa-ca-outline-link" href="https://portal.sms.net.bd/login/" target="_blank" rel="noopener">Gateway Login ↗</a></div>';
             ppa_ca_metric_cards(array(array('SMS Balance','Available after connection','Live gateway balance'),array('SMS Provider','sms.net.bd','Connected account'),array('Message History','Not stored','Privacy-first messaging')));
