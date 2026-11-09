@@ -310,6 +310,22 @@ function ppa_ca_section_styles() { ?><style>
 .ppa-ca-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
 .ppa-ca-outline-link{font-size:11px;font-weight:700;text-decoration:none;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:8px;padding:9px 12px;white-space:nowrap}
 @media(max-width:680px){.ppa-ca-section-head{align-items:flex-start;flex-direction:column}.ppa-ca-section-head h2{font-size:19px}.ppa-ca-store-grid,.ppa-ca-sms-grid{grid-template-columns:1fr}.ppa-ca-notice-row{align-items:flex-start}.ppa-ca-notice-row time{padding-top:3px}.ppa-ca-info-panel{padding:15px}}
+/* Fine details for content cards and compact responsive layouts. */
+.ppa-ca-stat-top span{display:block;font-size:12px;font-weight:500;color:#64748b}
+.ppa-ca-card strong{display:block;margin-top:0;font-size:26px;line-height:1.25;font-weight:700;color:#0f172a}
+.ppa-ca-recent-panel{padding:20px}
+.ppa-ca-recent-panel .ppa-ca-panel-head{margin-bottom:12px}
+.ppa-ca-notice-row{padding:15px 3px}
+.ppa-ca-notice-icon{width:38px;height:38px;flex:0 0 38px;border-radius:10px;background:#eff6ff;color:#2563eb;display:grid;place-items:center;font-size:15px}
+.ppa-ca-notice-copy strong{font-size:13px}
+.ppa-ca-notice-copy span{font-size:11px;line-height:1.5}
+.ppa-ca-notice-row time{font-size:10px;color:#94a3b8}
+.ppa-ca-store-card{padding:20px}
+.ppa-ca-store-card h3{font-size:13px;font-weight:750}
+.ppa-ca-store-card p{font-size:11px;line-height:1.65}
+.ppa-ca-gateway-status{border-radius:11px}
+.ppa-ca-field-label{font-size:12px;font-weight:650}
+@media(max-width:680px){.ppa-ca-card strong{font-size:24px}.ppa-ca-recent-panel{padding:16px}.ppa-ca-notice-row{gap:9px}.ppa-ca-notice-row time{white-space:normal}}
 /* Section-level parity: toolbar, filters, cards, tables, empty states and modal surfaces. */
 .ppa-ca-section-head{margin:0 0 20px;align-items:center}
 .ppa-ca-section-head h2{font-size:21px;font-weight:800;letter-spacing:-.035em}
@@ -476,7 +492,7 @@ function ppa_ca_render_page() {
             foreach(array('ppa_student'=>'Recent Students','ppa_fee_payment'=>'Recent Payments') as $type=>$heading) {
                 $recent=get_posts(array('post_type'=>$type,'post_status'=>'publish','numberposts'=>4,'orderby'=>'date','order'=>'DESC'));
                 echo '<section class="ppa-ca-panel ppa-ca-recent-panel"><div class="ppa-ca-panel-head"><div><h2>'.esc_html($heading).'</h2><p>Latest records added to the academy.</p></div><a class="ppa-ca-view-all" href="'.esc_url(add_query_arg('ppa_tab',$type==='ppa_student'?'students':'payments',home_url('/admin/'))).'">View all ↗</a></div>';
-                if($recent) { echo '<div class="ppa-ca-recent-list">'; foreach($recent as $item) { $detail=$type==='ppa_student'?get_post_meta($item->ID,'student_id',true):get_post_meta($item->ID,'billing_month',true); echo '<div class="ppa-ca-recent-row"><span class="ppa-ca-recent-icon">'.($type==='ppa_student'?'♙':'৳').'</span><div><strong>'.esc_html($item->post_title).'</strong><small>'.esc_html($detail?:get_the_date('d M Y',$item)).'</small></div><time>'.esc_html(get_the_date('d M',$item)).'</time></div>'; } echo '</div>'; }
+                if($recent) { echo '<div class="ppa-ca-recent-list">'; foreach($recent as $item) { $detail=$type==='ppa_student'?get_post_meta($item->ID,'_ppa_student_id',true):get_post_meta($item->ID,'_ppa_billing_month',true); echo '<div class="ppa-ca-recent-row"><span class="ppa-ca-recent-icon">'.($type==='ppa_student'?'♙':'৳').'</span><div><strong>'.esc_html($item->post_title).'</strong><small>'.esc_html($detail?:get_the_date('d M Y',$item)).'</small></div><time>'.esc_html(get_the_date('d M',$item)).'</time></div>'; } echo '</div>'; }
                 else echo '<div class="ppa-ca-empty"><strong>No records yet</strong><br>New entries will appear here.</div>';
                 echo '</section>';
             }
