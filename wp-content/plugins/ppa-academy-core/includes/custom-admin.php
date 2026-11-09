@@ -97,7 +97,7 @@ function ppa_ca_handle_post() {
         if (!$title) ppa_ca_redirect($tab,'required');
         $id=wp_insert_post(array('post_type'=>$allowed[$kind],'post_status'=>'publish','post_title'=>$title,'post_content'=>$body),true);
         if (!is_wp_error($id)) {
-            foreach (array('student_id','phone','guardian_phone','monthly_fee','batch_name','billing_month','amount','exam_name','marks') as $key) {
+            foreach (array('student_id','phone','guardian_phone','whatsapp_phone','monthly_fee','batch_name','class_level','schedule_days','time_slot','instructor','billing_month','amount','payment_method','payment_date','exam_name','marks') as $key) {
                 if (isset($_POST[$key])) update_post_meta($id,'_ppa_'.$key,sanitize_text_field(wp_unslash($_POST[$key])));
             }
             ppa_ca_redirect($tab,'created');
@@ -354,14 +354,14 @@ function ppa_ca_render_page() {
             echo '</div></section>';
         } elseif($tab==='students') {
             echo '<section class="ppa-ca-panel"><h2>Students Management</h2>'; ppa_ca_table(ppa_ca_records('ppa_student'),'ppa_student',$tab); echo '</section>';
-            ppa_ca_add_form('student','Add Student',array('record_title'=>'Student Name','student_id'=>'Student ID (YYNNN)','phone'=>'Student Mobile','guardian_phone'=>'Guardian Mobile','monthly_fee'=>'Monthly Fee (৳)','batch_name'=>'Batch','record_details'=>'Additional Details'),$tab);
+            ppa_ca_add_form('student','Add Student',array('record_title'=>'Student Name','student_id'=>'Student ID (5 digits, YYNNN)','class_level'=>'Class (8 / 9 / 10)','phone'=>'Student Mobile (Optional)','guardian_phone'=>'Guardian Mobile','whatsapp_phone'=>'WhatsApp Number (Optional)','monthly_fee'=>'Monthly Fee (৳)','batch_name'=>'Batch','record_details'=>'Additional Details'),$tab);
         } elseif($tab==='programs') {
             echo '<section class="ppa-ca-panel"><h2>Programs & Batches</h2>'; ppa_ca_table(ppa_ca_records('ppa_batch'),'ppa_batch',$tab); echo '</section>';
-            ppa_ca_add_form('batch','Add Batch',array('record_title'=>'Batch Name','record_details'=>'Batch details / class schedule'),$tab);
+            ppa_ca_add_form('batch','Add Batch',array('record_title'=>'Batch Name','class_level'=>'Class Level','schedule_days'=>'Schedule Days','time_slot'=>'Class Time','instructor'=>'Instructor','record_details'=>'Batch details / class schedule'),$tab);
             echo '<section class="ppa-ca-panel ppa-ca-info-panel"><div class="ppa-ca-info-icon">▤</div><div><strong>Course pages</strong><p>Course page editing will be brought into this custom panel. The public course content and existing pages will be preserved during the database integration stage.</p></div></section>';
         } elseif($tab==='payments') {
             echo '<section class="ppa-ca-panel"><h2>Payments & Fees</h2>'; ppa_ca_table(ppa_ca_records('ppa_fee_payment'),'ppa_fee_payment',$tab); echo '</section>';
-            ppa_ca_add_form('payment','Record Fee Payment',array('record_title'=>'Student Name / ID','billing_month'=>'Billing Month','amount'=>'Amount (৳)','record_details'=>'Payment note'),$tab);
+            ppa_ca_add_form('payment','Record Fee Payment',array('record_title'=>'Student Name / ID','student_id'=>'Student ID (YYNNN)','billing_month'=>'Billing Month','amount'=>'Amount (৳)','payment_method'=>'Payment Method','payment_date'=>'Payment Date','record_details'=>'Payment note'),$tab);
         } elseif($tab==='notices') {
             $notice_posts=ppa_ca_records('ppa_notice',50);
             $notice_terms=get_terms(array('taxonomy'=>'ppa_notice_category','hide_empty'=>false));
@@ -387,7 +387,7 @@ function ppa_ca_render_page() {
             echo '</select></label><label class="is-wide">Notice Details<textarea name="notice_content" rows="5" required></textarea></label><label class="ppa-ca-check"><input type="checkbox" name="notice_published" value="1" checked> Publish immediately on the website</label></div><button class="ppa-ca-primary" type="submit">Save Notice</button></form>';
         } elseif($tab==='results') {
             echo '<section class="ppa-ca-panel"><h2>Results & Exams</h2>'; ppa_ca_table(ppa_ca_records('ppa_exam_result'),'ppa_exam_result',$tab); echo '</section>';
-            ppa_ca_add_form('result','Add Exam Result',array('record_title'=>'Student Name / ID','exam_name'=>'Exam Name','marks'=>'Marks / Grade','record_details'=>'Result details'),$tab);
+            ppa_ca_add_form('result','Add Exam Result',array('record_title'=>'Student Name / ID','student_id'=>'Student ID (YYNNN)','exam_name'=>'Exam Name','marks'=>'Marks / Grade','record_details'=>'Result details'),$tab);
         } elseif($tab==='sms') {
             echo '<div class="ppa-ca-section-head"><div><h2>SMS Management</h2><p>Send academy updates to students and guardians through the SMS gateway.</p></div><a class="ppa-ca-outline-link" href="https://portal.sms.net.bd/login/" target="_blank" rel="noopener">Gateway Login ↗</a></div>';
             echo '<div class="ppa-ca-sms-grid"><section class="ppa-ca-panel"><div class="ppa-ca-panel-head"><div><h2>Gateway Connection</h2><p>SMS provider configuration and account status.</p></div><span class="ppa-ca-soft-badge">sms.net.bd</span></div><div class="ppa-ca-gateway-status"><span class="ppa-ca-status-dot"></span><div><strong>Connection setup pending</strong><small>Secure API connection will be configured during database and integration setup.</small></div></div><a class="ppa-ca-primary" href="https://portal.sms.net.bd/login/" target="_blank" rel="noopener">Open SMS Gateway</a></section>';
