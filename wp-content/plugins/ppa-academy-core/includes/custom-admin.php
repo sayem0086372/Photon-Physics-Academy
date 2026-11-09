@@ -310,6 +310,75 @@ function ppa_ca_section_styles() { ?><style>
 .ppa-ca-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
 .ppa-ca-outline-link{font-size:11px;font-weight:700;text-decoration:none;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:8px;padding:9px 12px;white-space:nowrap}
 @media(max-width:680px){.ppa-ca-section-head{align-items:flex-start;flex-direction:column}.ppa-ca-section-head h2{font-size:19px}.ppa-ca-store-grid,.ppa-ca-sms-grid{grid-template-columns:1fr}.ppa-ca-notice-row{align-items:flex-start}.ppa-ca-notice-row time{padding-top:3px}.ppa-ca-info-panel{padding:15px}}
+/* Main-branch visual parity pass: keep the custom WordPress panel aligned with the React admin shell. */
+.ppa-ca-shell{font-family:'Plus Jakarta Sans',Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8fafc;color:#1e293b}
+.ppa-ca-sidebar{width:256px;flex:0 0 256px;height:100vh;background:#0f172a;box-shadow:none;border-right:1px solid #1e293b}
+.ppa-ca-brand{height:64px;min-height:64px;padding:0 16px;gap:12px;border-bottom-color:#1e293b}
+.ppa-ca-brand-mark{width:36px;height:36px;flex:0 0 36px;padding:3px;border-radius:9px}
+.ppa-ca-brand strong{font-size:14px;letter-spacing:-.02em}
+.ppa-ca-brand small{font-size:11px}
+.ppa-ca-nav{padding:12px;gap:0}
+.ppa-ca-nav a{min-height:40px;margin:4px 0;padding:10px 12px;gap:12px;border:0;border-radius:8px;font-size:13px;font-weight:600;transition:background-color .16s,color .16s}
+.ppa-ca-nav a:hover{transform:none;background:#1e293b;color:#fff}
+.ppa-ca-nav a.is-active{background:#2563eb;color:#fff;box-shadow:none;border:0}
+.ppa-ca-nav a i{width:16px;flex:0 0 16px;font-size:15px}
+.ppa-ca-side-bottom{padding:12px;border-top:1px solid #1e293b}
+.ppa-ca-side-bottom a{padding:10px;border:0;border-radius:8px;background:#1e293b;font-size:12px}
+.ppa-ca-header{height:64px;min-height:64px;padding:0 24px;box-shadow:none;border-bottom:1px solid #e2e8f0}
+.ppa-ca-header h1{font-size:18px;font-weight:700;letter-spacing:0;color:#0f172a}
+.ppa-ca-user{gap:12px}
+.ppa-ca-avatar{width:32px;height:32px;border-radius:8px;font-size:12px}
+.ppa-ca-logout,.ppa-ca-public-site{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:34px;padding:7px 11px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#334155;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap;transition:background .15s,color .15s,border-color .15s}
+.ppa-ca-logout:hover,.ppa-ca-public-site:hover{background:#f0f9ff;color:#1d4ed8;border-color:#bfdbfe}
+.ppa-ca-content{max-width:1360px;padding:28px 28px 48px}
+.ppa-ca-welcome{margin-bottom:18px}
+.ppa-ca-welcome h2{font-size:23px;font-weight:800;letter-spacing:-.035em}
+.ppa-ca-welcome p{font-size:13px;color:#64748b}
+.ppa-ca-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin:20px 0 28px}
+.ppa-ca-card{min-height:112px;padding:18px 20px;border-radius:12px;box-shadow:none;border-color:#e2e8f0}
+.ppa-ca-card:after{display:none}
+.ppa-ca-card span{font-size:12px;font-weight:500;color:#64748b;letter-spacing:0}
+.ppa-ca-card strong{font-size:26px;font-weight:700;letter-spacing:0;color:#0f172a}
+.ppa-ca-panel,.ppa-ca-form{border-radius:12px;box-shadow:none;border-color:#e2e8f0}
+.ppa-ca-panel{padding:20px;margin:18px 0}
+.ppa-ca-panel h2{font-size:15px;font-weight:700}
+.ppa-ca-table{font-size:12px}
+.ppa-ca-table th{padding:12px 14px;background:#f8fafc;font-size:10px}
+.ppa-ca-table td{padding:13px 14px}
+.ppa-ca-form{padding:20px}
+.ppa-ca-form input,.ppa-ca-form textarea,.ppa-ca-form select{font-family:inherit;font-size:13px}
+.ppa-ca-primary{min-height:38px}
+.ppa-ca-mobile-toggle{display:none}
+@media(max-width:1023px){.ppa-ca-sidebar{width:256px;flex-basis:256px}.ppa-ca-content{padding:24px}}
+@media(max-width:680px){
+ .ppa-ca-shell{display:flex;min-height:100vh;position:relative}
+ .ppa-ca-sidebar{position:fixed;left:0;top:0;bottom:0;height:100dvh;width:min(288px,84vw);flex:0 0 min(288px,84vw);transform:translateX(-105%);transition:transform .22s ease;z-index:50;box-shadow:12px 0 40px rgba(15,23,42,.2)}
+ .ppa-ca-shell.is-nav-open .ppa-ca-sidebar{transform:translateX(0)}
+ .ppa-ca-shell.is-nav-open:after{content:"";position:fixed;inset:0;background:rgba(15,23,42,.52);z-index:40}
+ .ppa-ca-nav{display:block;padding:14px 12px;overflow-y:auto}
+ .ppa-ca-nav a{font-size:13px;padding:11px 12px}
+ .ppa-ca-side-bottom{display:block}
+ .ppa-ca-main{width:100%;min-height:100vh}
+ .ppa-ca-header{height:62px;min-height:62px;padding:0 14px;gap:9px;z-index:35}
+ .ppa-ca-header h1{font-size:15px;flex:1}
+ .ppa-ca-mobile-toggle{display:inline-flex;align-items:center;justify-content:center;flex:0 0 36px;width:36px;height:36px;border:1px solid #e2e8f0;border-radius:9px;background:#fff;color:#334155;font-size:19px}
+ .ppa-ca-user{gap:7px}
+ .ppa-ca-user .ppa-ca-user-label{display:none}
+ .ppa-ca-avatar{width:32px;height:32px}
+ .ppa-ca-logout{min-height:34px;padding:7px 9px;font-size:11px}
+ .ppa-ca-public-site{display:none}
+ .ppa-ca-content{padding:18px 14px 32px}
+ .ppa-ca-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:16px 0 20px}
+ .ppa-ca-card{min-height:96px;padding:14px}
+ .ppa-ca-card strong{font-size:24px}
+ .ppa-ca-panel,.ppa-ca-form{padding:16px;margin:14px 0}
+ .ppa-ca-form-grid{grid-template-columns:1fr;gap:12px}
+ .ppa-ca-form label.is-wide{grid-column:auto}
+ .ppa-ca-shortcuts{grid-template-columns:1fr}
+ .ppa-ca-table{min-width:640px}
+}
+@media(max-width:360px){.ppa-ca-header{padding:0 10px}.ppa-ca-header h1{font-size:14px}.ppa-ca-user{gap:5px}.ppa-ca-logout{padding:6px 7px}.ppa-ca-grid{gap:8px}.ppa-ca-card{padding:12px}}
+@media(prefers-reduced-motion:reduce){.ppa-ca-sidebar,.ppa-ca-nav a,.ppa-ca-primary{transition:none!important}}
 </style><?php }
 function ppa_ca_admin_script() { ?>
 <script>
@@ -343,7 +412,7 @@ function ppa_ca_render_page() {
         echo '</nav><div class="ppa-ca-side-bottom"><a href="'.esc_url(home_url('/')).'">← Back to Website</a></div></aside>';
         echo '<div class="ppa-ca-main"><header class="ppa-ca-header"><button type="button" class="ppa-ca-mobile-toggle" aria-label="Open admin navigation" aria-expanded="false">☰</button><h1>'.esc_html($tabs[$tab][0]).'</h1><div class="ppa-ca-user"><div class="ppa-ca-avatar">'.esc_html('JS').'</div><span class="ppa-ca-user-label">'.esc_html('Jewel Sir').' · Administrator</span><form method="post">';
         wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
-        echo '<input type="hidden" name="ppa_ca_action" value="logout"><button class="ppa-ca-logout" type="submit">Log out</button></form></div></header><main class="ppa-ca-content">';
+        echo '<input type="hidden" name="ppa_ca_action" value="logout"><button class="ppa-ca-logout" type="submit"><span aria-hidden="true">↪</span> <span>Log out</span></button></form><a class="ppa-ca-public-site" href="'.esc_url(home_url('/')).'" target="_blank" rel="noopener"><span aria-hidden="true">↗</span><span>Public Site</span></a></div></header><main class="ppa-ca-content">';
         if(isset($_GET['ppa_notice']) && $_GET['ppa_notice']!=='login_error') echo '<div class="ppa-ca-alert">'.esc_html(sanitize_text_field(wp_unslash($_GET['ppa_notice']))==='saved'?'Settings saved.':'Action completed.').'</div>';
         if($tab==='overview') {
             echo '<div class="ppa-ca-welcome"><h2>Welcome back, '.esc_html($user->display_name).'!</h2><p>Here is what is happening at Photon Physics Academy.</p></div><div class="ppa-ca-grid">';
