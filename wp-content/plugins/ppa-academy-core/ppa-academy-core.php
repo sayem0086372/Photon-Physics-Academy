@@ -94,6 +94,15 @@ function ppa_core_seed_default_courses() {
 }
 add_action('init', 'ppa_core_seed_default_courses', 30);
 
+/** Refresh rewrite rules once after a plugin upgrade adds the course permalink type. */
+function ppa_core_upgrade_rewrites() {
+    if (get_option('ppa_core_version') !== '1.1.0') {
+        flush_rewrite_rules(false);
+        update_option('ppa_core_version', '1.1.0');
+    }
+}
+add_action('init', 'ppa_core_upgrade_rewrites', 99);
+
 /** Editable course information shown on both cards and detail pages. */
 function ppa_core_course_meta_box() {
     add_meta_box('ppa_course_details', __('Course Information', 'photon-physics-academy'), 'ppa_core_course_meta_box_html', 'ppa_course', 'normal', 'high');
