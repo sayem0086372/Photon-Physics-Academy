@@ -243,6 +243,43 @@ function ppa_ca_enhanced_styles() { ?>
 @media(prefers-reduced-motion:reduce){.ppa-ca-sidebar,.ppa-ca-nav a,.ppa-ca-shortcuts a,.ppa-ca-primary{transition:none}}
 </style>
 <?php }
+function ppa_ca_section_styles() { ?><style>
+.ppa-ca-section-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:2px 0 20px}
+.ppa-ca-section-head h2{font-size:21px;font-weight:800;letter-spacing:-.035em;color:#0f172a;margin:0}
+.ppa-ca-section-head p{font-size:12px;color:#64748b;margin:5px 0 0}
+.ppa-ca-section-count,.ppa-ca-soft-badge{font-size:11px;font-weight:700;color:#1d4ed8;background:#eff6ff;border:1px solid #dbeafe;border-radius:999px;padding:7px 11px;white-space:nowrap}
+.ppa-ca-panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:15px}
+.ppa-ca-panel-head h2{margin:0 0 4px}
+.ppa-ca-panel-head p{font-size:11px;color:#64748b;margin:0}
+.ppa-ca-notice-list{display:grid;gap:0}
+.ppa-ca-notice-row{display:flex;align-items:center;gap:13px;padding:14px 4px;border-top:1px solid #f1f5f9}
+.ppa-ca-notice-icon,.ppa-ca-store-icon,.ppa-ca-info-icon{width:38px;height:38px;flex:0 0 38px;border-radius:11px;background:#eff6ff;color:#2563eb;display:grid;place-items:center;font-size:17px;font-weight:800}
+.ppa-ca-notice-copy{min-width:0;flex:1;display:grid;gap:4px}
+.ppa-ca-notice-copy strong{font-size:12px;color:#0f172a}
+.ppa-ca-notice-copy span{font-size:11px;color:#64748b;overflow:hidden;text-overflow:ellipsis}
+.ppa-ca-notice-row time{font-size:10px;color:#94a3b8;white-space:nowrap}
+.ppa-ca-info-panel{display:flex;align-items:flex-start;gap:13px;padding:18px 20px;border:1px solid #dbeafe;background:#f8fbff;border-radius:13px;margin:18px 0}
+.ppa-ca-info-icon{background:#dbeafe;color:#1d4ed8;font-size:15px}
+.ppa-ca-info-panel strong{font-size:12px;color:#1e3a8a}
+.ppa-ca-info-panel p{font-size:11px;line-height:1.7;color:#475569;margin:5px 0 0}
+.ppa-ca-store-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.ppa-ca-store-card{display:flex;align-items:flex-start;gap:14px;padding:19px;background:white;border:1px solid #e2e8f0;border-radius:13px}
+.ppa-ca-store-icon{width:42px;height:42px;flex-basis:42px;font-size:19px}
+.ppa-ca-store-card h3{font-size:13px;color:#0f172a;font-weight:750;margin:1px 0 5px}
+.ppa-ca-store-card p{font-size:11px;line-height:1.6;color:#64748b;margin:0 0 10px}
+.ppa-ca-coming-tag{font-size:10px;color:#64748b;background:#f1f5f9;border-radius:5px;padding:4px 7px;display:inline-block}
+.ppa-ca-sms-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.ppa-ca-gateway-status{display:flex;align-items:flex-start;gap:10px;padding:15px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;margin:16px 0}
+.ppa-ca-status-dot{width:9px;height:9px;border-radius:50%;background:#f59e0b;margin-top:4px;box-shadow:0 0 0 4px #fef3c7}
+.ppa-ca-gateway-status strong,.ppa-ca-gateway-status small{display:block}
+.ppa-ca-gateway-status strong{font-size:12px;color:#334155}
+.ppa-ca-gateway-status small{font-size:10px;color:#64748b;margin-top:4px;line-height:1.5}
+.ppa-ca-field-label{display:block;font-size:11px;font-weight:700;color:#475569;margin:12px 0}
+.ppa-ca-field-label select,.ppa-ca-field-label textarea{display:block;width:100%;box-sizing:border-box;margin-top:6px;padding:10px;border:1px solid #cbd5e1;border-radius:9px;font:inherit;background:#f8fafc}
+.ppa-ca-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.ppa-ca-outline-link{font-size:11px;font-weight:700;text-decoration:none;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:8px;padding:9px 12px;white-space:nowrap}
+@media(max-width:680px){.ppa-ca-section-head{align-items:flex-start;flex-direction:column}.ppa-ca-section-head h2{font-size:19px}.ppa-ca-store-grid,.ppa-ca-sms-grid{grid-template-columns:1fr}.ppa-ca-notice-row{align-items:flex-start}.ppa-ca-notice-row time{padding-top:3px}.ppa-ca-info-panel{padding:15px}}
+</style><?php }
 function ppa_ca_admin_script() { ?>
 <script>
 document.addEventListener('DOMContentLoaded',function(){
@@ -265,6 +302,7 @@ function ppa_ca_render_page() {
     echo '</head><body class="ppa-ca-body"><div class="ppa-ca-app">';
     ppa_ca_styles();
     ppa_ca_enhanced_styles();
+    ppa_ca_section_styles();
     if(!is_user_logged_in() || !current_user_can('manage_options')) {
         echo ppa_ca_login_screen();
     } else {
@@ -293,12 +331,19 @@ function ppa_ca_render_page() {
             echo '<section class="ppa-ca-panel"><h2>Payments & Fees</h2>'; ppa_ca_table(ppa_ca_records('ppa_fee_payment'),'ppa_fee_payment',$tab); echo '</section>';
             ppa_ca_add_form('payment','Record Fee Payment',array('record_title'=>'Student Name / ID','billing_month'=>'Billing Month','amount'=>'Amount (৳)','record_details'=>'Payment note'),$tab);
         } elseif($tab==='notices') {
-            echo '<section class="ppa-ca-panel"><h2>Notices</h2><p>Manage academy notices, categories and publishing status.</p><a class="ppa-ca-primary" href="'.esc_url(admin_url('edit.php?post_type=ppa_notice')).'">Open Notice Manager</a></section>';
+            echo '<div class="ppa-ca-section-head"><div><h2>Notice Management</h2><p>Manage admission, exam and class schedule announcements displayed on the public website.</p></div><span class="ppa-ca-section-count">'.number_format_i18n(ppa_ca_count('ppa_notice')).' published</span></div>';
+            echo '<section class="ppa-ca-panel"><div class="ppa-ca-panel-head"><div><h2>Published Notices</h2><p>Review the latest announcements and their publication dates.</p></div><span class="ppa-ca-soft-badge">Website content</span></div>';
+            $notice_posts=ppa_ca_records('ppa_notice',50);
+            if($notice_posts){ echo '<div class="ppa-ca-notice-list">'; foreach($notice_posts as $notice){ echo '<article class="ppa-ca-notice-row"><div class="ppa-ca-notice-icon">▣</div><div class="ppa-ca-notice-copy"><strong>'.esc_html($notice->post_title).'</strong><span>'.esc_html(wp_trim_words(wp_strip_all_tags($notice->post_content),22)).'</span></div><time>'.esc_html(get_the_date('d M Y',$notice)).'</time></article>'; } echo '</div>'; }
+            else { echo '<div class="ppa-ca-empty"><strong>No published notices yet</strong><br>Published academy announcements will appear here.</div>'; }
+            echo '</section><section class="ppa-ca-panel ppa-ca-info-panel"><div class="ppa-ca-info-icon">✦</div><div><strong>Notice workspace</strong><p>The custom notice editor and publish controls will be connected to the WordPress content model in the database integration stage. This panel will remain inside the academy Admin Panel.</p></div></section>';
         } elseif($tab==='results') {
             echo '<section class="ppa-ca-panel"><h2>Results & Exams</h2>'; ppa_ca_table(ppa_ca_records('ppa_exam_result'),'ppa_exam_result',$tab); echo '</section>';
             ppa_ca_add_form('result','Add Exam Result',array('record_title'=>'Student Name / ID','exam_name'=>'Exam Name','marks'=>'Marks / Grade','record_details'=>'Result details'),$tab);
         } elseif($tab==='sms') {
-            echo '<section class="ppa-ca-panel"><h2>SMS Management</h2><p>Gateway connection settings are stored in WordPress. No sent-message history is stored by this panel. Live sending and balance lookup require secure provider API integration.</p><a class="ppa-ca-primary" href="https://portal.sms.net.bd/login/" target="_blank" rel="noopener">Open SMS Gateway</a></section>';
+            echo '<div class="ppa-ca-section-head"><div><h2>SMS Management</h2><p>Send academy updates to students and guardians through the SMS gateway.</p></div><a class="ppa-ca-outline-link" href="https://portal.sms.net.bd/login/" target="_blank" rel="noopener">Gateway Login ↗</a></div>';
+            echo '<div class="ppa-ca-sms-grid"><section class="ppa-ca-panel"><div class="ppa-ca-panel-head"><div><h2>Gateway Connection</h2><p>SMS provider configuration and account status.</p></div><span class="ppa-ca-soft-badge">sms.net.bd</span></div><div class="ppa-ca-gateway-status"><span class="ppa-ca-status-dot"></span><div><strong>Connection setup pending</strong><small>Secure API connection will be configured during database and integration setup.</small></div></div><a class="ppa-ca-primary" href="https://portal.sms.net.bd/login/" target="_blank" rel="noopener">Open SMS Gateway</a></section>';
+            echo '<section class="ppa-ca-panel"><div class="ppa-ca-panel-head"><div><h2>Message Centre</h2><p>Prepare announcements for selected student groups.</p></div></div><label class="ppa-ca-field-label">Recipient group<select disabled><option>All active students and guardians</option></select></label><label class="ppa-ca-field-label">Message<textarea rows="4" disabled placeholder="Write your academy announcement…"></textarea></label><button class="ppa-ca-primary" type="button" disabled>Send SMS · Integration pending</button></section></div><section class="ppa-ca-info-panel"><div class="ppa-ca-info-icon">✓</div><div><strong>Privacy rule</strong><p>Sent SMS history will not be stored. Guardian numbers will be the default recipient; student mobile numbers remain optional. WhatsApp contacts will not be treated as SMS recipients.</p></div></section>';
         } elseif($tab==='settings') {
             echo '<form method="post" class="ppa-ca-form">'; wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
             echo '<input type="hidden" name="ppa_ca_action" value="save_settings"><input type="hidden" name="return_tab" value="settings"><h3>SMS Gateway & Homepage Slideshow</h3><div class="ppa-ca-form-grid">';
@@ -311,10 +356,17 @@ function ppa_ca_render_page() {
             }
             echo '</div><button class="ppa-ca-primary" type="submit">Save Settings</button></form>';
         } elseif($tab==='store') {
-            echo '<section class="ppa-ca-panel"><h2>Store Management</h2><div class="ppa-ca-shortcuts">';
-            $links=array('Products'=>admin_url('edit.php?post_type=product'),'Orders'=>admin_url('admin.php?page=wc-orders'),'Coupons'=>admin_url('edit.php?post_type=shop_coupon'),'Analytics'=>admin_url('admin.php?page=wc-admin&path=/analytics/overview'));
-            foreach($links as $label=>$url) echo '<a href="'.esc_url($url).'">'.esc_html($label).'<span>Manage WooCommerce '.strtolower($label).' →</span></a>';
-            echo '</div><p style="margin-top:18px">Store checkout, stock, order verification and customer notifications are handled by WooCommerce configuration and approved payment extensions.</p></section>';
+            echo '<div class="ppa-ca-section-head"><div><h2>Store Management</h2><p>Manage books, customer orders, promotions and delivery operations.</p></div><span class="ppa-ca-soft-badge">Online bookstore</span></div>';
+            echo '<div class="ppa-ca-store-grid">';
+            $storeCards=array(
+              array('▣','Books & Inventory','Manage book details, cover images, pricing, discounts and stock.','books'),
+              array('↗','Customer Orders','Review new orders, payment verification and fulfilment status.','orders'),
+              array('％','Coupons & Offers','Create discount codes, usage limits and promotional campaigns.','coupons'),
+              array('⌁','Delivery Settings','Configure delivery charges, free delivery threshold and instructions.','delivery'),
+              array('▥','Sales Analytics','Review order volume, revenue and top-selling books.','analytics')
+            );
+            foreach($storeCards as $card) echo '<article class="ppa-ca-store-card"><div class="ppa-ca-store-icon">'.esc_html($card[0]).'</div><div><h3>'.esc_html($card[1]).'</h3><p>'.esc_html($card[2]).'</p><span class="ppa-ca-coming-tag">Workspace UI · Database connection next</span></div></article>';
+            echo '</div><section class="ppa-ca-panel ppa-ca-info-panel"><div class="ppa-ca-info-icon">i</div><div><strong>Store data protection</strong><p>Book catalogue, customer orders, payment references, coupon records and delivery settings will be preserved. Store management will be implemented in this custom panel without sending administrators to the WordPress Dashboard.</p></div></section>';
         }
         echo '</main></div></div>';
     }
