@@ -1,0 +1,22 @@
+name: PHP syntax check
+
+on:
+  push:
+    branches:
+      - wordpress-migration
+    paths:
+      - 'wp-content/**'
+      - '.github/workflows/php-lint.yml'
+  pull_request:
+    paths:
+      - 'wp-content/**'
+
+jobs:
+  php-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Check PHP syntax
+        run: |
+          find wp-content -type f -name '*.php' -print0 | xargs -0 -n1 php -l
