@@ -28,21 +28,35 @@ get_header();
   </div></section>
 
   <?php
-  $notice_query = new WP_Query(array('post_type'=>'ppa_notice','post_status'=>'publish','posts_per_page'=>6,'orderby'=>'date','order'=>'DESC'));
+  $notice_query = new WP_Query(array('post_type'=>'ppa_notice','post_status'=>'publish','posts_per_page'=>12,'orderby'=>'date','order'=>'DESC'));
+  $notice_terms = get_terms(array('taxonomy'=>'ppa_notice_category','hide_empty'=>true));
   ?>
   <section id="notices" class="ppa-section ppa-gray"><div class="ppa-container">
     <p class="ppa-eyebrow">NOTICE BOARD — নোটিশ বোর্ড</p><h2 class="ppa-bangla">একাডেমিক নোটিশ ও নির্দেশনা</h2><p class="ppa-lead ppa-bangla">ভর্তি, পরীক্ষা ও ক্লাসরুটিনের তথ্য ও বিজ্ঞপ্তি।</p>
-    <?php if ($notice_query->have_posts()) : ?><div class="ppa-cards">
-      <?php while ($notice_query->have_posts()) : $notice_query->the_post(); ?>
-        <article class="ppa-notice-card"><time datetime="<?php echo esc_attr(get_the_date('c')); ?>"><?php echo esc_html(get_the_date('d F Y')); ?></time><h3 class="ppa-bangla"><?php the_title(); ?></h3><p class="ppa-bangla"><?php echo esc_html(ppa_excerpt(get_the_ID(), 26)); ?></p><a class="ppa-button" style="margin-top:16px" href="<?php the_permalink(); ?>">বিস্তারিত দেখুন →</a></article>
+    <div class="ppa-notice-filters" role="group" aria-label="নোটিশ বিভাগ">
+      <button type="button" class="is-active" data-notice-filter="all">সব নোটিশ</button>
+      <?php if (!is_wp_error($notice_terms) && $notice_terms) : foreach ($notice_terms as $term) : ?>
+        <button type="button" data-notice-filter="<?php echo esc_attr($term->slug); ?>"><?php echo esc_html($term->name); ?></button>
+      <?php endforeach; endif; ?>
+    </div>
+    <?php if ($notice_query->have_posts()) : ?><div class="ppa-cards ppa-notice-grid">
+      <?php while ($notice_query->have_posts()) : $notice_query->the_post(); $notice_cats=get_the_terms(get_the_ID(),'ppa_notice_category'); $notice_slug=(!is_wp_error($notice_cats)&&$notice_cats)?$notice_cats[0]->slug:'uncategorized'; ?>
+        <article class="ppa-notice-card" data-notice-card data-category="<?php echo esc_attr($notice_slug); ?>">
+          <time datetime="<?php echo esc_attr(get_the_date('c')); ?>"><?php echo esc_html(get_the_date('d F Y')); ?></time>
+          <h3 class="ppa-bangla"><?php the_title(); ?></h3>
+          <p class="ppa-bangla"><?php echo esc_html(ppa_excerpt(get_the_ID(), 26)); ?></p>
+          <button class="ppa-button ppa-notice-open" type="button" data-notice-open data-title="<?php echo esc_attr(get_the_title()); ?>" data-date="<?php echo esc_attr(get_the_date('d F Y')); ?>" data-content="<?php echo esc_attr(wp_strip_all_tags(apply_filters('the_content',get_the_content()))); ?>">বিস্তারিত দেখুন →</button>
+        </article>
       <?php endwhile; ?>
-    </div><?php else : ?><div class="ppa-notice-card"><p class="ppa-bangla" style="margin:0">বর্তমানে কোনো নোটিশ প্রকাশিত হয়নি। নতুন নোটিশ প্রকাশিত হলে এখানে দেখা যাবে।</p></div><?php endif; ?>
+    </div><p class="ppa-notice-empty ppa-bangla" hidden>এই বিভাগে কোনো নোটিশ পাওয়া যায়নি।</p>
+    <?php else : ?><div class="ppa-notice-card"><p class="ppa-bangla" style="margin:0">বর্তমানে কোনো নোটিশ প্রকাশিত হয়নি। নতুন নোটিশ প্রকাশিত হলে এখানে দেখা যাবে।</p></div><?php endif; ?>
   </div></section>
+  <dialog class="ppa-modal" id="ppa-notice-modal" aria-labelledby="ppa-notice-modal-title"><div class="ppa-modal-inner"><button class="ppa-modal-close" type="button" aria-label="বন্ধ করুন">×</button><p class="ppa-eyebrow">ACADEMY NOTICE</p><h2 id="ppa-notice-modal-title" class="ppa-bangla"></h2><time id="ppa-notice-modal-date"></time><div id="ppa-notice-modal-content" class="ppa-bangla"></div></div></dialog>
   <?php wp_reset_postdata(); ?>
 
   <section class="ppa-stats"><div class="ppa-container ppa-stat-grid">
-    <div class="ppa-stat"><strong>23 Years</strong><b class="ppa-bangla">শিক্ষার ক্ষেত্রে আমাদের ২৩ বছরের ঐতিহ্য</b></div>
-    <div class="ppa-stat"><strong>11,000+</strong><b class="ppa-bangla">শিক্ষার্থী আমাদের কাছ থেকে পড়াশোনা করেছে</b></div>
+    <div class="ppa-stat"><strong data-count="23" data-suffix=" Years">0</strong><b class="ppa-bangla">শিক্ষার ক্ষেত্রে আমাদের ২৩ বছরের ঐতিহ্য</b></div>
+    <div class="ppa-stat"><strong data-count="11000" data-suffix="+">0</strong><b class="ppa-bangla">শিক্ষার্থী আমাদের কাছ থেকে পড়াশোনা করেছে</b></div>
   </div></section>
 
   <section id="about" class="ppa-section"><div class="ppa-container">
@@ -123,18 +137,32 @@ get_header();
   <section id="gallery" class="ppa-section"><div class="ppa-container">
     <p class="ppa-eyebrow">CLASSROOM GALLERY — ক্লাসরুম</p><h2 class="ppa-bangla">শেখার পরিবেশ ও একাডেমির মুহূর্ত</h2><p class="ppa-lead ppa-bangla">আমাদের শ্রেণিকক্ষের পাঠদান ও শিক্ষামূলক কার্যক্রমের কিছু মুহূর্ত।</p>
     <div class="ppa-gallery-grid">
-      <img src="<?php echo esc_url(ppa_asset('gallery1')); ?>" alt="Students discussing physics in class" loading="lazy">
-      <img src="<?php echo esc_url(ppa_asset('gallery2')); ?>" alt="Students reading concept books" loading="lazy">
-      <img src="<?php echo esc_url(ppa_asset('hero')); ?>" alt="Physics classroom" loading="lazy">
-      <img src="<?php echo esc_url(ppa_asset('teacher')); ?>" alt="Physics teacher mentoring students" loading="lazy">
+      <?php $gallery_items=array(array('gallery1','Students discussing physics in class'),array('gallery2','Students reading concept books'),array('hero','Physics classroom'),array('teacher','Physics teacher mentoring students')); foreach($gallery_items as $i=>$item): ?>
+        <button class="ppa-gallery-item" type="button" data-gallery-open="<?php echo esc_attr($i); ?>" aria-label="ছবি বড় করে দেখুন"><img src="<?php echo esc_url(ppa_asset($item[0])); ?>" alt="<?php echo esc_attr($item[1]); ?>" loading="lazy"><span aria-hidden="true">⤢</span></button>
+      <?php endforeach; ?>
     </div>
+    <dialog class="ppa-modal ppa-lightbox" id="ppa-gallery-modal" aria-label="ক্লাসরুম গ্যালারি"><div class="ppa-lightbox-inner"><button class="ppa-modal-close" type="button" aria-label="বন্ধ করুন">×</button><button type="button" class="ppa-lightbox-prev" aria-label="আগের ছবি">‹</button><img id="ppa-gallery-large" src="" alt=""><button type="button" class="ppa-lightbox-next" aria-label="পরের ছবি">›</button><p id="ppa-gallery-caption"></p></div></dialog>
   </div></section>
 
   <section id="contact" class="ppa-section ppa-gray"><div class="ppa-container">
     <p class="ppa-eyebrow">START A CONVERSATION — যোগাযোগ</p><h2 class="ppa-bangla">ভর্তি সংক্রান্ত তথ্যের জন্য যোগাযোগ করুন</h2><p class="ppa-lead ppa-bangla">কোর্সের সময়সূচি, আসন সংখ্যা বা কনসেপ্ট বুক সম্পর্কে বিস্তারিত জানতে সরাসরি আমাদের ফোন নম্বরে যোগাযোগ করুন অথবা WhatsApp-এ বার্তা পাঠান।</p>
     <div class="ppa-contact-grid">
       <div class="ppa-contact-card"><h3 class="ppa-bangla">সরাসরি হেল্পলাইন</h3><p><a href="tel:+8801312364499">+880 1312-364499</a></p><p><a href="tel:01722003995">01722-003995</a></p><hr><h3 class="ppa-bangla">একাডেমির অফিশিয়াল ঠিকানা</h3><p class="ppa-bangla">১০, জিলা স্কুল রোড (জিলা স্কুলের বিপরীত গলি), ময়মনসিংহ</p><p class="ppa-bangla">যোগাযোগের সময়: সকাল ৯:০০ টা – রাত ৯:০০ টা (প্রতিদিন)</p></div>
-      <div class="ppa-contact-card"><h3>WhatsApp Us</h3><p>Have a question about admissions, class schedules, or concept books? Chat with Photon Physics Academy directly on WhatsApp.</p><a class="ppa-button" href="https://wa.me/8801312364499" target="_blank" rel="noopener noreferrer">WhatsApp-এ যোগাযোগ করুন ↗</a></div>
+      <div class="ppa-contact-card ppa-inquiry-card"><h3 class="ppa-bangla">ভর্তি ও কোর্স সংক্রান্ত অনুসন্ধান</h3>
+        <?php if(isset($_GET['ppa_inquiry']) && $_GET['ppa_inquiry']==='sent'): ?><p class="ppa-form-success ppa-bangla" role="status">আপনার বার্তা সফলভাবে পাঠানো হয়েছে। একাডেমি থেকে যোগাযোগ করা হবে।</p><?php elseif(isset($_GET['ppa_inquiry']) && $_GET['ppa_inquiry']==='error'): ?><p class="ppa-form-error ppa-bangla" role="alert">বার্তা পাঠানো যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন অথবা ফোন করুন।</p><?php endif; ?>
+        <form class="ppa-inquiry-form" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+          <input type="hidden" name="action" value="ppa_submit_inquiry"><?php wp_nonce_field('ppa_submit_inquiry','ppa_inquiry_nonce'); ?>
+          <p class="ppa-honeypot" aria-hidden="true"><label>Leave this empty<input type="text" name="website" tabindex="-1" autocomplete="off"></label></p>
+          <label class="ppa-bangla">আপনার নাম<input required name="inquiry_name" maxlength="100" autocomplete="name"></label>
+          <label class="ppa-bangla">মোবাইল নম্বর<input required name="inquiry_phone" maxlength="24" inputmode="tel" autocomplete="tel"></label>
+          <label class="ppa-bangla">কোন কোর্সে আগ্রহী?
+            <select name="inquiry_course"><option value="">নির্বাচন করুন</option><option>অষ্টম শ্রেণি বিজ্ঞান</option><option>নবম শ্রেণি পদার্থবিজ্ঞান</option><option>দশম শ্রেণি পদার্থবিজ্ঞান</option><option>অন্যান্য</option></select>
+          </label>
+          <label class="ppa-bangla">আপনার বার্তা<textarea name="inquiry_message" rows="3" maxlength="1200"></textarea></label>
+          <button class="ppa-button" type="submit">অনুসন্ধান পাঠান</button>
+        </form>
+        <p style="margin-top:18px">অথবা <a href="https://wa.me/8801312364499" target="_blank" rel="noopener noreferrer">WhatsApp-এ যোগাযোগ করুন ↗</a></p>
+      </div>
     </div>
   </div></section>
 </main>
