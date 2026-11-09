@@ -132,6 +132,18 @@ function ppa_ca_handle_post() {
         }
         ppa_ca_redirect($tab,'error');
     }
+    if ($action==='update_record') {
+        $id=absint($_POST['record_id'] ?? 0);
+        $post=get_post($id);
+        if(!$post || !in_array($post->post_type,array('ppa_student','ppa_batch'),true)) ppa_ca_redirect($tab,'invalid');
+        $title=sanitize_text_field(wp_unslash($_POST['record_title'] ?? ''));
+        $body=sanitize_textarea_field(wp_unslash($_POST['record_details'] ?? ''));
+        if($title==='') ppa_ca_redirect($tab,'required');
+        wp_update_post(array('ID'=>$id,'post_title'=>$title,'post_content'=>$body));
+        $keys=$post->post_type==='ppa_student'?array('bangla_name','institution','guardian_name','phone','guardian_phone','whatsapp_phone','monthly_fee','batch_name','class_level'):array('class_level','max_capacity','schedule_days','time_slot','instructor');
+        foreach($keys as $key) if(isset($_POST[$key])) update_post_meta($id,'_ppa_'.$key,sanitize_text_field(wp_unslash($_POST[$key])));
+        ppa_ca_redirect($tab,'updated');
+    }
     if ($action==='delete_record') {
         $id=absint($_POST['record_id'] ?? 0);
         $post=get_post($id);
@@ -287,6 +299,31 @@ function ppa_ca_add_form($kind,$title,$fields,$tab) {
         echo '</label>';
     }
     echo '</div><div class="ppa-ca-modal-actions"><a href="#ppa-ca-modal-close">Cancel</a><button class="ppa-ca-primary" type="submit">Save Record</button></div></form></div></div>';
+}
+function ppa_ca_edit_form($record_id,$tab) {
+    $post=get_post(absint($record_id));
+    if(!$post || !in_array($post->post_type,array('ppa_student','ppa_batch'),true)) return;
+    $kind=$post->post_type==='ppa_student'?'student':'batch';
+    echo '<div class="ppa-ca-modal" id="ppa-ca-edit-record" role="dialog" aria-modal="true" aria-label="Edit record"><a class="ppa-ca-modal-backdrop" href="#ppa-ca-modal-close" aria-label="Close dialog"></a><div class="ppa-ca-modal-card"><a class="ppa-ca-modal-close" href="#ppa-ca-modal-close" aria-label="Close dialog">×</a><form method="post" class="ppa-ca-form">';
+    wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
+    echo '<input type="hidden" name="ppa_ca_action" value="update_record"><input type="hidden" name="record_id" value="'.(int)$post->ID.'"><input type="hidden" name="return_tab" value="'.esc_attr($tab).'"><h3>Edit '.($kind==='student'?'Student':'Batch').'</h3><div class="ppa-ca-form-grid"><label>Record Name<input name="record_title" type="text" required value="'.esc_attr($post->post_title).'"></label>';
+    if($kind==='student') echo '<label>Student ID<input type="text" value="'.esc_attr(get_post_meta($post->ID,'_ppa_student_id',true)).'" readonly></label>';
+    echo '<label>Class Level<select name="class_level"><option value="">Select class</option>';
+    foreach(array('Class 8','Class 9','Class 10') as $class) echo '<option value="'.esc_attr($class).'" '.selected(get_post_meta($post->ID,'_ppa_class_level',true),$class,false).'>'.esc_html($class).'</option>';
+    echo '</select></label>';
+    if($kind==='student') {
+        echo '<label>Batch<select name="batch_name"><option value="">No batch assigned</option>';
+        foreach(ppa_ca_records('ppa_batch',200) as $batch) echo '<option value="'.esc_attr($batch->post_title).'" '.selected(get_post_meta($post->ID,'_ppa_batch_name',true),$batch->post_title,false).'>'.esc_html($batch->post_title).'</option>';
+        echo '</select></label>';
+        foreach(array('bangla_name'=>'Student Name (Bangla)','institution'=>'Institution','phone'=>'Student Mobile','guardian_name'=>'Guardian Name','guardian_phone'=>'Guardian Mobile','whatsapp_phone'=>'WhatsApp Number','monthly_fee'=>'Monthly Fee (৳)') as $key=>$label) {
+            $type=in_array($key,array('phone','guardian_phone','whatsapp_phone'),true)?'tel':($key==='monthly_fee'?'number':'text');
+            echo '<label>'.esc_html($label).'<input name="'.esc_attr($key).'" type="'.esc_attr($type).'" value="'.esc_attr(get_post_meta($post->ID,'_ppa_'.$key,true)).'"></label>';
+        }
+    } else {
+        echo '<label>Maximum Capacity<input name="max_capacity" type="number" min="0" value="'.esc_attr(get_post_meta($post->ID,'_ppa_max_capacity',true)).'"></label>';
+        foreach(array('schedule_days'=>'Schedule Days','time_slot'=>'Class Time','instructor'=>'Instructor') as $key=>$label) echo '<label>'.esc_html($label).'<input name="'.esc_attr($key).'" type="text" value="'.esc_attr(get_post_meta($post->ID,'_ppa_'.$key,true)).'"></label>';
+    }
+    echo '<label class="is-wide">Details<textarea name="record_details" rows="4">'.esc_textarea($post->post_content).'</textarea></label></div><div class="ppa-ca-modal-actions"><a href="#ppa-ca-modal-close">Cancel</a><button class="ppa-ca-primary" type="submit">Save Changes</button></div></form></div></div>';
 }
 function ppa_ca_styles() { ?>
 <style>
