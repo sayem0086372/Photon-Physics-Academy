@@ -154,6 +154,16 @@ function ppa_ca_table($posts,$type,$tab) {
     }
     echo '</tbody></table></div>';
 }
+function ppa_ca_section_intro($title,$description,$count_label='') {
+    echo '<div class="ppa-ca-section-head"><div><h2>'.esc_html($title).'</h2><p>'.esc_html($description).'</p></div>';
+    if ($count_label!=='') echo '<span class="ppa-ca-section-count">'.esc_html($count_label).'</span>';
+    echo '</div>';
+}
+function ppa_ca_metric_cards($items) {
+    echo '<div class="ppa-ca-metric-grid">';
+    foreach ($items as $item) echo '<article class="ppa-ca-metric"><span>'.esc_html($item[0]).'</span><strong>'.esc_html($item[1]).'</strong><small>'.esc_html($item[2]).'</small></article>';
+    echo '</div>';
+}
 function ppa_ca_add_form($kind,$title,$fields,$tab) {
     echo '<form method="post" class="ppa-ca-form">';
     wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
@@ -459,6 +469,19 @@ document.addEventListener('DOMContentLoaded',function(){
 </script>
 <?php }
 
+function ppa_ca_visual_parity_styles() { ?><style>
+/* Main-branch section layout parity */
+.ppa-ca-metric-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:0 0 20px}
+.ppa-ca-metric{background:#fff;border:1px solid #e2e8f0;border-radius:13px;padding:17px 18px;box-shadow:0 2px 8px rgba(15,23,42,.025)}
+.ppa-ca-metric span,.ppa-ca-metric small{display:block;color:#64748b;font-size:11px;font-weight:650}.ppa-ca-metric strong{display:block;margin:8px 0 3px;font-size:25px;line-height:1.2;font-weight:850;letter-spacing:-.035em;color:#0f172a}.ppa-ca-metric small{font-weight:400}
+.ppa-ca-data-panel{padding:0;overflow:hidden}.ppa-ca-data-panel>.ppa-ca-panel-head{padding:20px 22px 16px;border-bottom:1px solid #eef2f7}.ppa-ca-data-panel .ppa-ca-table-wrap{padding:0 8px 8px}
+.ppa-ca-program-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:0 0 20px}.ppa-ca-program-card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:20px;box-shadow:0 2px 8px rgba(15,23,42,.025)}.ppa-ca-program-top{display:flex;align-items:center;justify-content:space-between}.ppa-ca-program-icon{width:42px;height:42px;border-radius:12px;background:#eff6ff;color:#2563eb;display:grid;place-items:center;font-size:19px}.ppa-ca-program-card h3{font-size:17px;font-weight:800;color:#0f172a;margin:15px 0}.ppa-ca-program-meta{display:grid;gap:9px;color:#64748b;font-size:12px}.ppa-ca-program-foot{border-top:1px solid #f1f5f9;margin-top:17px;padding-top:13px;color:#64748b;font-size:11px}.ppa-ca-program-foot span{display:block;margin-top:5px;color:#334155;font-size:12px}
+.ppa-ca-settings-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;align-items:start}.ppa-ca-settings-form{margin:0;padding:0;border:0;box-shadow:none}.ppa-ca-settings-preview{margin:0}.ppa-ca-settings-note{padding:15px;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;color:#64748b;font-size:12px;line-height:1.7}
+.ppa-ca-store-banner{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:25px 28px;margin:0 0 20px;border-radius:16px;background:linear-gradient(115deg,#102b50,#1d4ed8);color:white;overflow:hidden}.ppa-ca-store-banner span{font-size:10px;letter-spacing:1.8px;font-weight:800;color:#bfdbfe}.ppa-ca-store-banner h3{font-size:21px;font-weight:850;margin:7px 0}.ppa-ca-store-banner p{font-size:12px;color:#dbeafe;margin:0}.ppa-ca-store-banner-mark{width:66px;height:66px;border:1px solid rgba(255,255,255,.3);border-radius:18px;display:grid;place-items:center;font-size:19px;font-weight:900;color:#fff;background:rgba(255,255,255,.1)}.ppa-ca-store-card{position:relative;min-height:150px;padding:21px 48px 20px 20px}.ppa-ca-store-card h3{font-size:15px;font-weight:800;color:#0f172a}.ppa-ca-store-card p{font-size:12px;line-height:1.6;color:#64748b}.ppa-ca-store-arrow{position:absolute;right:18px;top:20px;color:#94a3b8;font-size:17px}
+@media(max-width:900px){.ppa-ca-settings-grid{grid-template-columns:1fr}}
+@media(max-width:680px){.ppa-ca-metric-grid{grid-template-columns:1fr;gap:10px}.ppa-ca-metric{padding:14px 16px}.ppa-ca-program-grid{grid-template-columns:1fr}.ppa-ca-store-banner{padding:20px}.ppa-ca-store-banner h3{font-size:18px}.ppa-ca-store-banner-mark{width:50px;height:50px}.ppa-ca-data-panel>.ppa-ca-panel-head{padding:16px}}
+</style><?php }
+
 function ppa_ca_render_page() {
     status_header(200); nocache_headers();
     $user=wp_get_current_user();
@@ -470,6 +493,7 @@ function ppa_ca_render_page() {
     ppa_ca_styles();
     ppa_ca_enhanced_styles();
     ppa_ca_section_styles();
+    ppa_ca_visual_parity_styles();
     if(!is_user_logged_in() || !current_user_can('manage_options')) {
         echo ppa_ca_login_screen();
     } else {
@@ -498,15 +522,28 @@ function ppa_ca_render_page() {
             }
             echo '</div>';
         } elseif($tab==='students') {
-            echo '<section class="ppa-ca-panel"><h2>Students Management</h2>'; ppa_ca_table(ppa_ca_records('ppa_student'),'ppa_student',$tab); echo '</section>';
-            ppa_ca_add_form('student','Add Student',array('record_title'=>'Student Name','student_id'=>'Student ID (5 digits, YYNNN)','class_level'=>'Class (8 / 9 / 10)','phone'=>'Student Mobile (Optional)','guardian_phone'=>'Guardian Mobile','whatsapp_phone'=>'WhatsApp Number (Optional)','monthly_fee'=>'Monthly Fee (৳)','batch_name'=>'Batch','record_details'=>'Additional Details'),$tab);
+            $student_posts=ppa_ca_records('ppa_student');
+            ppa_ca_section_intro('Student Management','View, search and maintain academy student records.',number_format_i18n(count($student_posts)).' students');
+            ppa_ca_metric_cards(array(array('Total Students',(string)count($student_posts),'All registered students'),array('Active Classes','8 · 9 · 10','Academy class levels'),array('Student ID Format','YYNNN','Five-digit student codes')));
+            echo '<section class="ppa-ca-panel ppa-ca-data-panel"><div class="ppa-ca-panel-head"><div><h2>All Students</h2><p>Student profiles, guardian contacts and monthly fee information.</p></div><span class="ppa-ca-soft-badge">Student directory</span></div>';
+            ppa_ca_table($student_posts,'ppa_student',$tab); echo '</section>';
+            ppa_ca_add_form('student','Add New Student',array('record_title'=>'Student Name','student_id'=>'Student ID (5 digits, YYNNN)','class_level'=>'Class (8 / 9 / 10)','phone'=>'Student Mobile (Optional)','guardian_phone'=>'Guardian Mobile','whatsapp_phone'=>'WhatsApp Number (Optional)','monthly_fee'=>'Monthly Fee (৳)','batch_name'=>'Batch','record_details'=>'Additional Details'),$tab);
         } elseif($tab==='programs') {
-            echo '<section class="ppa-ca-panel"><h2>Programs & Batches</h2>'; ppa_ca_table(ppa_ca_records('ppa_batch'),'ppa_batch',$tab); echo '</section>';
-            ppa_ca_add_form('batch','Add Batch',array('record_title'=>'Batch Name','class_level'=>'Class Level','schedule_days'=>'Schedule Days','time_slot'=>'Class Time','instructor'=>'Instructor','record_details'=>'Batch details / class schedule'),$tab);
+            $batch_posts=ppa_ca_records('ppa_batch');
+            ppa_ca_section_intro('Programs & Batches','Organize class groups, schedules and teaching information.',number_format_i18n(count($batch_posts)).' batches');
+            echo '<div class="ppa-ca-program-grid">';
+            if($batch_posts){ foreach($batch_posts as $batch){ $class=get_post_meta($batch->ID,'_ppa_class_level',true); $days=get_post_meta($batch->ID,'_ppa_schedule_days',true); $time=get_post_meta($batch->ID,'_ppa_time_slot',true); $teacher=get_post_meta($batch->ID,'_ppa_instructor',true); echo '<article class="ppa-ca-program-card"><div class="ppa-ca-program-top"><span class="ppa-ca-program-icon">▤</span><span class="ppa-ca-soft-badge">'.esc_html($class?:'Academy Batch').'</span></div><h3>'.esc_html($batch->post_title).'</h3><div class="ppa-ca-program-meta"><span>◷ '.esc_html($days?:'Schedule not set').'</span><span>◴ '.esc_html($time?:'Time not set').'</span><span>♙ '.esc_html($teacher?:'Instructor not set').'</span></div><div class="ppa-ca-program-foot">Batch details <span>'.esc_html(wp_trim_words(wp_strip_all_tags($batch->post_content),12)).'</span></div></article>'; }} else echo '<div class="ppa-ca-empty">No batches have been created yet.</div>';
+            echo '</div>';
+            ppa_ca_add_form('batch','Create New Batch',array('record_title'=>'Batch Name','class_level'=>'Class Level','schedule_days'=>'Schedule Days','time_slot'=>'Class Time','instructor'=>'Instructor','record_details'=>'Batch details / class schedule'),$tab);
             echo '<section class="ppa-ca-panel ppa-ca-info-panel"><div class="ppa-ca-info-icon">▤</div><div><strong>Course pages</strong><p>Course page editing will be brought into this custom panel. The public course content and existing pages will be preserved during the database integration stage.</p></div></section>';
         } elseif($tab==='payments') {
-            echo '<section class="ppa-ca-panel"><h2>Payments & Fees</h2>'; ppa_ca_table(ppa_ca_records('ppa_fee_payment'),'ppa_fee_payment',$tab); echo '</section>';
-            ppa_ca_add_form('payment','Record Fee Payment',array('record_title'=>'Student Name / ID','student_id'=>'Student ID (YYNNN)','billing_month'=>'Billing Month','amount'=>'Amount (৳)','payment_method'=>'Payment Method','payment_date'=>'Payment Date','record_details'=>'Payment note'),$tab);
+            $payment_posts=ppa_ca_records('ppa_fee_payment');
+            ppa_ca_section_intro('Fees & Payments','Track monthly collections and record student fee payments.',number_format_i18n(count($payment_posts)).' records');
+            $total_collected=0; foreach($payment_posts as $payment_post) $total_collected+=(float)get_post_meta($payment_post->ID,'_ppa_amount',true);
+            ppa_ca_metric_cards(array(array('Total Collected','৳'.number_format_i18n($total_collected),'From recorded payments'),array('Payment Records',(string)count($payment_posts),'All saved transactions'),array('Payment Tracking','Monthly','Billing month and payment method')));
+            echo '<section class="ppa-ca-panel ppa-ca-data-panel"><div class="ppa-ca-panel-head"><div><h2>Payment Records</h2><p>Review recent payments and their billing details.</p></div><span class="ppa-ca-soft-badge">Fee ledger</span></div>';
+            ppa_ca_table($payment_posts,'ppa_fee_payment',$tab); echo '</section>';
+            ppa_ca_add_form('payment','Record a Fee Payment',array('record_title'=>'Student Name / ID','student_id'=>'Student ID (YYNNN)','billing_month'=>'Billing Month','amount'=>'Amount (৳)','payment_method'=>'Payment Method','payment_date'=>'Payment Date','record_details'=>'Payment note'),$tab);
         } elseif($tab==='notices') {
             $notice_posts=ppa_ca_records('ppa_notice',50);
             $notice_terms=get_terms(array('taxonomy'=>'ppa_notice_category','hide_empty'=>false));
@@ -531,15 +568,20 @@ function ppa_ca_render_page() {
             foreach($notice_terms as $term) echo '<option value="'.esc_attr($term->slug).'">'.esc_html($term->name).'</option>';
             echo '</select></label><label class="is-wide">Notice Details<textarea name="notice_content" rows="5" required></textarea></label><label class="ppa-ca-check"><input type="checkbox" name="notice_published" value="1" checked> Publish immediately on the website</label></div><button class="ppa-ca-primary" type="submit">Save Notice</button></form>';
         } elseif($tab==='results') {
-            echo '<section class="ppa-ca-panel"><h2>Results & Exams</h2>'; ppa_ca_table(ppa_ca_records('ppa_exam_result'),'ppa_exam_result',$tab); echo '</section>';
+            $result_posts=ppa_ca_records('ppa_exam_result');
+            ppa_ca_section_intro('Results & Exams','Publish and maintain student examination results.',number_format_i18n(count($result_posts)).' results');
+            ppa_ca_metric_cards(array(array('Published Results',(string)count($result_posts),'Saved exam records'),array('Assessment Records','Exams','Student performance'),array('Result Format','Marks / Grade','Flexible result entry')));
+            echo '<section class="ppa-ca-panel ppa-ca-data-panel"><div class="ppa-ca-panel-head"><div><h2>Exam Results</h2><p>Student-wise examination and assessment records.</p></div><span class="ppa-ca-soft-badge">Academic results</span></div>';
+            ppa_ca_table($result_posts,'ppa_exam_result',$tab); echo '</section>';
             ppa_ca_add_form('result','Add Exam Result',array('record_title'=>'Student Name / ID','student_id'=>'Student ID (YYNNN)','exam_name'=>'Exam Name','marks'=>'Marks / Grade','record_details'=>'Result details'),$tab);
         } elseif($tab==='sms') {
             echo '<div class="ppa-ca-section-head"><div><h2>SMS Management</h2><p>Send academy updates to students and guardians through the SMS gateway.</p></div><a class="ppa-ca-outline-link" href="https://portal.sms.net.bd/login/" target="_blank" rel="noopener">Gateway Login ↗</a></div>';
             echo '<div class="ppa-ca-sms-grid"><section class="ppa-ca-panel"><div class="ppa-ca-panel-head"><div><h2>Gateway Connection</h2><p>SMS provider configuration and account status.</p></div><span class="ppa-ca-soft-badge">sms.net.bd</span></div><div class="ppa-ca-gateway-status"><span class="ppa-ca-status-dot"></span><div><strong>Connection setup pending</strong><small>Secure API connection will be configured during database and integration setup.</small></div></div><a class="ppa-ca-primary" href="https://portal.sms.net.bd/login/" target="_blank" rel="noopener">Open SMS Gateway</a></section>';
             echo '<section class="ppa-ca-panel"><div class="ppa-ca-panel-head"><div><h2>Message Centre</h2><p>Prepare announcements for selected student groups.</p></div></div><label class="ppa-ca-field-label">Recipient group<select disabled><option>All active students and guardians</option></select></label><label class="ppa-ca-field-label">Message<textarea rows="4" disabled placeholder="Write your academy announcement…"></textarea></label><button class="ppa-ca-primary" type="button" disabled>Send SMS · Integration pending</button></section></div><section class="ppa-ca-info-panel"><div class="ppa-ca-info-icon">✓</div><div><strong>Privacy rule</strong><p>Sent SMS history will not be stored. Guardian numbers will be the default recipient; student mobile numbers remain optional. WhatsApp contacts will not be treated as SMS recipients.</p></div></section>';
         } elseif($tab==='settings') {
-            echo '<form method="post" class="ppa-ca-form">'; wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
-            echo '<input type="hidden" name="ppa_ca_action" value="save_settings"><input type="hidden" name="return_tab" value="settings"><h3>SMS Gateway & Homepage Slideshow</h3><div class="ppa-ca-form-grid">';
+            ppa_ca_section_intro('Settings','Configure academy integrations and homepage presentation.');
+            echo '<div class="ppa-ca-settings-grid"><section class="ppa-ca-panel"><div class="ppa-ca-panel-head"><div><h2>SMS Gateway</h2><p>Provider endpoint and sender identity.</p></div><span class="ppa-ca-soft-badge">Integration</span></div><form method="post" class="ppa-ca-form ppa-ca-settings-form">'; wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
+            echo '<input type="hidden" name="ppa_ca_action" value="save_settings"><input type="hidden" name="return_tab" value="settings"><div class="ppa-ca-form-grid">';
             foreach(array('sms_gateway_url'=>'SMS Gateway URL','sms_sender_id'=>'Sender ID','slideshow_urls'=>'Slideshow Image URLs (one per line)') as $key=>$label) {
                 $value=get_option('ppa_ca_'.$key,'');
                 echo '<label class="'.($key==='slideshow_urls'?'is-wide':'').'">'.esc_html($label);
@@ -547,10 +589,10 @@ function ppa_ca_render_page() {
                 else echo '<input type="text" name="'.esc_attr($key).'" value="'.esc_attr($value).'">';
                 echo '</label>';
             }
-            echo '</div><button class="ppa-ca-primary" type="submit">Save Settings</button></form>';
+            echo '</div><button class="ppa-ca-primary" type="submit">Save Settings</button></form></section><section class="ppa-ca-panel ppa-ca-settings-preview"><div class="ppa-ca-panel-head"><div><h2>Homepage Slideshow</h2><p>Use one image URL per line. Images remain externally hosted.</p></div><span class="ppa-ca-soft-badge">Homepage</span></div><div class="ppa-ca-settings-note">The slideshow image list is saved as URLs only. No image files are uploaded to the WordPress database.</div></section></div>';
         } elseif($tab==='store') {
-            echo '<div class="ppa-ca-section-head"><div><h2>Store Management</h2><p>Manage books, customer orders, promotions and delivery operations.</p></div><span class="ppa-ca-soft-badge">Online bookstore</span></div>';
-            echo '<div class="ppa-ca-store-grid">';
+            ppa_ca_section_intro('Store Management','Manage the online bookstore, customer orders and sales operations.');
+            echo '<div class="ppa-ca-store-banner"><div><span>PHOTON BOOKSTORE</span><h3>Books, orders & store operations</h3><p>Keep the academy bookstore organized from this dedicated admin workspace.</p></div><div class="ppa-ca-store-banner-mark">PPA</div></div><div class="ppa-ca-store-grid">';
             $storeCards=array(
               array('▣','Books & Inventory','Manage book details, cover images, pricing, discounts and stock.','books'),
               array('↗','Customer Orders','Review new orders, payment verification and fulfilment status.','orders'),
@@ -558,7 +600,7 @@ function ppa_ca_render_page() {
               array('⌁','Delivery Settings','Configure delivery charges, free delivery threshold and instructions.','delivery'),
               array('▥','Sales Analytics','Review order volume, revenue and top-selling books.','analytics')
             );
-            foreach($storeCards as $card) echo '<article class="ppa-ca-store-card"><div class="ppa-ca-store-icon">'.esc_html($card[0]).'</div><div><h3>'.esc_html($card[1]).'</h3><p>'.esc_html($card[2]).'</p><span class="ppa-ca-coming-tag">Workspace UI · Database connection next</span></div></article>';
+            foreach($storeCards as $card) echo '<article class="ppa-ca-store-card"><div class="ppa-ca-store-icon">'.esc_html($card[0]).'</div><div><h3>'.esc_html($card[1]).'</h3><p>'.esc_html($card[2]).'</p><span class="ppa-ca-coming-tag">Visual workspace · Integration pending</span></div><span class="ppa-ca-store-arrow">↗</span></article>';
             echo '</div><section class="ppa-ca-panel ppa-ca-info-panel"><div class="ppa-ca-info-icon">i</div><div><strong>Store data protection</strong><p>Book catalogue, customer orders, payment references, coupon records and delivery settings will be preserved. Store management will be implemented in this custom panel without sending administrators to the WordPress Dashboard.</p></div></section>';
         }
         echo '</main></div></div>';
