@@ -793,11 +793,11 @@ function ppa_ca_render_page() {
             } else {
                 echo '<div class="ppa-ca-empty"><strong>No notices created yet</strong><br>Create your first announcement below.</div>';
             }
-            echo '</section><form method="post" class="ppa-ca-form">';
+            echo '</section><div class="ppa-ca-modal-launch"><a href="#ppa-ca-modal-notice">＋ Create a Notice</a></div><div class="ppa-ca-modal" id="ppa-ca-modal-notice" role="dialog" aria-modal="true" aria-label="Create a Notice"><a class="ppa-ca-modal-backdrop" href="#ppa-ca-modal-close" aria-label="Close dialog"></a><div class="ppa-ca-modal-card"><a class="ppa-ca-modal-close" href="#ppa-ca-modal-close" aria-label="Close dialog">×</a><form method="post" class="ppa-ca-form">';
             wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
             echo '<input type="hidden" name="ppa_ca_action" value="add_notice"><h3>Create a Notice</h3><div class="ppa-ca-form-grid"><label>Notice Title<input name="notice_title" type="text" required maxlength="180"></label><label>Notice Category<select name="notice_category"><option value="">Select category</option>';
             foreach($notice_terms as $term) echo '<option value="'.esc_attr($term->slug).'">'.esc_html($term->name).'</option>';
-            echo '</select></label><label class="is-wide">Notice Details<textarea name="notice_content" rows="5" required></textarea></label><label class="ppa-ca-check"><input type="checkbox" name="notice_published" value="1" checked> Publish immediately on the website</label></div><button class="ppa-ca-primary" type="submit">Save Notice</button></form>';
+            echo '</select></label><label class="is-wide">Notice Details<textarea name="notice_content" rows="5" required></textarea></label><label class="ppa-ca-check"><input type="checkbox" name="notice_published" value="1" checked> Publish immediately on the website</label></div><div class="ppa-ca-modal-actions"><a href="#ppa-ca-modal-close">Cancel</a><button class="ppa-ca-primary" type="submit">Save Notice</button></div></form></div></div>';
         } elseif($tab==='results') {
             $result_posts=ppa_ca_records('ppa_exam_result');
             $result_query=isset($_GET['ppa_search'])?sanitize_text_field(wp_unslash($_GET['ppa_search'])):'';
