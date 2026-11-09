@@ -30,3 +30,15 @@ function ppa_core_register_notice_type() {
     ));
 }
 add_action('init', 'ppa_core_register_notice_type');
+
+/** Ensure notice permalinks are ready immediately after activation. */
+function ppa_core_activate() {
+    ppa_core_register_notice_type();
+    flush_rewrite_rules();
+}
+register_activation_hook(__FILE__, 'ppa_core_activate');
+
+function ppa_core_deactivate() {
+    flush_rewrite_rules();
+}
+register_deactivation_hook(__FILE__, 'ppa_core_deactivate');
