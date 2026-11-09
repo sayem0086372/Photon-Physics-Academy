@@ -17,6 +17,13 @@ function ppa_core_register_notice_taxonomy() {
     ));
 }
 add_action('init','ppa_core_register_notice_taxonomy',11);
+function ppa_core_seed_notice_categories() {
+    $categories = array('ভর্তি বিজ্ঞপ্তি'=>'admission','পরীক্ষার সময়সূচি'=>'exam-schedule','ক্লাসের সময়সূচি'=>'class-schedule','জরুরি ঘোষণা'=>'urgent','ফলাফল প্রকাশ'=>'results');
+    foreach ($categories as $name=>$slug) {
+        if (!term_exists($slug,'ppa_notice_category')) { wp_insert_term($name,'ppa_notice_category',array('slug'=>$slug)); }
+    }
+}
+add_action('init','ppa_core_seed_notice_categories',20);
 
 // Store admission/contact enquiries in WordPress for the academy team.
 function ppa_core_register_inquiry_type() {
@@ -72,12 +79,12 @@ function ppa_core_render_admin_dashboard() {
         $counts = wp_count_posts($type);
         return $counts && isset($counts->publish) ? (int)$counts->publish : 0;
     };
-    $inquiries = $count('ppa_inquiry');
+    $inquiry_counts = wp_count_posts('ppa_inquiry');
+    $inquiries = $inquiry_counts && isset($inquiry_counts->private) ? (int)$inquiry_counts->private : 0;
     $notices = $count('ppa_notice');
     $courses = $count('ppa_course');
     $products = function_exists('wc_get_products') ? (int)wp_count_posts('product')->publish : 0;
     $links = array(
-        array(__('Students & Batches','photon-physics-academy'), admin_url('edit.php?post_type=ppa_student'), __('Student and batch management is part of the next migration phase.','photon-physics-academy')),
         array(__('Admission Inquiries','photon-physics-academy'), admin_url('edit.php?post_type=ppa_inquiry'), __('Review messages submitted from the public homepage.','photon-physics-academy')),
         array(__('Notices','photon-physics-academy'), admin_url('edit.php?post_type=ppa_notice'), __('Publish and organize academy notices.','photon-physics-academy')),
         array(__('Courses & Programs','photon-physics-academy'), admin_url('edit.php?post_type=ppa_course'), __('Edit homepage course cards and program information.','photon-physics-academy')),
