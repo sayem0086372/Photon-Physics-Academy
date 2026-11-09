@@ -97,9 +97,11 @@ function ppa_ca_handle_post() {
         if (!$title) ppa_ca_redirect($tab,'required');
         $id=wp_insert_post(array('post_type'=>$allowed[$kind],'post_status'=>'publish','post_title'=>$title,'post_content'=>$body),true);
         if (!is_wp_error($id)) {
-            foreach (array('student_id','phone','guardian_phone','whatsapp_phone','monthly_fee','batch_name','class_level','schedule_days','time_slot','instructor','billing_month','amount','payment_method','payment_date','exam_name','marks') as $key) {
-                if (isset($_POST[$key])) update_post_meta($id,'_ppa_'.$key,sanitize_text_field(wp_unslash($_POST[$key])));
+            foreach (array('student_id','bangla_name','institution','guardian_name','phone','guardian_phone','whatsapp_phone','monthly_fee','batch_name','class_level','schedule_days','time_slot','instructor','billing_month','amount','payment_method','payment_date','exam_name','marks') as $key) {
+                if (isset($_POST[$key]) && !($kind==='student' && $key==='student_id')) update_post_meta($id,'_ppa_'.$key,sanitize_text_field(wp_unslash($_POST[$key])));
             }
+            if($kind==='student') update_post_meta($id,'_ppa_student_id',ppa_ca_next_student_id());
+            if(false) {}
             ppa_ca_redirect($tab,'created');
         }
         ppa_ca_redirect($tab,'error');
@@ -132,6 +134,15 @@ function ppa_ca_login_screen() {
 function ppa_ca_records($type,$limit=100) {
     $statuses = $type === 'ppa_notice' ? array('publish','draft') : array('publish');
     return get_posts(array('post_type'=>$type,'post_status'=>$statuses,'numberposts'=>$limit,'orderby'=>'date','order'=>'DESC'));
+}
+function ppa_ca_next_student_id() {
+    $prefix=date('y');
+    $highest=0;
+    foreach(ppa_ca_records('ppa_student',1000) as $student) {
+        $existing=(string)get_post_meta($student->ID,'_ppa_student_id',true);
+        if(preg_match('/^'.preg_quote($prefix,'/').'([0-9]{3})$/',$existing,$match)) $highest=max($highest,(int)$match[1]);
+    }
+    return $prefix.sprintf('%03d',$highest+1);
 }
 function ppa_ca_table($posts,$type,$tab) {
     if (!$posts) { echo '<div class="ppa-ca-empty">No records yet. Add your first record using the form below.</div>'; return; }
@@ -186,8 +197,33 @@ function ppa_ca_add_form($kind,$title,$fields,$tab) {
     foreach($fields as $field=>$label) {
         $wide=in_array($field,array('record_details'),true);
         echo '<label class="'.($wide?'is-wide':'').'">'.esc_html($label);
-        if ($field==='record_details') echo '<textarea name="record_details" rows="3"></textarea>';
-        else echo '<input name="'.esc_attr($field).'" type="text" '.($field==='record_title'?'required':'').'>';
+        if($field==='record_details') {
+            echo '<textarea name="record_details" rows="3"></textarea>';
+        } elseif($field==='student_id' && $kind==='student') {
+            echo '<input name="student_id" type="text" value="'.esc_attr(ppa_ca_next_student_id()).'" readonly aria-readonly="true">';
+        } elseif($field==='class_level') {
+            echo '<select name="class_level" required><option value="">Select class</option><option value="Class 8">Class 8</option><option value="Class 9">Class 9</option><option value="Class 10">Class 10</option></select>';
+        } elseif($field==='batch_name') {
+            echo '<select name="batch_name"><option value="">No batch assigned</option>';
+            foreach(ppa_ca_records('ppa_batch',200) as $batch) echo '<option value="'.esc_attr($batch->post_title).'">'.esc_html($batch->post_title).'</option>';
+            echo '</select>';
+        } elseif($field==='billing_month') {
+            echo '<select name="billing_month" required><option value="">Select month</option>';
+            foreach(array('January','February','March','April','May','June','July','August','September','October','November','December') as $month) echo '<option value="'.esc_attr($month).'">'.esc_html($month).'</option>';
+            echo '</select>';
+        } elseif($field==='payment_method') {
+            echo '<select name="payment_method" required><option value="">Select method</option><option value="Cash">Cash</option><option value="bKash">bKash</option><option value="Nagad">Nagad</option></select>';
+        } elseif(in_array($field,array('monthly_fee','amount','marks'),true)) {
+            echo '<input name="'.esc_attr($field).'" type="number" min="0" step="0.01" '.($field==='amount'?'required':'').' inputmode="decimal">';
+        } elseif($field==='payment_date') {
+            echo '<input name="payment_date" type="date">';
+        } elseif(in_array($field,array('phone','guardian_phone','whatsapp_phone'),true)) {
+            echo '<input name="'.esc_attr($field).'" type="tel" inputmode="tel" placeholder="01XXXXXXXXX" '.($field==='guardian_phone'?'required':'').'>';
+        } elseif($field==='record_title') {
+            echo '<input name="record_title" type="text" required maxlength="180" placeholder="'.esc_attr($kind==='student'?'Student full name':($kind==='batch'?'Batch name':'Name / title')).'">';
+        } else {
+            echo '<input name="'.esc_attr($field).'" type="text" '.($field==='record_title'?'required':'').'>';
+        }
         echo '</label>';
     }
     echo '</div><button class="ppa-ca-primary" type="submit">Save Record</button></form>';
@@ -591,7 +627,7 @@ function ppa_ca_render_page() {
             echo '<section class="ppa-ca-panel ppa-ca-data-panel"><div class="ppa-ca-panel-head"><div><h2>All Students</h2><p>Student profiles, guardian contacts and monthly fee information.</p></div><span class="ppa-ca-soft-badge">Student directory</span></div>';
             ppa_ca_search_toolbar('Search by student name, ID or phone number...');
             ppa_ca_table($student_posts,'ppa_student',$tab); echo '</section>';
-            ppa_ca_add_form('student','Add New Student',array('record_title'=>'Student Name','student_id'=>'Student ID (5 digits, YYNNN)','class_level'=>'Class (8 / 9 / 10)','phone'=>'Student Mobile (Optional)','guardian_phone'=>'Guardian Mobile','whatsapp_phone'=>'WhatsApp Number (Optional)','monthly_fee'=>'Monthly Fee (৳)','batch_name'=>'Batch','record_details'=>'Additional Details'),$tab);
+            ppa_ca_add_form('student','Add New Student',array('record_title'=>'Student Name','student_id'=>'Student ID (5 digits, YYNNN)','class_level'=>'Class (8 / 9 / 10)','batch_name'=>'Batch (Optional)','bangla_name'=>'Student Name (Bangla, Optional)','institution'=>'Institution (Optional)','phone'=>'Student Mobile (Optional)','guardian_name'=>'Guardian Name (Optional)','guardian_phone'=>'Guardian Mobile','whatsapp_phone'=>'WhatsApp Number (Optional)','monthly_fee'=>'Monthly Fee (৳)','record_details'=>'Additional Details'),$tab);
         } elseif($tab==='programs') {
             $batch_posts=ppa_ca_records('ppa_batch');
             ppa_ca_section_intro('Programs & Batches','Organize class groups, schedules and teaching information.',number_format_i18n(count($batch_posts)).' batches');
