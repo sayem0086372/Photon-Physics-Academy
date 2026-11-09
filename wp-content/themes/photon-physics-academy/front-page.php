@@ -58,30 +58,55 @@ get_header();
     </div>
   </div></section>
 
-  <section id="programs" class="ppa-section ppa-programs-section"><div class="ppa-container">
-    <div class="ppa-section-heading-row">
-      <div><p class="ppa-eyebrow">LEARNING PATHWAYS — শিক্ষা কার্যক্রম</p><h2 class="ppa-bangla">শ্রেণিভিত্তিক অ্যাকাডেমিক কার্যক্রম</h2><p class="ppa-lead ppa-bangla">প্রতিটি শ্রেণির জন্য পরিকল্পিত পাঠদান, কনসেপ্টের স্পষ্টতা এবং ধারাবাহিক অনুশীলন।</p></div>
-      <div class="ppa-program-note"><strong class="ppa-bangla">অ্যাকাডেমিক নোটিশ</strong><p class="ppa-bangla">বর্তমান সক্রিয় ব্যাচ ও রুটিন নিশ্চিত করতে সরাসরি একাডেমি অফিসে যোগাযোগ করুন।</p></div>
+  <section id="programs" class="ppa-section ppa-programs-section">
+    <div class="ppa-container">
+      <div class="ppa-section-heading-row">
+        <div>
+          <p class="ppa-eyebrow">LEARNING PATHWAYS — শিক্ষা কার্যক্রম</p>
+          <h2 class="ppa-bangla">শ্রেণিভিত্তিক অ্যাকাডেমিক কার্যক্রম</h2>
+          <p class="ppa-lead ppa-bangla">প্রতিটি শ্রেণির জন্য পরিকল্পিত পাঠদান, কনসেপ্টের স্পষ্টতা এবং ধারাবাহিক অনুশীলন।</p>
+        </div>
+      </div>
+      <?php $course_query = new WP_Query(array('post_type'=>'ppa_course','post_status'=>'publish','posts_per_page'=>3,'orderby'=>'menu_order title','order'=>'ASC')); ?>
+      <?php if ($course_query->have_posts()) : ?>
+        <div class="ppa-program-grid ppa-course-reference-grid">
+          <?php while ($course_query->have_posts()) : $course_query->the_post();
+            $course_subtitle = get_post_meta(get_the_ID(), '_ppa_course_subtitle', true);
+            $course_audience = get_post_meta(get_the_ID(), '_ppa_course_audience', true);
+            $course_features = get_post_meta(get_the_ID(), '_ppa_course_features', true);
+            $course_image = get_post_meta(get_the_ID(), '_ppa_course_image', true);
+          ?>
+            <article class="ppa-program-card ppa-course-reference-card">
+              <?php if ($course_image) : ?>
+                <div class="ppa-course-reference-image"><img src="<?php echo esc_url($course_image); ?>" alt="<?php echo esc_attr(get_the_title()); ?>" loading="lazy"></div>
+              <?php elseif (has_post_thumbnail()) : ?>
+                <div class="ppa-course-reference-image"><?php the_post_thumbnail('large', array('loading'=>'lazy')); ?></div>
+              <?php endif; ?>
+              <div class="ppa-course-reference-body">
+                <div class="ppa-course-reference-badge"><?php echo esc_html(get_the_title()); ?></div>
+                <h3 class="ppa-bangla"><?php the_title(); ?></h3>
+                <?php if ($course_subtitle) : ?><p class="ppa-course-reference-subtitle ppa-bangla"><?php echo esc_html($course_subtitle); ?></p><?php endif; ?>
+                <?php if ($course_audience) : ?>
+                  <div class="ppa-course-reference-audience"><span class="ppa-bangla">উপযুক্ত শিক্ষার্থী:</span> <strong class="ppa-bangla"><?php echo esc_html($course_audience); ?></strong></div>
+                <?php endif; ?>
+                <?php if (is_array($course_features) && $course_features) : ?>
+                  <ul class="ppa-course-reference-features">
+                    <?php foreach (array_slice($course_features,0,4) as $feature) : ?><li class="ppa-bangla"><?php echo esc_html($feature); ?></li><?php endforeach; ?>
+                  </ul>
+                <?php endif; ?>
+              </div>
+              <div class="ppa-course-reference-footer">
+                <p class="ppa-bangla"><span aria-hidden="true">◉</span> প্রস্তাবিত লার্নিং পাথওয়ে · বিস্তারিত জানতে যোগাযোগ করুন</p>
+                <a class="ppa-course-reference-button ppa-bangla" href="https://wa.me/8801312364499" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">◯</span> ব্যাচ ও সময়সূচি জানতে যোগাযোগ</a>
+              </div>
+            </article>
+          <?php endwhile; ?>
+        </div>
+      <?php else : ?>
+        <div class="ppa-notice-card"><p class="ppa-bangla">প্রোগ্রামের তথ্য শিগগিরই প্রকাশ করা হবে।</p></div>
+      <?php endif; wp_reset_postdata(); ?>
     </div>
-    <?php $course_query = new WP_Query(array('post_type'=>'ppa_course','post_status'=>'publish','posts_per_page'=>12,'orderby'=>'menu_order title','order'=>'ASC')); ?>
-    <?php if ($course_query->have_posts()) : ?><div class="ppa-program-grid">
-      <?php while ($course_query->have_posts()) : $course_query->the_post(); $course_subtitle = get_post_meta(get_the_ID(), '_ppa_course_subtitle', true); $course_audience = get_post_meta(get_the_ID(), '_ppa_course_audience', true); $course_features = get_post_meta(get_the_ID(), '_ppa_course_features', true); ?>
-        <article class="ppa-program-card ppa-program-card-compact">
-          <div class="ppa-program-body">
-            <p class="ppa-program-level-text">ACADEMIC PROGRAM</p>
-            <h3 class="ppa-bangla"><?php the_title(); ?></h3>
-            <?php if ($course_subtitle) : ?><p class="ppa-program-subtitle ppa-bangla"><?php echo esc_html($course_subtitle); ?></p><?php endif; ?>
-            <?php if ($course_audience) : ?><div class="ppa-program-audience"><span>উপযুক্ত শিক্ষার্থী</span><strong class="ppa-bangla"><?php echo esc_html($course_audience); ?></strong></div><?php endif; ?>
-            <?php if (is_array($course_features) && $course_features) : ?><ul class="ppa-program-highlights"><?php foreach (array_slice($course_features,0,2) as $feature) : ?><li class="ppa-bangla"><?php echo esc_html($feature); ?></li><?php endforeach; ?></ul><?php endif; ?>
-            <details class="ppa-course-inline-details">
-              <summary class="ppa-program-link">কোর্সের সংক্ষিপ্ত বিবরণ <span aria-hidden="true">＋</span></summary>
-              <div class="ppa-course-inline-content ppa-bangla"><?php echo wp_kses_post(apply_filters('the_content', get_the_content())); ?></div>
-            </details>
-          </div>
-        </article>
-      <?php endwhile; ?>
-    </div><?php else : ?><div class="ppa-notice-card"><p class="ppa-bangla">প্রোগ্রামের তথ্য শিগগিরই প্রকাশ করা হবে।</p></div><?php endif; wp_reset_postdata(); ?>
-  </div></section>
+  </section>
 
   <section id="results" class="ppa-section ppa-results-section"><div class="ppa-container ppa-results-panel">
     <div><p class="ppa-eyebrow">RESULTS &amp; ACHIEVEMENTS — ফলাফল</p><h2 class="ppa-bangla">শেখার অগ্রগতি ও অর্জন</h2><p class="ppa-bangla">শিক্ষার্থীদের পরীক্ষার ফলাফল ও একাডেমিক অর্জনের তথ্য যাচাই করে এখানে প্রকাশ করা হবে।</p></div>
