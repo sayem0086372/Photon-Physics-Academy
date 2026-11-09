@@ -525,22 +525,61 @@ function ppa_ca_render_page() {
         echo '<input type="hidden" name="ppa_ca_action" value="logout"><button class="ppa-ca-logout" type="submit"><span aria-hidden="true">↪</span> <span>Log out</span></button></form><a class="ppa-ca-public-site" href="'.esc_url(home_url('/')).'" target="_blank" rel="noopener"><span aria-hidden="true">↗</span><span>Public Site</span></a></div></header><main class="ppa-ca-content">';
         if(isset($_GET['ppa_notice']) && $_GET['ppa_notice']!=='login_error') echo '<div class="ppa-ca-alert">'.esc_html(sanitize_text_field(wp_unslash($_GET['ppa_notice']))==='saved'?'Settings saved.':'Action completed.').'</div>';
         if($tab==='overview') {
-            echo '<div class="ppa-ca-welcome"><h2>Welcome back, '.esc_html($user->display_name).'!</h2><p>Here is what is happening at Photon Physics Academy.</p></div><div class="ppa-ca-grid">';
-            $stats=array('Total Students'=>ppa_ca_count('ppa_student'),'Active Batches'=>ppa_ca_count('ppa_batch'),'Published Notices'=>ppa_ca_count('ppa_notice'),'Fee Payments'=>ppa_ca_count('ppa_fee_payment'));
-            $stat_icons=array('♙','▤','▣','৳');
-            $stat_index=0;
-            foreach($stats as $label=>$number) { echo '<div class="ppa-ca-card"><div class="ppa-ca-stat-top"><span>'.esc_html($label).'</span><i>'.esc_html($stat_icons[$stat_index]).'</i></div><strong>'.number_format_i18n($number).'</strong></div>'; $stat_index++; }
-            echo '</div><section class="ppa-ca-panel ppa-ca-quick-panel"><h2>Quick Actions</h2><div class="ppa-ca-shortcuts">';
-            foreach(array('students'=>'＋ Add Student','payments'=>'▤ Record Payment','notices'=>'♧ Publish Notice','results'=>'★ Add Exam Marks') as $key=>$label) echo '<a href="'.esc_url(add_query_arg('ppa_tab',$key,home_url('/admin/'))).'">'.esc_html($label).'</a>';
-            echo '</div></section><div class="ppa-ca-overview-columns">';
-            foreach(array('ppa_student'=>'Recent Students','ppa_fee_payment'=>'Recent Payments') as $type=>$heading) {
-                $recent=get_posts(array('post_type'=>$type,'post_status'=>'publish','numberposts'=>4,'orderby'=>'date','order'=>'DESC'));
-                echo '<section class="ppa-ca-panel ppa-ca-recent-panel"><div class="ppa-ca-panel-head"><div><h2>'.esc_html($heading).'</h2><p>Latest records added to the academy.</p></div><a class="ppa-ca-view-all" href="'.esc_url(add_query_arg('ppa_tab',$type==='ppa_student'?'students':'payments',home_url('/admin/'))).'">View all ↗</a></div>';
-                if($recent) { echo '<div class="ppa-ca-recent-list">'; foreach($recent as $item) { $detail=$type==='ppa_student'?get_post_meta($item->ID,'_ppa_student_id',true):get_post_meta($item->ID,'_ppa_billing_month',true); echo '<div class="ppa-ca-recent-row"><span class="ppa-ca-recent-icon">'.($type==='ppa_student'?'♙':'৳').'</span><div><strong>'.esc_html($item->post_title).'</strong><small>'.esc_html($detail?:get_the_date('d M Y',$item)).'</small></div><time>'.esc_html(get_the_date('d M',$item)).'</time></div>'; } echo '</div>'; }
-                else echo '<div class="ppa-ca-empty"><strong>No records yet</strong><br>New entries will appear here.</div>';
-                echo '</section>';
+            $student_total=ppa_ca_count('ppa_student');
+            $active_batch_total=ppa_ca_count('ppa_batch');
+            $dashboard_payments=ppa_ca_records('ppa_fee_payment',500);
+            $collected_total=0;
+            $pending_total=0;
+            foreach($dashboard_payments as $dashboard_payment) {
+                $collected_total+=(float)get_post_meta($dashboard_payment->ID,'_ppa_amount',true);
+                $pending_total+=(float)get_post_meta($dashboard_payment->ID,'_ppa_due_amount',true);
             }
-            echo '</div>';
+            echo '<div class="ppa-ca-welcome"><h2>Welcome back, '.esc_html($user->display_name).'!</h2><p>Here is what is happening at Photon Physics Academy.</p></div>';
+            echo '<div class="ppa-ca-grid">';
+            $dashboard_cards=array(
+                array('Total Students',number_format_i18n($student_total),'♙','blue'),
+                array('Collected','৳'.number_format_i18n($collected_total),'৳','emerald'),
+                array('Pending Due','৳'.number_format_i18n($pending_total),'!','amber'),
+                array('Active Batches',number_format_i18n($active_batch_total),'▤','sky')
+            );
+            foreach($dashboard_cards as $card) {
+                echo '<article class="ppa-ca-card"><div class="ppa-ca-stat-top"><span>'.esc_html($card[0]).'</span><i class="tone-'.esc_attr($card[3]).'">'.esc_html($card[2]).'</i></div><strong>'.esc_html($card[1]).'</strong></article>';
+            }
+            echo '</div><section class="ppa-ca-panel ppa-ca-quick-panel"><h2>Quick Actions</h2><div class="ppa-ca-shortcuts">';
+            foreach(array('students'=>'＋ Add Student','payments'=>'▤ Record Payment','notices'=>'♧ Publish Notice','results'=>'★ Add Exam Marks') as $key=>$label) {
+                echo '<a href="'.esc_url(add_query_arg('ppa_tab',$key,home_url('/admin/'))).'">'.esc_html($label).'</a>';
+            }
+            echo '</div></section><div class="ppa-ca-overview-columns">';
+            $recent_students=ppa_ca_records('ppa_student',4);
+            echo '<section class="ppa-ca-panel ppa-ca-recent-panel"><div class="ppa-ca-panel-head"><div><h2>Recent Students</h2><p>Recently enrolled students</p></div><a class="ppa-ca-view-all" href="'.esc_url(add_query_arg('ppa_tab','students',home_url('/admin/'))).'">View all ↗</a></div>';
+            if($recent_students) {
+                echo '<div class="ppa-ca-table-wrap"><table class="ppa-ca-table"><thead><tr><th>ID</th><th>Name</th><th>Class</th><th>Fee</th></tr></thead><tbody>';
+                foreach($recent_students as $student) {
+                    $student_id=get_post_meta($student->ID,'_ppa_student_id',true);
+                    $class_level=get_post_meta($student->ID,'_ppa_class_level',true);
+                    $monthly_fee=(float)get_post_meta($student->ID,'_ppa_monthly_fee',true);
+                    echo '<tr><td>'.esc_html($student_id?:'—').'</td><td><strong>'.esc_html($student->post_title).'</strong></td><td>'.esc_html($class_level?:'—').'</td><td>'.($monthly_fee>0?'৳'.esc_html(number_format_i18n($monthly_fee)):'—').'</td></tr>';
+                }
+                echo '</tbody></table></div>';
+            } else {
+                echo '<div class="ppa-ca-empty"><strong>No students yet</strong><br>Newly enrolled students will appear here.</div>';
+            }
+            echo '</section>';
+            $recent_payments=array_slice($dashboard_payments,0,4);
+            echo '<section class="ppa-ca-panel ppa-ca-recent-panel"><div class="ppa-ca-panel-head"><div><h2>Recent Payments</h2><p>Latest fee transactions</p></div><a class="ppa-ca-view-all" href="'.esc_url(add_query_arg('ppa_tab','payments',home_url('/admin/'))).'">View all ↗</a></div>';
+            if($recent_payments) {
+                echo '<div class="ppa-ca-table-wrap"><table class="ppa-ca-table"><thead><tr><th>Receipt</th><th>Student</th><th>Method</th><th class="is-right">Paid</th></tr></thead><tbody>';
+                foreach($recent_payments as $payment) {
+                    $receipt=get_post_meta($payment->ID,'_ppa_receipt_number',true);
+                    $method=get_post_meta($payment->ID,'_ppa_payment_method',true);
+                    $amount=(float)get_post_meta($payment->ID,'_ppa_amount',true);
+                    echo '<tr><td>'.esc_html($receipt?:'—').'</td><td><strong>'.esc_html($payment->post_title).'</strong></td><td><span class="ppa-ca-method">'.esc_html($method?:'—').'</span></td><td class="is-right">'.($amount>0?'৳'.esc_html(number_format_i18n($amount)):'—').'</td></tr>';
+                }
+                echo '</tbody></table></div>';
+            } else {
+                echo '<div class="ppa-ca-empty"><strong>No payments recorded</strong><br>Recorded fee payments will appear here.</div>';
+            }
+            echo '</section></div>';
         } elseif($tab==='students') {
             $student_posts=ppa_ca_records('ppa_student');
             $student_query=isset($_GET['ppa_search'])?sanitize_text_field(wp_unslash($_GET['ppa_search'])):'';
