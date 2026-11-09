@@ -21,3 +21,8 @@ Text Domain: photon-physics-academy
 .ppa-brand .custom-logo{width:56px;height:56px;object-fit:contain}
 .ppa-footer .ppa-brand .custom-logo{filter:none}
 @media(max-width:850px){.ppa-nav ul{display:none}.ppa-mobile-nav ul{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}}
+
+/* The mobile drawer is hidden at all viewport widths until opened. */
+.ppa-mobile-nav{display:none}
+.ppa-mobile-nav.is-open{display:block}
+.ppa-logo-img{display:block;width:56px;height:56px;object-fit:contain}
