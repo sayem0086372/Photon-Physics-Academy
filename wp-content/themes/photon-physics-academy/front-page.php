@@ -9,7 +9,7 @@ get_header();
 <main id="primary">
   <section class="ppa-store-banner" aria-labelledby="ppa-store-title"><div class="ppa-container"><div class="ppa-store-box">
     <div><div class="ppa-eyebrow" style="margin:0">PHOTON PHYSICS ACADEMY</div><h2 id="ppa-store-title" class="ppa-store-title">Find Your Next Book</h2><p style="margin:0;color:#64748b">Explore concept books and other learning resources, and order online.</p></div>
-    <a class="ppa-store-button" href="<?php echo esc_url(home_url('/store/')); ?>">Browse &amp; Buy Books ↗</a>
+    <a class="ppa-store-button" href="<?php echo esc_url(home_url('/shop/')); ?>">Browse &amp; Buy Books ↗</a>
   </div></div></section>
 
   <section id="home" class="ppa-hero"><div class="ppa-container">
@@ -131,7 +131,7 @@ get_header();
 
   <section id="resources" class="ppa-section ppa-gray"><div class="ppa-container ppa-resources-panel">
     <div><p class="ppa-eyebrow">LEARNING RESOURCES — শিক্ষাসামগ্রী</p><h2 class="ppa-bangla">কনসেপ্ট বুঝুন, অনুশীলনে দক্ষ হোন</h2><p class="ppa-bangla">পদার্থবিজ্ঞানের কনসেপ্ট বুক ও অন্যান্য শিক্ষাসামগ্রী একাডেমির অনলাইন বুকস্টোরে দেখুন।</p></div>
-    <a class="ppa-button" href="<?php echo esc_url(home_url('/store/')); ?>">শিক্ষাসামগ্রী দেখুন ↗</a>
+    <a class="ppa-button" href="<?php echo esc_url(home_url('/shop/')); ?>">শিক্ষাসামগ্রী দেখুন ↗</a>
   </div></section>
 
   <section id="gallery" class="ppa-section"><div class="ppa-container">
