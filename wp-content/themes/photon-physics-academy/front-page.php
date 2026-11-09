@@ -75,6 +75,8 @@ get_header();
             $course_audience = get_post_meta(get_the_ID(), '_ppa_course_audience', true);
             $course_features = get_post_meta(get_the_ID(), '_ppa_course_features', true);
             $course_image = get_post_meta(get_the_ID(), '_ppa_course_image', true);
+            $course_slug = get_post_field('post_name', get_the_ID());
+            $course_badge = array('class-eight-science'=>'Class Eight Science','class-nine-physics'=>'Class Nine Physics','class-ten-physics'=>'Class Ten Physics');
           ?>
             <article class="ppa-program-card ppa-course-reference-card">
               <?php if ($course_image) : ?>
@@ -83,7 +85,7 @@ get_header();
                 <div class="ppa-course-reference-image"><?php the_post_thumbnail('large', array('loading'=>'lazy')); ?></div>
               <?php endif; ?>
               <div class="ppa-course-reference-body">
-                <div class="ppa-course-reference-badge"><?php echo esc_html(get_the_title()); ?></div>
+                <div class="ppa-course-reference-badge"><?php echo esc_html(isset($course_badge[$course_slug]) ? $course_badge[$course_slug] : get_the_title()); ?></div>
                 <h3 class="ppa-bangla"><?php the_title(); ?></h3>
                 <?php if ($course_subtitle) : ?><p class="ppa-course-reference-subtitle ppa-bangla"><?php echo esc_html($course_subtitle); ?></p><?php endif; ?>
                 <?php if ($course_audience) : ?>
