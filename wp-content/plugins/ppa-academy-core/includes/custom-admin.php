@@ -530,16 +530,18 @@ function ppa_ca_render_page() {
             $dashboard_payments=ppa_ca_records('ppa_fee_payment',500);
             $collected_total=0;
             $pending_total=0;
+            $has_due_data=false;
             foreach($dashboard_payments as $dashboard_payment) {
                 $collected_total+=(float)get_post_meta($dashboard_payment->ID,'_ppa_amount',true);
-                $pending_total+=(float)get_post_meta($dashboard_payment->ID,'_ppa_due_amount',true);
+                $due_value=get_post_meta($dashboard_payment->ID,'_ppa_due_amount',true);
+                if($due_value!=='') { $has_due_data=true; $pending_total+=(float)$due_value; }
             }
             echo '<div class="ppa-ca-welcome"><h2>Welcome back, '.esc_html($user->display_name).'!</h2><p>Here is what is happening at Photon Physics Academy.</p></div>';
             echo '<div class="ppa-ca-grid">';
             $dashboard_cards=array(
                 array('Total Students',number_format_i18n($student_total),'♙','blue'),
                 array('Collected','৳'.number_format_i18n($collected_total),'৳','emerald'),
-                array('Pending Due','৳'.number_format_i18n($pending_total),'!','amber'),
+                array('Pending Due',$has_due_data?'৳'.number_format_i18n($pending_total):'—','!','amber'),
                 array('Active Batches',number_format_i18n($active_batch_total),'▤','sky')
             );
             foreach($dashboard_cards as $card) {
