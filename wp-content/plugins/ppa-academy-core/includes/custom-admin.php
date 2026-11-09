@@ -62,6 +62,26 @@ function ppa_ca_handle_post() {
     check_admin_referer('ppa_ca_admin_action','ppa_ca_nonce');
     if ($action==='logout') { wp_logout(); wp_safe_redirect(home_url('/admin/')); exit; }
     $tab=sanitize_key(wp_unslash($_POST['return_tab'] ?? 'overview'));
+    if ($action==='add_notice') {
+        $title=sanitize_text_field(wp_unslash($_POST['notice_title'] ?? ''));
+        $content=sanitize_textarea_field(wp_unslash($_POST['notice_content'] ?? ''));
+        $status=isset($_POST['notice_published']) ? 'publish' : 'draft';
+        if (!$title || !$content) ppa_ca_redirect('notices','required');
+        $notice_id=wp_insert_post(array('post_type'=>'ppa_notice','post_status'=>$status,'post_title'=>$title,'post_content'=>$content),true);
+        if (is_wp_error($notice_id)) ppa_ca_redirect('notices','error');
+        $category=sanitize_key(wp_unslash($_POST['notice_category'] ?? ''));
+        if ($category) {
+            $term=get_term_by('slug',$category,'ppa_notice_category');
+            if ($term && !is_wp_error($term)) wp_set_object_terms($notice_id,(int)$term->term_id,'ppa_notice_category',false);
+        }
+        ppa_ca_redirect('notices','created');
+    }
+    if ($action==='delete_notice') {
+        $notice_id=absint($_POST['notice_id'] ?? 0);
+        $notice=get_post($notice_id);
+        if ($notice && $notice->post_type==='ppa_notice') wp_delete_post($notice_id,true);
+        ppa_ca_redirect('notices','deleted');
+    }
     if ($action==='save_settings') {
         update_option('ppa_ca_sms_gateway_url',esc_url_raw(wp_unslash($_POST['sms_gateway_url'] ?? '')));
         update_option('ppa_ca_sms_sender_id',sanitize_text_field(wp_unslash($_POST['sms_sender_id'] ?? '')));
@@ -243,7 +263,7 @@ function ppa_ca_enhanced_styles() { ?>
 </style>
 <?php }
 function ppa_ca_section_styles() { ?><style>
-.ppa-ca-section-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:2px 0 20px}
+.ppa-ca-notice-row form{margin-left:auto;flex:0 0 auto}.ppa-ca-notice-row time{font-size:10px;color:#64748b;white-space:nowrap}.ppa-ca-check{display:flex!important;flex-direction:row!important;align-items:center!important;gap:9px!important}.ppa-ca-check input{width:auto!important;min-height:0!important}.ppa-ca-form select{box-sizing:border-box;min-height:40px;border:1px solid #cbd5e1;border-radius:9px;padding:10px 12px;background:#fff;font-size:13px}.ppa-ca-notice-copy{min-width:0;flex:1}.ppa-ca-notice-copy strong,.ppa-ca-notice-copy span{display:block}.ppa-ca-notice-copy span{font-size:11px;color:#64748b;margin-top:4px}.ppa-ca-section-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:2px 0 20px}
 .ppa-ca-section-head h2{font-size:21px;font-weight:800;letter-spacing:-.035em;color:#0f172a;margin:0}
 .ppa-ca-section-head p{font-size:12px;color:#64748b;margin:5px 0 0}
 .ppa-ca-section-count,.ppa-ca-soft-badge{font-size:11px;font-weight:700;color:#1d4ed8;background:#eff6ff;border:1px solid #dbeafe;border-radius:999px;padding:7px 11px;white-space:nowrap}
@@ -331,12 +351,28 @@ function ppa_ca_render_page() {
             echo '<section class="ppa-ca-panel"><h2>Payments & Fees</h2>'; ppa_ca_table(ppa_ca_records('ppa_fee_payment'),'ppa_fee_payment',$tab); echo '</section>';
             ppa_ca_add_form('payment','Record Fee Payment',array('record_title'=>'Student Name / ID','billing_month'=>'Billing Month','amount'=>'Amount (৳)','record_details'=>'Payment note'),$tab);
         } elseif($tab==='notices') {
-            echo '<div class="ppa-ca-section-head"><div><h2>Notice Management</h2><p>Manage admission, exam and class schedule announcements displayed on the public website.</p></div><span class="ppa-ca-section-count">'.number_format_i18n(ppa_ca_count('ppa_notice')).' published</span></div>';
-            echo '<section class="ppa-ca-panel"><div class="ppa-ca-panel-head"><div><h2>Published Notices</h2><p>Review the latest announcements and their publication dates.</p></div><span class="ppa-ca-soft-badge">Website content</span></div>';
             $notice_posts=ppa_ca_records('ppa_notice',50);
-            if($notice_posts){ echo '<div class="ppa-ca-notice-list">'; foreach($notice_posts as $notice){ echo '<article class="ppa-ca-notice-row"><div class="ppa-ca-notice-icon">▣</div><div class="ppa-ca-notice-copy"><strong>'.esc_html($notice->post_title).'</strong><span>'.esc_html(wp_trim_words(wp_strip_all_tags($notice->post_content),22)).'</span></div><time>'.esc_html(get_the_date('d M Y',$notice)).'</time></article>'; } echo '</div>'; }
-            else { echo '<div class="ppa-ca-empty"><strong>No published notices yet</strong><br>Published academy announcements will appear here.</div>'; }
-            echo '</section><section class="ppa-ca-panel ppa-ca-info-panel"><div class="ppa-ca-info-icon">✦</div><div><strong>Notice workspace</strong><p>The custom notice editor and publish controls will be connected to the WordPress content model in the database integration stage. This panel will remain inside the academy Admin Panel.</p></div></section>';
+            $notice_terms=get_terms(array('taxonomy'=>'ppa_notice_category','hide_empty'=>false));
+            if (is_wp_error($notice_terms)) $notice_terms=array();
+            echo '<div class="ppa-ca-section-head"><div><h2>Notice Management</h2><p>Create, publish and manage announcements shown on the academy website.</p></div><span class="ppa-ca-section-count">'.number_format_i18n(ppa_ca_count('ppa_notice')).' published</span></div>';
+            echo '<section class="ppa-ca-panel"><div class="ppa-ca-panel-head"><div><h2>All Notices</h2><p>Drafts and published notices are managed here.</p></div><span class="ppa-ca-soft-badge">Website content</span></div>';
+            if($notice_posts){
+                echo '<div class="ppa-ca-notice-list">';
+                foreach($notice_posts as $notice){
+                    $status=get_post_status($notice);
+                    echo '<article class="ppa-ca-notice-row"><div class="ppa-ca-notice-icon">▣</div><div class="ppa-ca-notice-copy"><strong>'.esc_html($notice->post_title).'</strong><span>'.esc_html(wp_trim_words(wp_strip_all_tags($notice->post_content),22)).'</span></div><time>'.esc_html($status==='publish'?'Published':'Draft').' · '.esc_html(get_the_date('d M Y',$notice)).'</time><form method="post" onsubmit="return confirm(\'Delete this notice?\')">';
+                    wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
+                    echo '<input type="hidden" name="ppa_ca_action" value="delete_notice"><input type="hidden" name="notice_id" value="'.(int)$notice->ID.'"><button class="ppa-ca-delete" type="submit">Delete</button></form></article>';
+                }
+                echo '</div>';
+            } else {
+                echo '<div class="ppa-ca-empty"><strong>No notices created yet</strong><br>Create your first announcement below.</div>';
+            }
+            echo '</section><form method="post" class="ppa-ca-form">';
+            wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
+            echo '<input type="hidden" name="ppa_ca_action" value="add_notice"><h3>Create a Notice</h3><div class="ppa-ca-form-grid"><label>Notice Title<input name="notice_title" type="text" required maxlength="180"></label><label>Notice Category<select name="notice_category"><option value="">Select category</option>';
+            foreach($notice_terms as $term) echo '<option value="'.esc_attr($term->slug).'">'.esc_html($term->name).'</option>';
+            echo '</select></label><label class="is-wide">Notice Details<textarea name="notice_content" rows="5" required></textarea></label><label class="ppa-ca-check"><input type="checkbox" name="notice_published" value="1" checked> Publish immediately on the website</label></div><button class="ppa-ca-primary" type="submit">Save Notice</button></form>';
         } elseif($tab==='results') {
             echo '<section class="ppa-ca-panel"><h2>Results & Exams</h2>'; ppa_ca_table(ppa_ca_records('ppa_exam_result'),'ppa_exam_result',$tab); echo '</section>';
             ppa_ca_add_form('result','Add Exam Result',array('record_title'=>'Student Name / ID','exam_name'=>'Exam Name','marks'=>'Marks / Grade','record_details'=>'Result details'),$tab);
