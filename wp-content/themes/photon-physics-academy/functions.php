@@ -58,16 +58,6 @@ function ppa_fallback_menu() {
     echo '</ul>';
 }
 
-function ppa_register_content_types() {
-    register_post_type('ppa_notice', array(
-        'labels' => array('name' => __('Academy Notices', 'photon-physics-academy'), 'singular_name' => __('Academy Notice', 'photon-physics-academy'), 'add_new_item' => __('Add New Notice', 'photon-physics-academy')),
-        'public' => true, 'show_in_rest' => true, 'has_archive' => false,
-        'menu_icon' => 'dashicons-megaphone', 'supports' => array('title', 'editor', 'excerpt', 'thumbnail'),
-        'rewrite' => array('slug' => 'academy-notice'),
-    ));
-}
-add_action('init', 'ppa_register_content_types');
-
 function ppa_excerpt($post_id = null, $length = 24) {
     $post = get_post($post_id);
     if (!$post) { return ''; }
