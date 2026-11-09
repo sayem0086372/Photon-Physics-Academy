@@ -52,6 +52,69 @@ function ppa_core_handle_public_inquiry() {
 add_action('admin_post_nopriv_ppa_submit_inquiry','ppa_core_handle_public_inquiry');
 add_action('admin_post_ppa_submit_inquiry','ppa_core_handle_public_inquiry');
 
+/** Branded admin landing page with live WordPress content counts and shortcuts. */
+function ppa_core_admin_menu() {
+    add_menu_page(
+        __('Photon Physics Academy','photon-physics-academy'),
+        __('Photon Academy','photon-physics-academy'),
+        'manage_options',
+        'ppa-academy-admin',
+        'ppa_core_render_admin_dashboard',
+        'dashicons-welcome-learn-more',
+        3
+    );
+}
+add_action('admin_menu','ppa_core_admin_menu');
+
+function ppa_core_render_admin_dashboard() {
+    if (!current_user_can('manage_options')) { return; }
+    $count = function($type) {
+        $counts = wp_count_posts($type);
+        return $counts && isset($counts->publish) ? (int)$counts->publish : 0;
+    };
+    $inquiries = $count('ppa_inquiry');
+    $notices = $count('ppa_notice');
+    $courses = $count('ppa_course');
+    $products = function_exists('wc_get_products') ? (int)wp_count_posts('product')->publish : 0;
+    $links = array(
+        array(__('Students & Batches','photon-physics-academy'), admin_url('edit.php?post_type=ppa_student'), __('Student and batch management is part of the next migration phase.','photon-physics-academy')),
+        array(__('Admission Inquiries','photon-physics-academy'), admin_url('edit.php?post_type=ppa_inquiry'), __('Review messages submitted from the public homepage.','photon-physics-academy')),
+        array(__('Notices','photon-physics-academy'), admin_url('edit.php?post_type=ppa_notice'), __('Publish and organize academy notices.','photon-physics-academy')),
+        array(__('Courses & Programs','photon-physics-academy'), admin_url('edit.php?post_type=ppa_course'), __('Edit homepage course cards and program information.','photon-physics-academy')),
+        array(__('Store Products','photon-physics-academy'), admin_url('edit.php?post_type=product'), __('Manage books and product inventory with WooCommerce.','photon-physics-academy')),
+        array(__('Store Orders','photon-physics-academy'), admin_url('admin.php?page=wc-orders'), __('Review and process customer orders.','photon-physics-academy')),
+    );
+    echo '<div class="wrap ppa-admin-wrap"><h1>Photon Physics Academy</h1><p class="ppa-admin-subtitle">Academy management overview</p>';
+    echo '<div class="ppa-admin-stats">';
+    foreach (array(array(__('Published Notices','photon-physics-academy'),$notices),array(__('Courses','photon-physics-academy'),$courses),array(__('New Inquiries','photon-physics-academy'),$inquiries),array(__('Store Products','photon-physics-academy'),$products)) as $stat) {
+        echo '<div class="ppa-admin-stat"><span>'.esc_html($stat[0]).'</span><strong>'.esc_html(number_format_i18n($stat[1])).'</strong></div>';
+    }
+    echo '</div><h2>'.esc_html__('Quick Management','photon-physics-academy').'</h2><div class="ppa-admin-links">';
+    foreach ($links as $link) {
+        echo '<a class="ppa-admin-link" href="'.esc_url($link[1]).'"><strong>'.esc_html($link[0]).'</strong><span>'.esc_html($link[2]).'</span></a>';
+    }
+    echo '</div><div class="notice notice-info inline"><p><strong>'.esc_html__('Version 2 restoration in progress:','photon-physics-academy').'</strong> '.esc_html__('Student records, batches, fees, results, SMS gateway and the full legacy custom admin workflows are being migrated in staged releases. Do not use this dashboard as a replacement for those workflows until their migration is complete.','photon-physics-academy').'</p></div></div>';
+}
+function ppa_core_admin_dashboard_styles() {
+    $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+    if (!$screen || $screen->id !== 'toplevel_page_ppa-academy-admin') { return; }
+    echo '<style>
+    .ppa-admin-wrap{max-width:1180px}.ppa-admin-subtitle{color:#64748b;font-size:14px;margin:6px 0 24px}
+    .ppa-admin-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin:20px 0 30px}
+    .ppa-admin-stat{background:#fff;border:1px solid #dce4ec;border-radius:12px;padding:20px;box-shadow:0 4px 16px #102b4e0a}
+    .ppa-admin-stat span{display:block;color:#64748b;font-size:12px;font-weight:600}.ppa-admin-stat strong{display:block;color:#102b4e;font-size:30px;margin-top:8px}
+    .ppa-admin-links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:16px 0 28px}
+    .ppa-admin-link{display:block;text-decoration:none;background:#fff;border:1px solid #dce4ec;border-radius:12px;padding:18px;color:#14243a;transition:.2s}
+    .ppa-admin-link:hover{border-color:#2474bd;box-shadow:0 8px 22px #102b4e12;transform:translateY(-2px)}
+    .ppa-admin-link strong{display:block;font-size:14px;margin-bottom:7px}.ppa-admin-link span{display:block;color:#64748b;font-size:12px;line-height:1.6}
+    @media(max-width:900px){.ppa-admin-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.ppa-admin-links{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:520px){.ppa-admin-stats,.ppa-admin-links{grid-template-columns:1fr}}
+    </style>';
+}
+add_action('admin_head','ppa_core_admin_dashboard_styles');
+
+
+
 /** Register academy notices and structured course pages independently of the active theme. */
 function ppa_core_register_content_types() {
     register_post_type('ppa_notice', array(
