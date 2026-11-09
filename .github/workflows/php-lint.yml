@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - wordpress-migration
+      - wordpress-v2-restoration
     paths:
       - 'wp-content/**'
       - '.github/workflows/php-lint.yml'
