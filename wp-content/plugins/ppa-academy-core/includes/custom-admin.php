@@ -154,6 +154,21 @@ function ppa_ca_table($posts,$type,$tab) {
     }
     echo '</tbody></table></div>';
 }
+function ppa_ca_filter_records($posts,$query) {
+    $query=mb_strtolower(trim((string)$query));
+    if ($query==='') return $posts;
+    return array_values(array_filter($posts,function($post) use ($query) {
+        $haystack=mb_strtolower($post->post_title.' '.wp_strip_all_tags($post->post_content));
+        foreach(array('student_id','guardian_phone','phone','billing_month','amount','exam_name','marks','class_level','batch_name') as $key) $haystack.=' '.mb_strtolower((string)get_post_meta($post->ID,'_ppa_'.$key,true));
+        return mb_strpos($haystack,$query)!==false;
+    }));
+}
+function ppa_ca_search_toolbar($placeholder) {
+    $query=isset($_GET['ppa_search'])?sanitize_text_field(wp_unslash($_GET['ppa_search'])):'';
+    echo '<form method="get" class="ppa-ca-search-toolbar"><input type="hidden" name="ppa_tab" value="'.esc_attr(isset($_GET['ppa_tab'])?sanitize_key(wp_unslash($_GET['ppa_tab'])):'overview').'"><label class="ppa-ca-search-box"><span>⌕</span><input type="search" name="ppa_search" value="'.esc_attr($query).'" placeholder="'.esc_attr($placeholder).'"></label><button class="ppa-ca-outline-link" type="submit">Search</button>';
+    if($query!=='') echo '<a class="ppa-ca-clear-search" href="'.esc_url(add_query_arg('ppa_tab',sanitize_key(wp_unslash($_GET['ppa_tab']??'overview')),home_url('/admin/'))).'">Clear</a>';
+    echo '</form>';
+}
 function ppa_ca_section_intro($title,$description,$count_label='') {
     echo '<div class="ppa-ca-section-head"><div><h2>'.esc_html($title).'</h2><p>'.esc_html($description).'</p></div>';
     if ($count_label!=='') echo '<span class="ppa-ca-section-count">'.esc_html($count_label).'</span>';
@@ -470,6 +485,8 @@ document.addEventListener('DOMContentLoaded',function(){
 <?php }
 
 function ppa_ca_visual_parity_styles() { ?><style>
+.ppa-ca-search-toolbar{display:flex;align-items:center;gap:9px;padding:14px 18px;border-bottom:1px solid #eef2f7;background:#fff}.ppa-ca-search-box{display:flex;align-items:center;gap:9px;flex:1;min-width:0;border:1px solid #cbd5e1;border-radius:9px;padding:0 12px;background:#fff;color:#94a3b8}.ppa-ca-search-box span{font-size:18px}.ppa-ca-search-box input{width:100%;min-width:0;border:0!important;outline:0!important;box-shadow:none!important;padding:10px 0!important;font-size:12px!important}.ppa-ca-clear-search{font-size:11px;color:#64748b;text-decoration:none;white-space:nowrap}
+
 /* Main-branch section layout parity */
 .ppa-ca-metric-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:0 0 20px}
 .ppa-ca-metric{background:#fff;border:1px solid #e2e8f0;border-radius:13px;padding:17px 18px;box-shadow:0 2px 8px rgba(15,23,42,.025)}
@@ -523,9 +540,12 @@ function ppa_ca_render_page() {
             echo '</div>';
         } elseif($tab==='students') {
             $student_posts=ppa_ca_records('ppa_student');
+            $student_query=isset($_GET['ppa_search'])?sanitize_text_field(wp_unslash($_GET['ppa_search'])):'';
+            $student_posts=ppa_ca_filter_records($student_posts,$student_query);
             ppa_ca_section_intro('Student Management','View, search and maintain academy student records.',number_format_i18n(count($student_posts)).' students');
             ppa_ca_metric_cards(array(array('Total Students',(string)count($student_posts),'All registered students'),array('Active Classes','8 · 9 · 10','Academy class levels'),array('Student ID Format','YYNNN','Five-digit student codes')));
             echo '<section class="ppa-ca-panel ppa-ca-data-panel"><div class="ppa-ca-panel-head"><div><h2>All Students</h2><p>Student profiles, guardian contacts and monthly fee information.</p></div><span class="ppa-ca-soft-badge">Student directory</span></div>';
+            ppa_ca_search_toolbar('Search by student name, ID or phone number...');
             ppa_ca_table($student_posts,'ppa_student',$tab); echo '</section>';
             ppa_ca_add_form('student','Add New Student',array('record_title'=>'Student Name','student_id'=>'Student ID (5 digits, YYNNN)','class_level'=>'Class (8 / 9 / 10)','phone'=>'Student Mobile (Optional)','guardian_phone'=>'Guardian Mobile','whatsapp_phone'=>'WhatsApp Number (Optional)','monthly_fee'=>'Monthly Fee (৳)','batch_name'=>'Batch','record_details'=>'Additional Details'),$tab);
         } elseif($tab==='programs') {
@@ -538,10 +558,13 @@ function ppa_ca_render_page() {
             echo '<section class="ppa-ca-panel ppa-ca-info-panel"><div class="ppa-ca-info-icon">▤</div><div><strong>Course pages</strong><p>Course page editing will be brought into this custom panel. The public course content and existing pages will be preserved during the database integration stage.</p></div></section>';
         } elseif($tab==='payments') {
             $payment_posts=ppa_ca_records('ppa_fee_payment');
+            $payment_query=isset($_GET['ppa_search'])?sanitize_text_field(wp_unslash($_GET['ppa_search'])):'';
+            $payment_posts=ppa_ca_filter_records($payment_posts,$payment_query);
             ppa_ca_section_intro('Fees & Payments','Track monthly collections and record student fee payments.',number_format_i18n(count($payment_posts)).' records');
             $total_collected=0; foreach($payment_posts as $payment_post) $total_collected+=(float)get_post_meta($payment_post->ID,'_ppa_amount',true);
             ppa_ca_metric_cards(array(array('Total Collected','৳'.number_format_i18n($total_collected),'From recorded payments'),array('Payment Records',(string)count($payment_posts),'All saved transactions'),array('Payment Tracking','Monthly','Billing month and payment method')));
             echo '<section class="ppa-ca-panel ppa-ca-data-panel"><div class="ppa-ca-panel-head"><div><h2>Payment Records</h2><p>Review recent payments and their billing details.</p></div><span class="ppa-ca-soft-badge">Fee ledger</span></div>';
+            ppa_ca_search_toolbar('Search student, ID, billing month or amount...');
             ppa_ca_table($payment_posts,'ppa_fee_payment',$tab); echo '</section>';
             ppa_ca_add_form('payment','Record a Fee Payment',array('record_title'=>'Student Name / ID','student_id'=>'Student ID (YYNNN)','billing_month'=>'Billing Month','amount'=>'Amount (৳)','payment_method'=>'Payment Method','payment_date'=>'Payment Date','record_details'=>'Payment note'),$tab);
         } elseif($tab==='notices') {
@@ -569,13 +592,17 @@ function ppa_ca_render_page() {
             echo '</select></label><label class="is-wide">Notice Details<textarea name="notice_content" rows="5" required></textarea></label><label class="ppa-ca-check"><input type="checkbox" name="notice_published" value="1" checked> Publish immediately on the website</label></div><button class="ppa-ca-primary" type="submit">Save Notice</button></form>';
         } elseif($tab==='results') {
             $result_posts=ppa_ca_records('ppa_exam_result');
+            $result_query=isset($_GET['ppa_search'])?sanitize_text_field(wp_unslash($_GET['ppa_search'])):'';
+            $result_posts=ppa_ca_filter_records($result_posts,$result_query);
             ppa_ca_section_intro('Results & Exams','Publish and maintain student examination results.',number_format_i18n(count($result_posts)).' results');
             ppa_ca_metric_cards(array(array('Published Results',(string)count($result_posts),'Saved exam records'),array('Assessment Records','Exams','Student performance'),array('Result Format','Marks / Grade','Flexible result entry')));
             echo '<section class="ppa-ca-panel ppa-ca-data-panel"><div class="ppa-ca-panel-head"><div><h2>Exam Results</h2><p>Student-wise examination and assessment records.</p></div><span class="ppa-ca-soft-badge">Academic results</span></div>';
+            ppa_ca_search_toolbar('Search student, exam or marks...');
             ppa_ca_table($result_posts,'ppa_exam_result',$tab); echo '</section>';
             ppa_ca_add_form('result','Add Exam Result',array('record_title'=>'Student Name / ID','student_id'=>'Student ID (YYNNN)','exam_name'=>'Exam Name','marks'=>'Marks / Grade','record_details'=>'Result details'),$tab);
         } elseif($tab==='sms') {
             echo '<div class="ppa-ca-section-head"><div><h2>SMS Management</h2><p>Send academy updates to students and guardians through the SMS gateway.</p></div><a class="ppa-ca-outline-link" href="https://portal.sms.net.bd/login/" target="_blank" rel="noopener">Gateway Login ↗</a></div>';
+            ppa_ca_metric_cards(array(array('SMS Balance','Available after connection','Live gateway balance'),array('SMS Provider','sms.net.bd','Connected account'),array('Message History','Not stored','Privacy-first messaging')));
             echo '<div class="ppa-ca-sms-grid"><section class="ppa-ca-panel"><div class="ppa-ca-panel-head"><div><h2>Gateway Connection</h2><p>SMS provider configuration and account status.</p></div><span class="ppa-ca-soft-badge">sms.net.bd</span></div><div class="ppa-ca-gateway-status"><span class="ppa-ca-status-dot"></span><div><strong>Connection setup pending</strong><small>Secure API connection will be configured during database and integration setup.</small></div></div><a class="ppa-ca-primary" href="https://portal.sms.net.bd/login/" target="_blank" rel="noopener">Open SMS Gateway</a></section>';
             echo '<section class="ppa-ca-panel"><div class="ppa-ca-panel-head"><div><h2>Message Centre</h2><p>Prepare announcements for selected student groups.</p></div></div><label class="ppa-ca-field-label">Recipient group<select disabled><option>All active students and guardians</option></select></label><label class="ppa-ca-field-label">Message<textarea rows="4" disabled placeholder="Write your academy announcement…"></textarea></label><button class="ppa-ca-primary" type="button" disabled>Send SMS · Integration pending</button></section></div><section class="ppa-ca-info-panel"><div class="ppa-ca-info-icon">✓</div><div><strong>Privacy rule</strong><p>Sent SMS history will not be stored. Guardian numbers will be the default recipient; student mobile numbers remain optional. WhatsApp contacts will not be treated as SMS recipients.</p></div></section>';
         } elseif($tab==='settings') {
