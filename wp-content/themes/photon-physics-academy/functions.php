@@ -1,0 +1,76 @@
+<?php
+/**
+ * Photon Physics Academy theme functions.
+ *
+ * @package Photon_Physics_Academy
+ */
+if (!defined('ABSPATH')) { exit; }
+
+define('PPA_THEME_VERSION', '1.0.0');
+
+function ppa_theme_setup() {
+    load_theme_textdomain('photon-physics-academy', get_template_directory() . '/languages');
+    add_theme_support('title-tag');
+    add_theme_support('post-thumbnails');
+    add_theme_support('custom-logo', array('height' => 120, 'width' => 420, 'flex-height' => true, 'flex-width' => true));
+    add_theme_support('html5', array('search-form', 'comment-form', 'comment-list', 'gallery', 'caption', 'style', 'script'));
+    add_theme_support('woocommerce');
+    register_nav_menus(array('primary' => __('Primary Navigation', 'photon-physics-academy'), 'footer' => __('Footer Navigation', 'photon-physics-academy')));
+}
+add_action('after_setup_theme', 'ppa_theme_setup');
+
+function ppa_enqueue_assets() {
+    wp_enqueue_style('ppa-google-fonts', 'https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&display=swap', array(), null);
+    wp_enqueue_style('ppa-theme', get_stylesheet_uri(), array('ppa-google-fonts'), PPA_THEME_VERSION);
+    wp_enqueue_script('ppa-theme', get_template_directory_uri() . '/assets/js/theme.js', array(), PPA_THEME_VERSION, true);
+}
+add_action('wp_enqueue_scripts', 'ppa_enqueue_assets');
+
+function ppa_asset($filename) {
+    $allowed = array(
+        'hero' => 'hero_physics_classroom_1792301360099.jpg',
+        'teacher' => 'teacher_mentorship_physics_1792301361137.jpg',
+        'gallery1' => 'classroom_students_discussion_1792301360431.jpg',
+        'gallery2' => 'students_reading_concept_book_1792301361773.jpg',
+        'book1' => 'book_bol_authentic_cover_1792302614714.jpg',
+        'book2' => 'book_gati_authentic_cover_1792302615144.jpg',
+        'book3' => 'book_quantities_measurement_cover_1792302614659.jpg',
+    );
+    if (!isset($allowed[$filename])) { return ''; }
+    return 'https://raw.githubusercontent.com/oathwi1d/Photon-Physics-Academy/wordpress-migration/src/assets/images/' . rawurlencode($allowed[$filename]);
+}
+
+function ppa_fallback_menu() {
+    $links = array(
+        'Home' => home_url('/'),
+        'About' => home_url('/#about'),
+        'Programs' => home_url('/#programs'),
+        'Classroom' => home_url('/#gallery'),
+        'Book Store' => home_url('/store/'),
+        'Notices' => home_url('/#notices'),
+        'Results' => home_url('/#results'),
+        'Contact' => home_url('/#contact'),
+    );
+    echo '<ul class="ppa-nav-list">';
+    foreach ($links as $label => $url) {
+        printf('<li><a href="%s">%s</a></li>', esc_url($url), esc_html($label));
+    }
+    echo '</ul>';
+}
+
+function ppa_register_content_types() {
+    register_post_type('ppa_notice', array(
+        'labels' => array('name' => __('Academy Notices', 'photon-physics-academy'), 'singular_name' => __('Academy Notice', 'photon-physics-academy'), 'add_new_item' => __('Add New Notice', 'photon-physics-academy')),
+        'public' => true, 'show_in_rest' => true, 'has_archive' => false,
+        'menu_icon' => 'dashicons-megaphone', 'supports' => array('title', 'editor', 'excerpt', 'thumbnail'),
+        'rewrite' => array('slug' => 'academy-notice'),
+    ));
+}
+add_action('init', 'ppa_register_content_types');
+
+function ppa_excerpt($post_id = null, $length = 24) {
+    $post = get_post($post_id);
+    if (!$post) { return ''; }
+    $text = has_excerpt($post) ? get_the_excerpt($post) : wp_strip_all_tags($post->post_content);
+    return wp_trim_words($text, $length, '…');
+}
