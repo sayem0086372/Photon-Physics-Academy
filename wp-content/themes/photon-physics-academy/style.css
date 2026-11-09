@@ -1,4 +1,18 @@
-[object Object]
+/*
+Theme Name: Photon Physics Academy
+Theme URI: https://photonphysicsbd.com/
+Author: Photon Physics Academy
+Author URI: https://photonphysicsbd.com/
+Description: Official WordPress theme for Photon Physics Academy.
+Version: 1.0.1
+Requires at least: 6.0
+Tested up to: 6.8
+Requires PHP: 7.4
+Text Domain: photon-physics-academy
+License: GPL-2.0-or-later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+*/
+
 /* WooCommerce storefront styling — retain the academy's restrained visual language. */
 .woocommerce .woocommerce-breadcrumb{color:#64748b;font-size:13px;margin-bottom:22px}
 .woocommerce ul.products{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
