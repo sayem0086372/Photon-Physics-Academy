@@ -1,0 +1,219 @@
+<?php
+/**
+ * Standalone front-end admin application for Photon Physics Academy.
+ * Data is stored in WordPress (CPTs/options); this file never loads wp-admin UI.
+ */
+if (!defined('ABSPATH')) { exit; }
+
+function ppa_ca_register_types() {
+    $types = array(
+        'ppa_student' => array('Students','Student'),
+        'ppa_batch' => array('Programs & Batches','Batch'),
+        'ppa_fee_payment' => array('Payments & Fees','Fee Payment'),
+        'ppa_exam_result' => array('Results & Exams','Exam Result'),
+    );
+    foreach ($types as $type => $labels) {
+        register_post_type($type, array(
+            'labels'=>array('name'=>__($labels[0],'photon-physics-academy'),'singular_name'=>__($labels[1],'photon-physics-academy')),
+            'public'=>false,'show_ui'=>false,'show_in_rest'=>false,
+            'supports'=>array('title','editor'),
+        ));
+    }
+}
+add_action('init','ppa_ca_register_types',30);
+
+function ppa_ca_tabs() {
+    return array(
+        'overview'=>array('Overview Dashboard','▦'),
+        'students'=>array('Students Management','♙'),
+        'programs'=>array('Programs & Batches','▤'),
+        'payments'=>array('Payments & Fees','৳'),
+        'notices'=>array('Notices','▣'),
+        'results'=>array('Results & Exams','✓'),
+        'sms'=>array('SMS Management','✉'),
+        'settings'=>array('Settings & Slideshow','⚙'),
+        'store'=>array('Store Management','▧'),
+    );
+}
+function ppa_ca_count($type) {
+    $counts=wp_count_posts($type);
+    return $counts ? (int)$counts->publish : 0;
+}
+function ppa_ca_redirect($tab,$notice='') {
+    $url=add_query_arg(array('ppa_tab'=>$tab),home_url('/admin/'));
+    if ($notice) $url=add_query_arg('ppa_notice',$notice,$url);
+    wp_safe_redirect($url); exit;
+}
+function ppa_ca_handle_post() {
+    if (!isset($_POST['ppa_ca_action'])) return;
+    if (!is_user_logged_in() || !current_user_can('manage_options')) wp_die('You are not allowed to do this.');
+    check_admin_referer('ppa_ca_admin_action','ppa_ca_nonce');
+    $action=sanitize_key(wp_unslash($_POST['ppa_ca_action']));
+    if ($action==='login') {
+        $creds=array(
+            'user_login'=>sanitize_text_field(wp_unslash($_POST['log'] ?? '')),
+            'user_password'=>wp_unslash($_POST['pwd'] ?? ''),
+            'remember'=>!empty($_POST['rememberme']),
+        );
+        $user=wp_signon($creds,is_ssl());
+        if (is_wp_error($user)) ppa_ca_redirect('overview','login_error');
+        ppa_ca_redirect('overview','welcome');
+    }
+    if ($action==='logout') { wp_logout(); wp_safe_redirect(home_url('/admin/')); exit; }
+    $tab=sanitize_key(wp_unslash($_POST['return_tab'] ?? 'overview'));
+    if ($action==='save_settings') {
+        update_option('ppa_ca_sms_gateway_url',esc_url_raw(wp_unslash($_POST['sms_gateway_url'] ?? '')));
+        update_option('ppa_ca_sms_api_key',sanitize_text_field(wp_unslash($_POST['sms_api_key'] ?? '')));
+        update_option('ppa_ca_sms_sender_id',sanitize_text_field(wp_unslash($_POST['sms_sender_id'] ?? '')));
+        update_option('ppa_ca_slideshow_urls',sanitize_textarea_field(wp_unslash($_POST['slideshow_urls'] ?? '')));
+        ppa_ca_redirect('settings','saved');
+    }
+    if ($action==='add_record') {
+        $kind=sanitize_key(wp_unslash($_POST['record_type'] ?? ''));
+        $allowed=array('student'=>'ppa_student','batch'=>'ppa_batch','payment'=>'ppa_fee_payment','result'=>'ppa_exam_result');
+        if (!isset($allowed[$kind])) ppa_ca_redirect($tab,'invalid');
+        $title=sanitize_text_field(wp_unslash($_POST['record_title'] ?? ''));
+        $body=sanitize_textarea_field(wp_unslash($_POST['record_details'] ?? ''));
+        if (!$title) ppa_ca_redirect($tab,'required');
+        $id=wp_insert_post(array('post_type'=>$allowed[$kind],'post_status'=>'publish','post_title'=>$title,'post_content'=>$body),true);
+        if (!is_wp_error($id)) {
+            foreach (array('student_id','phone','guardian_phone','monthly_fee','batch_name','billing_month','amount','exam_name','marks') as $key) {
+                if (isset($_POST[$key])) update_post_meta($id,'_ppa_'.$key,sanitize_text_field(wp_unslash($_POST[$key])));
+            }
+            ppa_ca_redirect($tab,'created');
+        }
+        ppa_ca_redirect($tab,'error');
+    }
+    if ($action==='delete_record') {
+        $id=absint($_POST['record_id'] ?? 0);
+        $post=get_post($id);
+        if ($post && current_user_can('manage_options') && in_array($post->post_type,array('ppa_student','ppa_batch','ppa_fee_payment','ppa_exam_result'),true)) wp_delete_post($id,true);
+        ppa_ca_redirect($tab,'deleted');
+    }
+}
+add_action('template_redirect','ppa_ca_handle_post',1);
+
+function ppa_ca_login_screen() {
+    $error=isset($_GET['ppa_notice']) && $_GET['ppa_notice']==='login_error';
+    ob_start(); ?>
+    <div class="ppa-ca-login"><form method="post" class="ppa-ca-login-card">
+      <div class="ppa-ca-brand-mark">P</div><div class="ppa-ca-kicker">PHOTON PHYSICS ACADEMY</div>
+      <h1>Admin Login</h1><p>Sign in to manage your academy website.</p>
+      <?php if($error): ?><div class="ppa-ca-alert is-error">Incorrect username or password. Please try again.</div><?php endif; ?>
+      <?php wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce'); ?>
+      <input type="hidden" name="ppa_ca_action" value="login">
+      <label>Username or Email<input name="log" type="text" autocomplete="username" required></label>
+      <label>Password<input name="pwd" type="password" autocomplete="current-password" required></label>
+      <label class="ppa-ca-remember"><input type="checkbox" name="rememberme" value="1"> Remember me</label>
+      <button class="ppa-ca-primary" type="submit">Sign in to Admin Panel</button>
+      <a class="ppa-ca-back" href="<?php echo esc_url(home_url('/')); ?>">← Back to Website</a>
+    </form></div><?php return ob_get_clean();
+}
+function ppa_ca_records($type,$limit=100) {
+    return get_posts(array('post_type'=>$type,'post_status'=>'publish','numberposts'=>$limit,'orderby'=>'date','order'=>'DESC'));
+}
+function ppa_ca_table($posts,$type,$tab) {
+    if (!$posts) { echo '<div class="ppa-ca-empty">No records yet. Add your first record using the form below.</div>'; return; }
+    echo '<div class="ppa-ca-table-wrap"><table class="ppa-ca-table"><thead><tr><th>Name / Title</th><th>Details</th><th>Created</th><th></th></tr></thead><tbody>';
+    foreach($posts as $p) {
+        echo '<tr><td><strong>'.esc_html($p->post_title).'</strong></td><td>'.esc_html(wp_trim_words(wp_strip_all_tags($p->post_content),18)).'</td><td>'.esc_html(get_the_date('d M Y',$p)).'</td><td><form method="post" onsubmit="return confirm(\'Delete this record?\')">';
+        wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
+        echo '<input type="hidden" name="ppa_ca_action" value="delete_record"><input type="hidden" name="record_id" value="'.(int)$p->ID.'"><input type="hidden" name="return_tab" value="'.esc_attr($tab).'"><button class="ppa-ca-delete" type="submit">Delete</button></form></td></tr>';
+    }
+    echo '</tbody></table></div>';
+}
+function ppa_ca_add_form($kind,$title,$fields,$tab) {
+    echo '<form method="post" class="ppa-ca-form">';
+    wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
+    echo '<input type="hidden" name="ppa_ca_action" value="add_record"><input type="hidden" name="record_type" value="'.esc_attr($kind).'"><input type="hidden" name="return_tab" value="'.esc_attr($tab).'"><h3>'.esc_html($title).'</h3><div class="ppa-ca-form-grid">';
+    foreach($fields as $field=>$label) {
+        $wide=in_array($field,array('record_details'),true);
+        echo '<label class="'.($wide?'is-wide':'').'">'.esc_html($label);
+        if ($field==='record_details') echo '<textarea name="record_details" rows="3"></textarea>';
+        else echo '<input name="'.esc_attr($field).'" type="text" '.($field==='record_title'?'required':'').'>';
+        echo '</label>';
+    }
+    echo '</div><button class="ppa-ca-primary" type="submit">Save Record</button></form>';
+}
+function ppa_ca_styles() { ?>
+<style>
+body.ppa-ca-body{background:#f8fafc!important;color:#1e293b}body.ppa-ca-body #wpadminbar{display:none!important}body.ppa-ca-body{margin-top:0!important}
+.ppa-ca-shell{min-height:100vh;display:flex;font-family:Arial,'Hind Siliguri',sans-serif;color:#1e293b;background:#f8fafc}.ppa-ca-sidebar{width:256px;flex:0 0 256px;height:100vh;position:sticky;top:0;background:#0f172a;color:#cbd5e1;display:flex;flex-direction:column;border-right:1px solid #1e293b}.ppa-ca-brand{height:64px;padding:0 16px;border-bottom:1px solid #1e293b;display:flex;align-items:center;gap:12px}.ppa-ca-brand-mark{width:36px;height:36px;border-radius:9px;background:#fff;color:#1d4ed8;font-weight:900;display:grid;place-items:center}.ppa-ca-brand strong{display:block;color:white;font-size:14px;letter-spacing:.5px}.ppa-ca-brand small{font-size:11px;color:#94a3b8}.ppa-ca-nav{padding:12px;overflow:auto;flex:1}.ppa-ca-nav a{display:flex;gap:12px;align-items:center;padding:11px 12px;margin:3px 0;border-radius:8px;color:#cbd5e1;text-decoration:none;font-size:13px;font-weight:600}.ppa-ca-nav a:hover{background:#1e293b;color:white}.ppa-ca-nav a.is-active{background:#2563eb;color:white}.ppa-ca-nav i{font-style:normal;width:17px;text-align:center}.ppa-ca-side-bottom{padding:12px;border-top:1px solid #1e293b}.ppa-ca-side-bottom a{display:block;text-align:center;padding:10px;background:#1e293b;border-radius:8px;color:#e2e8f0;text-decoration:none;font-size:12px}
+.ppa-ca-main{min-width:0;flex:1;display:flex;flex-direction:column}.ppa-ca-header{height:64px;position:sticky;top:0;z-index:5;background:#fff;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;padding:0 24px}.ppa-ca-header h1{font-size:18px;margin:0;color:#0f172a}.ppa-ca-user{display:flex;align-items:center;gap:10px;font-size:12px}.ppa-ca-avatar{width:32px;height:32px;border-radius:8px;background:#dbeafe;color:#1d4ed8;display:grid;place-items:center;font-weight:bold}.ppa-ca-logout{border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;background:white;color:#334155;font-weight:600;cursor:pointer}.ppa-ca-content{width:100%;max-width:1280px;margin:0 auto;padding:28px}.ppa-ca-welcome{margin:0 0 22px}.ppa-ca-welcome p{color:#64748b;margin:6px 0}.ppa-ca-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin:20px 0 28px}.ppa-ca-card,.ppa-ca-panel{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;box-shadow:0 4px 16px rgba(16,43,78,.035)}.ppa-ca-card span{font-size:12px;color:#64748b;font-weight:600}.ppa-ca-card strong{display:block;font-size:30px;margin-top:8px;color:#102b4e}.ppa-ca-panel{margin:18px 0}.ppa-ca-panel h2{font-size:17px;margin:0 0 15px}.ppa-ca-table-wrap{overflow:auto}.ppa-ca-table{width:100%;border-collapse:collapse;font-size:13px}.ppa-ca-table th,.ppa-ca-table td{text-align:left;padding:12px;border-bottom:1px solid #e2e8f0;vertical-align:top}.ppa-ca-table th{color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:.04em}.ppa-ca-empty{padding:22px;border:1px dashed #cbd5e1;border-radius:10px;color:#64748b;font-size:13px}.ppa-ca-form{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin:20px 0}.ppa-ca-form h3{margin:0 0 16px;font-size:16px}.ppa-ca-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:16px}.ppa-ca-form label,.ppa-ca-login-card label{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:700;color:#475569}.ppa-ca-form label.is-wide{grid-column:1/-1}.ppa-ca-form input,.ppa-ca-form textarea,.ppa-ca-login-card input:not([type=checkbox]){width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font:inherit;background:#fff;color:#0f172a}.ppa-ca-primary{background:#2563eb;color:white;border:0;border-radius:8px;padding:11px 16px;font-size:13px;font-weight:700;cursor:pointer}.ppa-ca-delete{border:0;background:#fff1f2;color:#be123c;border-radius:6px;padding:7px 10px;cursor:pointer}.ppa-ca-shortcuts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.ppa-ca-shortcuts a{border:1px solid #e2e8f0;border-radius:10px;padding:16px;text-decoration:none;color:#0f172a;font-weight:700;background:white}.ppa-ca-shortcuts a span{display:block;color:#64748b;font-weight:400;font-size:12px;margin-top:6px}.ppa-ca-alert{padding:12px 14px;border-radius:9px;margin-bottom:16px;font-size:13px;background:#eff6ff;color:#1d4ed8}.ppa-ca-alert.is-error{background:#fff1f2;color:#be123c}.ppa-ca-login{min-height:100vh;display:grid;place-items:center;padding:20px;background:#f8fafc;font-family:Arial,sans-serif}.ppa-ca-login-card{width:100%;max-width:410px;background:white;border:1px solid #e2e8f0;border-radius:18px;padding:30px;box-shadow:0 15px 45px rgba(15,23,42,.08)}.ppa-ca-login-card .ppa-ca-brand-mark{margin-bottom:15px}.ppa-ca-kicker{font-size:10px;letter-spacing:1.5px;color:#64748b;font-weight:bold}.ppa-ca-login-card h1{font-size:25px;margin:8px 0}.ppa-ca-login-card p{font-size:13px;color:#64748b;margin:0 0 22px}.ppa-ca-login-card label{margin:14px 0}.ppa-ca-login-card .ppa-ca-remember{display:flex;flex-direction:row;align-items:center;font-weight:400}.ppa-ca-login-card .ppa-ca-remember input{width:auto}.ppa-ca-login-card .ppa-ca-primary{width:100%;margin-top:6px}.ppa-ca-back{display:block;text-align:center;margin-top:18px;color:#64748b;text-decoration:none;font-size:12px}.ppa-ca-mobile-toggle{display:none}
+@media(max-width:900px){.ppa-ca-sidebar{width:220px;flex-basis:220px}.ppa-ca-content{padding:20px}.ppa-ca-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ppa-ca-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:680px){.ppa-ca-shell{display:block}.ppa-ca-sidebar{width:100%;height:auto;position:relative}.ppa-ca-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));padding:8px}.ppa-ca-nav a{font-size:11px;padding:9px}.ppa-ca-side-bottom{display:none}.ppa-ca-header{height:58px;padding:0 14px}.ppa-ca-header h1{font-size:15px}.ppa-ca-user .ppa-ca-user-label{display:none}.ppa-ca-content{padding:16px}.ppa-ca-grid{gap:10px}.ppa-ca-card{padding:14px}.ppa-ca-card strong{font-size:24px}.ppa-ca-form-grid{grid-template-columns:1fr}.ppa-ca-form label.is-wide{grid-column:auto}.ppa-ca-shortcuts{grid-template-columns:1fr}}
+</style>
+<?php }
+function ppa_ca_render_page() {
+    status_header(200); nocache_headers();
+    $user=wp_get_current_user();
+    $tab=isset($_GET['ppa_tab'])?sanitize_key(wp_unslash($_GET['ppa_tab'])):'overview';
+    $tabs=ppa_ca_tabs(); if(!isset($tabs[$tab])) $tab='overview';
+    get_header();
+    echo '<div class="ppa-ca-app">';
+    ppa_ca_styles();
+    if(!is_user_logged_in() || !current_user_can('manage_options')) {
+        echo ppa_ca_login_screen();
+    } else {
+        echo '<div class="ppa-ca-shell"><aside class="ppa-ca-sidebar"><div class="ppa-ca-brand"><div class="ppa-ca-brand-mark">P</div><div><strong>PHOTON</strong><small>Admin Panel</small></div></div><nav class="ppa-ca-nav">';
+        foreach($tabs as $key=>$item) echo '<a class="'.($tab===$key?'is-active':'').'" href="'.esc_url(add_query_arg('ppa_tab',$key,home_url('/admin/'))).'"><i>'.esc_html($item[1]).'</i><span>'.esc_html($item[0]).'</span></a>';
+        echo '</nav><div class="ppa-ca-side-bottom"><a href="'.esc_url(home_url('/')).'">← Back to Website</a></div></aside>';
+        echo '<div class="ppa-ca-main"><header class="ppa-ca-header"><h1>'.esc_html($tabs[$tab][0]).'</h1><div class="ppa-ca-user"><div class="ppa-ca-avatar">'.esc_html(strtoupper(substr($user->display_name,0,1))).'</div><span class="ppa-ca-user-label">'.esc_html($user->display_name).' · Administrator</span><form method="post">';
+        wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
+        echo '<input type="hidden" name="ppa_ca_action" value="logout"><button class="ppa-ca-logout" type="submit">Log out</button></form></div></header><main class="ppa-ca-content">';
+        if(isset($_GET['ppa_notice']) && $_GET['ppa_notice']!=='login_error') echo '<div class="ppa-ca-alert">'.esc_html(sanitize_text_field(wp_unslash($_GET['ppa_notice']))==='saved'?'Settings saved.':'Action completed.').'</div>';
+        if($tab==='overview') {
+            echo '<div class="ppa-ca-welcome"><h2>Welcome back, '.esc_html($user->display_name).'!</h2><p>Here is what is happening at Photon Physics Academy.</p></div><div class="ppa-ca-grid">';
+            $stats=array('Students'=>ppa_ca_count('ppa_student'),'Programs & Batches'=>ppa_ca_count('ppa_batch'),'Published Notices'=>ppa_ca_count('ppa_notice'),'Fee Payments'=>ppa_ca_count('ppa_fee_payment'));
+            foreach($stats as $label=>$number) echo '<div class="ppa-ca-card"><span>'.esc_html($label).'</span><strong>'.number_format_i18n($number).'</strong></div>';
+            echo '</div><section class="ppa-ca-panel"><h2>Quick Management</h2><div class="ppa-ca-shortcuts">';
+            foreach(array('students'=>'Manage Students','programs'=>'Programs & Batches','payments'=>'Record Fee Payment','notices'=>'Publish Notices','results'=>'Exam Results','store'=>'Store Orders') as $key=>$label) echo '<a href="'.esc_url(add_query_arg('ppa_tab',$key,home_url('/admin/'))).'">'.esc_html($label).'<span>Open management section →</span></a>';
+            echo '</div></section>';
+        } elseif($tab==='students') {
+            echo '<section class="ppa-ca-panel"><h2>Students Management</h2>'; ppa_ca_table(ppa_ca_records('ppa_student'),'ppa_student',$tab); echo '</section>';
+            ppa_ca_add_form('student','Add Student',array('record_title'=>'Student Name','student_id'=>'Student ID (YYNNN)','phone'=>'Student Mobile','guardian_phone'=>'Guardian Mobile','monthly_fee'=>'Monthly Fee (৳)','batch_name'=>'Batch','record_details'=>'Additional Details'),$tab);
+        } elseif($tab==='programs') {
+            echo '<section class="ppa-ca-panel"><h2>Programs & Batches</h2>'; ppa_ca_table(ppa_ca_records('ppa_batch'),'ppa_batch',$tab); echo '</section>';
+            ppa_ca_add_form('batch','Add Batch',array('record_title'=>'Batch Name','record_details'=>'Batch details / class schedule'),$tab);
+            echo '<section class="ppa-ca-panel"><h2>Course Pages</h2><p>Manage public course descriptions in the WordPress content manager.</p><a class="ppa-ca-primary" href="'.esc_url(admin_url('edit.php?post_type=ppa_course')).'">Open Course Manager</a></section>';
+        } elseif($tab==='payments') {
+            echo '<section class="ppa-ca-panel"><h2>Payments & Fees</h2>'; ppa_ca_table(ppa_ca_records('ppa_fee_payment'),'ppa_fee_payment',$tab); echo '</section>';
+            ppa_ca_add_form('payment','Record Fee Payment',array('record_title'=>'Student Name / ID','billing_month'=>'Billing Month','amount'=>'Amount (৳)','record_details'=>'Payment note'),$tab);
+        } elseif($tab==='notices') {
+            echo '<section class="ppa-ca-panel"><h2>Notices</h2><p>Manage academy notices, categories and publishing status.</p><a class="ppa-ca-primary" href="'.esc_url(admin_url('edit.php?post_type=ppa_notice')).'">Open Notice Manager</a></section>';
+        } elseif($tab==='results') {
+            echo '<section class="ppa-ca-panel"><h2>Results & Exams</h2>'; ppa_ca_table(ppa_ca_records('ppa_exam_result'),'ppa_exam_result',$tab); echo '</section>';
+            ppa_ca_add_form('result','Add Exam Result',array('record_title'=>'Student Name / ID','exam_name'=>'Exam Name','marks'=>'Marks / Grade','record_details'=>'Result details'),$tab);
+        } elseif($tab==='sms') {
+            echo '<section class="ppa-ca-panel"><h2>SMS Management</h2><p>Gateway connection settings are stored in WordPress. No sent-message history is stored by this panel. Live sending and balance lookup require secure provider API integration.</p><a class="ppa-ca-primary" href="https://portal.sms.net.bd/login/" target="_blank" rel="noopener">Open SMS Gateway</a></section>';
+        } elseif($tab==='settings') {
+            echo '<form method="post" class="ppa-ca-form">'; wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
+            echo '<input type="hidden" name="ppa_ca_action" value="save_settings"><input type="hidden" name="return_tab" value="settings"><h3>SMS Gateway & Homepage Slideshow</h3><div class="ppa-ca-form-grid">';
+            foreach(array('sms_gateway_url'=>'SMS Gateway URL','sms_api_key'=>'SMS API Key','sms_sender_id'=>'Sender ID','slideshow_urls'=>'Slideshow Image URLs (one per line)') as $key=>$label) {
+                $value=get_option('ppa_ca_'.$key,'');
+                echo '<label class="'.($key==='slideshow_urls'?'is-wide':'').'">'.esc_html($label);
+                if($key==='slideshow_urls') echo '<textarea rows="5" name="slideshow_urls">'.esc_textarea($value).'</textarea>';
+                else echo '<input type="'.($key==='sms_api_key'?'password':'text').'" name="'.esc_attr($key).'" value="'.esc_attr($value).'">';
+                echo '</label>';
+            }
+            echo '</div><button class="ppa-ca-primary" type="submit">Save Settings</button></form>';
+        } elseif($tab==='store') {
+            echo '<section class="ppa-ca-panel"><h2>Store Management</h2><div class="ppa-ca-shortcuts">';
+            $links=array('Products'=>admin_url('edit.php?post_type=product'),'Orders'=>admin_url('admin.php?page=wc-orders'),'Coupons'=>admin_url('edit.php?post_type=shop_coupon'),'Analytics'=>admin_url('admin.php?page=wc-admin&path=/analytics/overview'));
+            foreach($links as $label=>$url) echo '<a href="'.esc_url($url).'">'.esc_html($label).'<span>Manage WooCommerce '.strtolower($label).' →</span></a>';
+            echo '</div><p style="margin-top:18px">Store checkout, stock, order verification and customer notifications are handled by WooCommerce configuration and approved payment extensions.</p></section>';
+        }
+        echo '</main></div></div>';
+    }
+    echo '</div>';
+    get_footer();
+}
+function ppa_ca_register_route() {
+    add_rewrite_rule('^admin/?$','index.php?ppa_custom_admin=1','top');
+    add_rewrite_tag('%ppa_custom_admin%','1');
+}
+add_action('init','ppa_ca_register_route',99);
+add_filter('query_vars',function($vars){$vars[]='ppa_custom_admin';return $vars;});
+add_action('template_redirect',function(){if(get_query_var('ppa_custom_admin')) ppa_ca_render_page();},0);
+add_filter('body_class',function($classes){if(get_query_var('ppa_custom_admin')) $classes[]='ppa-ca-body';return $classes;});
+add_filter('login_url',function($url,$redirect,$force_reauth){return home_url('/admin/');},10,3);
