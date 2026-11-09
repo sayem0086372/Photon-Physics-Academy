@@ -29,16 +29,16 @@ get_header();
 
   <?php
   $notice_query = new WP_Query(array('post_type'=>'ppa_notice','post_status'=>'publish','posts_per_page'=>6,'orderby'=>'date','order'=>'DESC'));
-  if ($notice_query->have_posts()) : ?>
+  ?>
   <section id="notices" class="ppa-section ppa-gray"><div class="ppa-container">
     <p class="ppa-eyebrow">NOTICE BOARD — নোটিশ বোর্ড</p><h2 class="ppa-bangla">একাডেমিক নোটিশ ও নির্দেশনা</h2><p class="ppa-lead ppa-bangla">ভর্তি, পরীক্ষা ও ক্লাসরুটিনের তথ্য ও বিজ্ঞপ্তি।</p>
-    <div class="ppa-cards">
+    <?php if ($notice_query->have_posts()) : ?><div class="ppa-cards">
       <?php while ($notice_query->have_posts()) : $notice_query->the_post(); ?>
         <article class="ppa-notice-card"><time datetime="<?php echo esc_attr(get_the_date('c')); ?>"><?php echo esc_html(get_the_date('d F Y')); ?></time><h3 class="ppa-bangla"><?php the_title(); ?></h3><p class="ppa-bangla"><?php echo esc_html(ppa_excerpt(get_the_ID(), 26)); ?></p><a class="ppa-button" style="margin-top:16px" href="<?php the_permalink(); ?>">বিস্তারিত দেখুন →</a></article>
       <?php endwhile; ?>
-    </div>
+    </div><?php else : ?><div class="ppa-notice-card"><p class="ppa-bangla" style="margin:0">বর্তমানে কোনো নোটিশ প্রকাশিত হয়নি। নতুন নোটিশ প্রকাশিত হলে এখানে দেখা যাবে।</p></div><?php endif; ?>
   </div></section>
-  <?php endif; wp_reset_postdata(); ?>
+  <?php wp_reset_postdata(); ?>
 
   <section class="ppa-stats"><div class="ppa-container ppa-stat-grid">
     <div class="ppa-stat"><strong>23 Years</strong><b class="ppa-bangla">শিক্ষার ক্ষেত্রে আমাদের ২৩ বছরের ঐতিহ্য</b></div>
@@ -62,8 +62,8 @@ get_header();
     <p class="ppa-eyebrow">LEARNING PATHWAYS — শিক্ষা কার্যক্রম</p><h2 class="ppa-bangla">শ্রেণিভিত্তিক অ্যাকাডেমিক কার্যক্রম</h2><p class="ppa-lead ppa-bangla">নবম ও দশম শ্রেণির শিক্ষার্থীদের জন্য পদার্থবিজ্ঞানের সমন্বিত ও নিবিড় পাঠদান রূপরেখা।</p>
     <div class="ppa-cards">
       <article class="ppa-card"><img src="https://cdn.phototourl.com/member/2026-10-24-d41bef46-5d75-4bd3-b5d7-8dc5cc22ea39.png" alt="Class eight learning programme" loading="lazy"><div class="ppa-card-body"><h3 class="ppa-bangla">অষ্টম শ্রেণি</h3><p class="ppa-bangla">পদার্থবিজ্ঞানের ভিত্তি ও প্রাথমিক ধারণা গড়ে তোলার পাঠদান।</p></div></article>
-      <article class="ppa-card"><img src="https://cdn.phototourl.com/member/2026-10-24-b370d7b1-7e0f-4454-9623-fbca99e4b95a.png" alt="Class nine physics programme" loading="lazy"><div class="ppa-card-body"><h3 class="ppa-bangla">নবম শ্রেণি</h3><p class="ppa-bangla">কনসেপ্ট, থিওরি, গাণিতিক সমস্যা ও নিয়মিত অনুশীলন।</p></div></article>
-      <article class="ppa-card"><img src="https://cdn.phototourl.com/member/2026-10-24-eab7643b-7bec-4dd6-b5aa-7a8cfd4bc8ac.png" alt="Class ten physics programme" loading="lazy"><div class="ppa-card-body"><h3 class="ppa-bangla">দশম শ্রেণি</h3><p class="ppa-bangla">এসএসসি প্রস্তুতি, অধ্যায়ভিত্তিক মূল্যায়ন ও প্রশ্ন সমাধান।</p></div></article>
+      <article class="ppa-card"><img src="https://cdn.phototourl.com/member/2026-10-24-b370d7b1-7e0f-4454-9623-fbca99e4b95a.png" alt="Class nine physics programme" loading="lazy"><div class="ppa-card-body"><h3 class="ppa-bangla">নবম শ্রেণি</h3><p class="ppa-bangla">ভৌত রাশির স্পষ্ট ধারণা, অধ্যায়ভিত্তিক গণিত, কনসেপ্ট বুকের সহায়তায় সূত্রের প্রমাণ ও প্রয়োগ এবং বিস্তারিত সমস্যা সমাধান।</p></div></article>
+      <article class="ppa-card"><img src="https://cdn.phototourl.com/member/2026-10-24-eab7643b-7bec-4dd6-b5aa-7a8cfd4bc8ac.png" alt="Class ten physics programme" loading="lazy"><div class="ppa-card-body"><h3 class="ppa-bangla">দশম শ্রেণি</h3><p class="ppa-bangla">সম্পূর্ণ পাঠ্যবইয়ের পাঠদান, CQ ও MCQ সমাধান কৌশল, অধ্যায়ভিত্তিক নিবিড় অনুশীলন এবং স্পেশাল কেয়ার সেশন।</p></div></article>
     </div>
     <p class="ppa-bangla" style="margin-top:20px;color:#64748b">বর্তমান সক্রিয় ব্যাচ ও রুটিন নিশ্চিতকরণের জন্য সরাসরি একাডেমি অফিসে যোগাযোগ করুন।</p>
   </div></section>
