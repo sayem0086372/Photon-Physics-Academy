@@ -58,14 +58,39 @@ get_header();
     </div>
   </div></section>
 
-  <section id="programs" class="ppa-section ppa-gray"><div class="ppa-container">
-    <p class="ppa-eyebrow">LEARNING PATHWAYS — শিক্ষা কার্যক্রম</p><h2 class="ppa-bangla">শ্রেণিভিত্তিক অ্যাকাডেমিক কার্যক্রম</h2><p class="ppa-lead ppa-bangla">নবম ও দশম শ্রেণির শিক্ষার্থীদের জন্য পদার্থবিজ্ঞানের সমন্বিত ও নিবিড় পাঠদান রূপরেখা।</p>
-    <div class="ppa-cards">
-      <article class="ppa-card"><img src="https://cdn.phototourl.com/member/2026-10-24-d41bef46-5d75-4bd3-b5d7-8dc5cc22ea39.png" alt="Class eight learning programme" loading="lazy"><div class="ppa-card-body"><h3 class="ppa-bangla">অষ্টম শ্রেণি</h3><p class="ppa-bangla">পদার্থবিজ্ঞানের ভিত্তি ও প্রাথমিক ধারণা গড়ে তোলার পাঠদান।</p></div></article>
-      <article class="ppa-card"><img src="https://cdn.phototourl.com/member/2026-10-24-b370d7b1-7e0f-4454-9623-fbca99e4b95a.png" alt="Class nine physics programme" loading="lazy"><div class="ppa-card-body"><h3 class="ppa-bangla">নবম শ্রেণি</h3><p class="ppa-bangla">ভৌত রাশির স্পষ্ট ধারণা, অধ্যায়ভিত্তিক গণিত, কনসেপ্ট বুকের সহায়তায় সূত্রের প্রমাণ ও প্রয়োগ এবং বিস্তারিত সমস্যা সমাধান।</p></div></article>
-      <article class="ppa-card"><img src="https://cdn.phototourl.com/member/2026-10-24-eab7643b-7bec-4dd6-b5aa-7a8cfd4bc8ac.png" alt="Class ten physics programme" loading="lazy"><div class="ppa-card-body"><h3 class="ppa-bangla">দশম শ্রেণি</h3><p class="ppa-bangla">সম্পূর্ণ পাঠ্যবইয়ের পাঠদান, CQ ও MCQ সমাধান কৌশল, অধ্যায়ভিত্তিক নিবিড় অনুশীলন এবং স্পেশাল কেয়ার সেশন।</p></div></article>
+  <section id="programs" class="ppa-section ppa-programs-section"><div class="ppa-container">
+    <div class="ppa-section-heading-row">
+      <div><p class="ppa-eyebrow">LEARNING PATHWAYS — শিক্ষা কার্যক্রম</p><h2 class="ppa-bangla">শ্রেণিভিত্তিক অ্যাকাডেমিক কার্যক্রম</h2><p class="ppa-lead ppa-bangla">প্রতিটি শ্রেণির জন্য পরিকল্পিত পাঠদান, কনসেপ্টের স্পষ্টতা এবং ধারাবাহিক অনুশীলন।</p></div>
+      <div class="ppa-program-note"><strong class="ppa-bangla">অ্যাকাডেমিক নোটিশ</strong><p class="ppa-bangla">বর্তমান সক্রিয় ব্যাচ ও রুটিন নিশ্চিত করতে সরাসরি একাডেমি অফিসে যোগাযোগ করুন।</p></div>
     </div>
-    <p class="ppa-bangla" style="margin-top:20px;color:#64748b">বর্তমান সক্রিয় ব্যাচ ও রুটিন নিশ্চিতকরণের জন্য সরাসরি একাডেমি অফিসে যোগাযোগ করুন।</p>
+    <?php $course_query = new WP_Query(array('post_type'=>'ppa_course','post_status'=>'publish','posts_per_page'=>12,'orderby'=>'menu_order title','order'=>'ASC')); ?>
+    <?php if ($course_query->have_posts()) : ?><div class="ppa-program-grid">
+      <?php while ($course_query->have_posts()) : $course_query->the_post(); $course_image = get_post_meta(get_the_ID(), '_ppa_course_image', true); $course_subtitle = get_post_meta(get_the_ID(), '_ppa_course_subtitle', true); $course_audience = get_post_meta(get_the_ID(), '_ppa_course_audience', true); $course_features = get_post_meta(get_the_ID(), '_ppa_course_features', true); ?>
+        <article class="ppa-program-card">
+          <a class="ppa-program-image" href="<?php the_permalink(); ?>">
+            <?php if ($course_image) : ?><img src="<?php echo esc_url($course_image); ?>" alt="<?php echo esc_attr(get_the_title()); ?>" loading="lazy"><?php elseif (has_post_thumbnail()) : the_post_thumbnail('large'); ?><?php else : ?><span class="ppa-program-image-fallback">PHYSICS<br>LEARNING</span><?php endif; ?>
+            <span class="ppa-program-level">ACADEMIC PROGRAM</span>
+          </a>
+          <div class="ppa-program-body">
+            <h3 class="ppa-bangla"><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h3>
+            <?php if ($course_subtitle) : ?><p class="ppa-program-subtitle ppa-bangla"><?php echo esc_html($course_subtitle); ?></p><?php endif; ?>
+            <?php if ($course_audience) : ?><div class="ppa-program-audience"><span>উপযুক্ত শিক্ষার্থী</span><strong class="ppa-bangla"><?php echo esc_html($course_audience); ?></strong></div><?php endif; ?>
+            <?php if (is_array($course_features) && $course_features) : ?><ul class="ppa-program-highlights"><?php foreach (array_slice($course_features,0,3) as $feature) : ?><li class="ppa-bangla"><?php echo esc_html($feature); ?></li><?php endforeach; ?></ul><?php else : ?><p class="ppa-bangla"><?php echo esc_html(ppa_excerpt(get_the_ID(),24)); ?></p><?php endif; ?>
+            <a class="ppa-program-link" href="<?php the_permalink(); ?>">প্রোগ্রামের বিস্তারিত দেখুন <span aria-hidden="true">→</span></a>
+          </div>
+        </article>
+      <?php endwhile; ?>
+    </div><?php else : ?><div class="ppa-notice-card"><p class="ppa-bangla">প্রোগ্রামের তথ্য শিগগিরই প্রকাশ করা হবে।</p></div><?php endif; wp_reset_postdata(); ?>
+  </div></section>
+
+  <section id="results" class="ppa-section ppa-results-section"><div class="ppa-container ppa-results-panel">
+    <div><p class="ppa-eyebrow">RESULTS &amp; ACHIEVEMENTS — ফলাফল</p><h2 class="ppa-bangla">শেখার অগ্রগতি ও অর্জন</h2><p class="ppa-bangla">শিক্ষার্থীদের পরীক্ষার ফলাফল ও একাডেমিক অর্জনের তথ্য যাচাই করে এখানে প্রকাশ করা হবে।</p></div>
+    <a class="ppa-button ppa-button-outline" href="#contact">ফলাফল সম্পর্কে জানতে যোগাযোগ করুন</a>
+  </div></section>
+
+  <section id="resources" class="ppa-section ppa-gray"><div class="ppa-container ppa-resources-panel">
+    <div><p class="ppa-eyebrow">LEARNING RESOURCES — শিক্ষাসামগ্রী</p><h2 class="ppa-bangla">কনসেপ্ট বুঝুন, অনুশীলনে দক্ষ হোন</h2><p class="ppa-bangla">পদার্থবিজ্ঞানের কনসেপ্ট বুক ও অন্যান্য শিক্ষাসামগ্রী একাডেমির অনলাইন বুকস্টোরে দেখুন।</p></div>
+    <a class="ppa-button" href="<?php echo esc_url(home_url('/store/')); ?>">শিক্ষাসামগ্রী দেখুন ↗</a>
   </div></section>
 
   <section id="gallery" class="ppa-section"><div class="ppa-container">
