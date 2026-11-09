@@ -46,10 +46,9 @@ function ppa_ca_redirect($tab,$notice='') {
 }
 function ppa_ca_handle_post() {
     if (!isset($_POST['ppa_ca_action'])) return;
-    if (!is_user_logged_in() || !current_user_can('manage_options')) wp_die('You are not allowed to do this.');
-    check_admin_referer('ppa_ca_admin_action','ppa_ca_nonce');
     $action=sanitize_key(wp_unslash($_POST['ppa_ca_action']));
     if ($action==='login') {
+        if (!isset($_POST['ppa_ca_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['ppa_ca_nonce'])),'ppa_ca_admin_action')) wp_die('Security check failed.');
         $creds=array(
             'user_login'=>sanitize_text_field(wp_unslash($_POST['log'] ?? '')),
             'user_password'=>wp_unslash($_POST['pwd'] ?? ''),
@@ -57,8 +56,10 @@ function ppa_ca_handle_post() {
         );
         $user=wp_signon($creds,is_ssl());
         if (is_wp_error($user)) ppa_ca_redirect('overview','login_error');
-        ppa_ca_redirect('overview','welcome');
+        wp_safe_redirect(add_query_arg('ppa_tab','overview',home_url('/admin/'))); exit;
     }
+    if (!is_user_logged_in() || !current_user_can('manage_options')) wp_die('You are not allowed to do this.');
+    check_admin_referer('ppa_ca_admin_action','ppa_ca_nonce');
     if ($action==='logout') { wp_logout(); wp_safe_redirect(home_url('/admin/')); exit; }
     $tab=sanitize_key(wp_unslash($_POST['return_tab'] ?? 'overview'));
     if ($action==='save_settings') {
@@ -149,8 +150,9 @@ function ppa_ca_render_page() {
     $user=wp_get_current_user();
     $tab=isset($_GET['ppa_tab'])?sanitize_key(wp_unslash($_GET['ppa_tab'])):'overview';
     $tabs=ppa_ca_tabs(); if(!isset($tabs[$tab])) $tab='overview';
-    get_header();
-    echo '<div class="ppa-ca-app">';
+    echo '<!doctype html><html '.get_language_attributes().'><head><meta charset="'.esc_attr(get_bloginfo('charset')).'"><meta name="viewport" content="width=device-width, initial-scale=1">';
+    wp_head();
+    echo '</head><body class="ppa-ca-body"><div class="ppa-ca-app">';
     ppa_ca_styles();
     if(!is_user_logged_in() || !current_user_can('manage_options')) {
         echo ppa_ca_login_screen();
@@ -206,7 +208,8 @@ function ppa_ca_render_page() {
         echo '</main></div></div>';
     }
     echo '</div>';
-    get_footer();
+    wp_footer();
+    echo '</body></html>';
 }
 function ppa_ca_register_route() {
     add_rewrite_rule('^admin/?$','index.php?ppa_custom_admin=1','top');
@@ -214,6 +217,6 @@ function ppa_ca_register_route() {
 }
 add_action('init','ppa_ca_register_route',99);
 add_filter('query_vars',function($vars){$vars[]='ppa_custom_admin';return $vars;});
-add_action('template_redirect',function(){if(get_query_var('ppa_custom_admin')) ppa_ca_render_page();},0);
+add_action('template_redirect',function(){if(get_query_var('ppa_custom_admin')) { ppa_ca_render_page(); exit; }},0);
 add_filter('body_class',function($classes){if(get_query_var('ppa_custom_admin')) $classes[]='ppa-ca-body';return $classes;});
 add_filter('login_url',function($url,$redirect,$force_reauth){return home_url('/admin/');},10,3);
