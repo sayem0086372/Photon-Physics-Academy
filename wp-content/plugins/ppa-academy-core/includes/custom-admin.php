@@ -100,7 +100,7 @@ function ppa_ca_handle_post() {
             foreach (array('student_id','bangla_name','institution','guardian_name','phone','guardian_phone','whatsapp_phone','monthly_fee','batch_name','class_level','schedule_days','time_slot','instructor','billing_month','amount','payment_method','payment_date','exam_name','chapter','marks','total_marks','highest_marks','grade','exam_date','billing_year','payable_amount','paid_amount','due_amount','max_capacity') as $key) {
                 if (isset($_POST[$key]) && !($kind==='student' && $key==='student_id')) update_post_meta($id,'_ppa_'.$key,sanitize_text_field(wp_unslash($_POST[$key])));
             }
-            if($kind==='student') update_post_meta($id,'_ppa_student_id',ppa_ca_next_student_id());
+            if($kind==='student') update_post_meta($id,'_ppa_student_id',ppa_ca_next_student_id(true));
             ppa_ca_redirect($tab,'created');
         }
         ppa_ca_redirect($tab,'error');
@@ -134,18 +134,20 @@ function ppa_ca_records($type,$limit=100) {
     $statuses = $type === 'ppa_notice' ? array('publish','draft') : array('publish');
     return get_posts(array('post_type'=>$type,'post_status'=>$statuses,'numberposts'=>$limit,'orderby'=>'date','order'=>'DESC'));
 }
-function ppa_ca_next_student_id() {
-    $prefix=date('y');
-    $highest=0;
+function ppa_ca_next_student_id($reserve=false) {
+    $prefix=wp_date('y');
+    $highest=(int)get_option('ppa_ca_student_sequence_'.$prefix,0);
     foreach(ppa_ca_records('ppa_student',1000) as $student) {
         $existing=(string)get_post_meta($student->ID,'_ppa_student_id',true);
         if(preg_match('/^'.preg_quote($prefix,'/').'([0-9]{3})$/',$existing,$match)) $highest=max($highest,(int)$match[1]);
     }
-    return $prefix.sprintf('%03d',$highest+1);
+    $next=$highest+1;
+    if($reserve) update_option('ppa_ca_student_sequence_'.$prefix,$next,false);
+    return $prefix.sprintf('%03d',$next);
 }
 function ppa_ca_table($posts,$type,$tab) {
     if (!$posts) { echo '<div class="ppa-ca-empty">No records yet. Add your first record using the form below.</div>'; return; }
-    $columns = array('ppa_student'=>array('Student ID'=>'student_id','Class'=>'class_level','Batch'=>'batch_name','Guardian Mobile'=>'guardian_phone','Monthly Fee'=>'monthly_fee'),'ppa_batch'=>array('Class Level'=>'class_level','Schedule Days'=>'schedule_days','Class Time'=>'time_slot','Instructor'=>'instructor'),'ppa_fee_payment'=>array('Student ID'=>'student_id','Billing Month'=>'billing_month','Amount'=>'amount','Method'=>'payment_method','Payment Date'=>'payment_date'),'ppa_exam_result'=>array('Student ID'=>'student_id','Exam'=>'exam_name','Marks / Grade'=>'marks'));
+    $columns = array('ppa_student'=>array('Student ID'=>'student_id','Class'=>'class_level','Batch'=>'batch_name','Guardian Mobile'=>'guardian_phone','Monthly Fee'=>'monthly_fee'),'ppa_batch'=>array('Class Level'=>'class_level','Capacity'=>'max_capacity','Schedule Days'=>'schedule_days','Class Time'=>'time_slot','Instructor'=>'instructor'),'ppa_fee_payment'=>array('Student ID'=>'student_id','Billing Month'=>'billing_month','Year'=>'billing_year','Payable'=>'payable_amount','Paid'=>'paid_amount','Due'=>'due_amount','Method'=>'payment_method','Payment Date'=>'payment_date'),'ppa_exam_result'=>array('Student ID'=>'student_id','Exam'=>'exam_name','Chapter'=>'chapter','Total'=>'total_marks','Obtained'=>'marks','Highest'=>'highest_marks','Grade'=>'grade','Exam Date'=>'exam_date'));
     $meta_columns = isset($columns[$type]) ? $columns[$type] : array();
     echo '<div class="ppa-ca-table-wrap"><table class="ppa-ca-table"><thead><tr><th>Name / Title</th>';
     foreach($meta_columns as $label=>$key) echo '<th>'.esc_html($label).'</th>';
@@ -155,7 +157,8 @@ function ppa_ca_table($posts,$type,$tab) {
         foreach($meta_columns as $label=>$key) {
             $value=$key==='record_details' ? wp_trim_words(wp_strip_all_tags($p->post_content),12) : get_post_meta($p->ID,'_ppa_'.$key,true);
             if($key==='monthly_fee' && $value!=='') $value='৳'.number_format_i18n((float)$value);
-            if($key==='amount' && $value!=='') $value='৳'.number_format_i18n((float)$value);
+            if($key==='paid_amount' && $value==='') $value=get_post_meta($p->ID,'_ppa_amount',true);
+            if(in_array($key,array('amount','payable_amount','paid_amount','due_amount'),true) && $value!=='') $value='৳'.number_format_i18n((float)$value);
             echo '<td>'.esc_html($value!=='' ? $value : '—').'</td>';
         }
         echo '<td>'.esc_html(wp_trim_words(wp_strip_all_tags($p->post_content),16)).'</td><td>'.esc_html(get_the_date('d M Y',$p)).'</td><td><form method="post" onsubmit="return confirm(\'Delete this record?\')">';
@@ -169,7 +172,7 @@ function ppa_ca_filter_records($posts,$query) {
     if ($query==='') return $posts;
     return array_values(array_filter($posts,function($post) use ($query) {
         $haystack=strtolower($post->post_title.' '.wp_strip_all_tags($post->post_content));
-        foreach(array('student_id','guardian_phone','phone','billing_month','amount','exam_name','marks','class_level','batch_name') as $key) $haystack.=' '.strtolower((string)get_post_meta($post->ID,'_ppa_'.$key,true));
+        foreach(array('student_id','guardian_phone','phone','billing_month','billing_year','amount','payable_amount','paid_amount','due_amount','exam_name','chapter','marks','total_marks','highest_marks','grade','class_level','batch_name') as $key) $haystack.=' '.strtolower((string)get_post_meta($post->ID,'_ppa_'.$key,true));
         return strpos($haystack,$query)!==false;
     }));
 }
