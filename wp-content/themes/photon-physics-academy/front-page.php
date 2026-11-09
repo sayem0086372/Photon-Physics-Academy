@@ -65,18 +65,18 @@ get_header();
     </div>
     <?php $course_query = new WP_Query(array('post_type'=>'ppa_course','post_status'=>'publish','posts_per_page'=>12,'orderby'=>'menu_order title','order'=>'ASC')); ?>
     <?php if ($course_query->have_posts()) : ?><div class="ppa-program-grid">
-      <?php while ($course_query->have_posts()) : $course_query->the_post(); $course_image = get_post_meta(get_the_ID(), '_ppa_course_image', true); $course_subtitle = get_post_meta(get_the_ID(), '_ppa_course_subtitle', true); $course_audience = get_post_meta(get_the_ID(), '_ppa_course_audience', true); $course_features = get_post_meta(get_the_ID(), '_ppa_course_features', true); ?>
-        <article class="ppa-program-card">
-          <a class="ppa-program-image" href="<?php the_permalink(); ?>">
-            <?php if ($course_image) : ?><img src="<?php echo esc_url($course_image); ?>" alt="<?php echo esc_attr(get_the_title()); ?>" loading="lazy"><?php elseif (has_post_thumbnail()) : the_post_thumbnail('large'); ?><?php else : ?><span class="ppa-program-image-fallback">PHYSICS<br>LEARNING</span><?php endif; ?>
-            <span class="ppa-program-level">ACADEMIC PROGRAM</span>
-          </a>
+      <?php while ($course_query->have_posts()) : $course_query->the_post(); $course_subtitle = get_post_meta(get_the_ID(), '_ppa_course_subtitle', true); $course_audience = get_post_meta(get_the_ID(), '_ppa_course_audience', true); $course_features = get_post_meta(get_the_ID(), '_ppa_course_features', true); ?>
+        <article class="ppa-program-card ppa-program-card-compact">
           <div class="ppa-program-body">
-            <h3 class="ppa-bangla"><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h3>
+            <p class="ppa-program-level-text">ACADEMIC PROGRAM</p>
+            <h3 class="ppa-bangla"><?php the_title(); ?></h3>
             <?php if ($course_subtitle) : ?><p class="ppa-program-subtitle ppa-bangla"><?php echo esc_html($course_subtitle); ?></p><?php endif; ?>
             <?php if ($course_audience) : ?><div class="ppa-program-audience"><span>উপযুক্ত শিক্ষার্থী</span><strong class="ppa-bangla"><?php echo esc_html($course_audience); ?></strong></div><?php endif; ?>
-            <?php if (is_array($course_features) && $course_features) : ?><ul class="ppa-program-highlights"><?php foreach (array_slice($course_features,0,3) as $feature) : ?><li class="ppa-bangla"><?php echo esc_html($feature); ?></li><?php endforeach; ?></ul><?php else : ?><p class="ppa-bangla"><?php echo esc_html(ppa_excerpt(get_the_ID(),24)); ?></p><?php endif; ?>
-            <a class="ppa-program-link" href="<?php the_permalink(); ?>">প্রোগ্রামের বিস্তারিত দেখুন <span aria-hidden="true">→</span></a>
+            <?php if (is_array($course_features) && $course_features) : ?><ul class="ppa-program-highlights"><?php foreach (array_slice($course_features,0,2) as $feature) : ?><li class="ppa-bangla"><?php echo esc_html($feature); ?></li><?php endforeach; ?></ul><?php endif; ?>
+            <details class="ppa-course-inline-details">
+              <summary class="ppa-program-link">কোর্সের সংক্ষিপ্ত বিবরণ <span aria-hidden="true">＋</span></summary>
+              <div class="ppa-course-inline-content ppa-bangla"><?php echo wp_kses_post(apply_filters('the_content', get_the_content())); ?></div>
+            </details>
           </div>
         </article>
       <?php endwhile; ?>
