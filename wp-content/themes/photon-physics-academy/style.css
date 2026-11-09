@@ -4,7 +4,7 @@ Theme URI: https://photonphysicsbd.com/
 Author: Photon Physics Academy
 Author URI: https://photonphysicsbd.com/
 Description: Official WordPress theme for Photon Physics Academy.
-Version: 1.0.2
+Version: 1.0.3
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
@@ -292,3 +292,18 @@ button,input,textarea,select{font:inherit}
 @media(prefers-reduced-motion:reduce){
  .ppa-program-card,.ppa-program-image img,.ppa-card{transition:none!important}
 }
+
+
+/* Compact, expandable course details kept entirely on the homepage. */
+.ppa-program-card-compact .ppa-program-body{padding:25px}
+.ppa-program-level-text{margin:0 0 10px;color:#718096;font-size:10px;font-weight:800;letter-spacing:.13em}
+.ppa-course-inline-details{margin-top:17px;border-top:1px solid var(--ppa-border);padding-top:13px}
+.ppa-course-inline-details summary{display:flex;justify-content:space-between;align-items:center;cursor:pointer;list-style:none}
+.ppa-course-inline-details summary::-webkit-details-marker{display:none}
+.ppa-course-inline-details summary span{font-size:18px}
+.ppa-course-inline-details[open] summary span{transform:rotate(45deg)}
+.ppa-course-inline-content{padding:12px 0 0;color:#526477;font-size:13px;line-height:1.85}
+.ppa-course-inline-content h2{margin:14px 0 5px;color:var(--ppa-navy);font-size:15px}
+.ppa-course-inline-content p{margin:0 0 9px}
+.ppa-course-inline-content ul{margin:5px 0 12px;padding-left:20px}
+.ppa-course-inline-content li{padding:2px 0}
