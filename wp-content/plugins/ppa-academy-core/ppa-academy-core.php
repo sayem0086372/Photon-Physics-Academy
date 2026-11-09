@@ -260,3 +260,30 @@ register_deactivation_hook(__FILE__, 'ppa_core_deactivate');
 
 // Load the standalone, front-end academy administration application.
 require_once __DIR__ . '/includes/custom-admin.php';
+
+
+/** Ensure WooCommerce has a published Shop page at /shop/ and uses it as its catalogue page. */
+function ppa_core_ensure_woocommerce_shop_page() {
+    if (!function_exists('wc_get_page_id') || !post_type_exists('product')) { return; }
+
+    $shop_id = (int) wc_get_page_id('shop');
+    $shop_page = $shop_id ? get_post($shop_id) : null;
+    if (!$shop_page || 'publish' !== $shop_page->post_status || 'shop' !== $shop_page->post_name) {
+        $shop_page = get_page_by_path('shop', OBJECT, 'page');
+        if (!$shop_page) {
+            $shop_id = wp_insert_post(array(
+                'post_type' => 'page',
+                'post_status' => 'publish',
+                'post_title' => __('Shop', 'photon-physics-academy'),
+                'post_name' => 'shop',
+                'post_content' => '',
+            ), true);
+            if (is_wp_error($shop_id)) { return; }
+        } else {
+            $shop_id = (int) $shop_page->ID;
+        }
+        update_option('woocommerce_shop_page_id', (int) $shop_id);
+        flush_rewrite_rules(false);
+    }
+}
+add_action('init', 'ppa_core_ensure_woocommerce_shop_page', 110);
