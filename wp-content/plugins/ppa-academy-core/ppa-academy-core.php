@@ -257,3 +257,6 @@ function ppa_core_activate() {
 register_activation_hook(__FILE__, 'ppa_core_activate');
 function ppa_core_deactivate() { flush_rewrite_rules(); }
 register_deactivation_hook(__FILE__, 'ppa_core_deactivate');
+
+// Load the standalone, front-end academy administration application.
+require_once __DIR__ . '/includes/custom-admin.php';
