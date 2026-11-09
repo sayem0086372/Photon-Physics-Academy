@@ -64,7 +64,6 @@ function ppa_ca_handle_post() {
     $tab=sanitize_key(wp_unslash($_POST['return_tab'] ?? 'overview'));
     if ($action==='save_settings') {
         update_option('ppa_ca_sms_gateway_url',esc_url_raw(wp_unslash($_POST['sms_gateway_url'] ?? '')));
-        update_option('ppa_ca_sms_api_key',sanitize_text_field(wp_unslash($_POST['sms_api_key'] ?? '')));
         update_option('ppa_ca_sms_sender_id',sanitize_text_field(wp_unslash($_POST['sms_sender_id'] ?? '')));
         update_option('ppa_ca_slideshow_urls',sanitize_textarea_field(wp_unslash($_POST['slideshow_urls'] ?? '')));
         ppa_ca_redirect('settings','saved');
@@ -326,7 +325,7 @@ function ppa_ca_render_page() {
         } elseif($tab==='programs') {
             echo '<section class="ppa-ca-panel"><h2>Programs & Batches</h2>'; ppa_ca_table(ppa_ca_records('ppa_batch'),'ppa_batch',$tab); echo '</section>';
             ppa_ca_add_form('batch','Add Batch',array('record_title'=>'Batch Name','record_details'=>'Batch details / class schedule'),$tab);
-            echo '<section class="ppa-ca-panel"><h2>Course Pages</h2><p>Manage public course descriptions in the WordPress content manager.</p><a class="ppa-ca-primary" href="'.esc_url(admin_url('edit.php?post_type=ppa_course')).'">Open Course Manager</a></section>';
+            echo '<section class="ppa-ca-panel ppa-ca-info-panel"><div class="ppa-ca-info-icon">▤</div><div><strong>Course pages</strong><p>Course page editing will be brought into this custom panel. The public course content and existing pages will be preserved during the database integration stage.</p></div></section>';
         } elseif($tab==='payments') {
             echo '<section class="ppa-ca-panel"><h2>Payments & Fees</h2>'; ppa_ca_table(ppa_ca_records('ppa_fee_payment'),'ppa_fee_payment',$tab); echo '</section>';
             ppa_ca_add_form('payment','Record Fee Payment',array('record_title'=>'Student Name / ID','billing_month'=>'Billing Month','amount'=>'Amount (৳)','record_details'=>'Payment note'),$tab);
@@ -347,11 +346,11 @@ function ppa_ca_render_page() {
         } elseif($tab==='settings') {
             echo '<form method="post" class="ppa-ca-form">'; wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
             echo '<input type="hidden" name="ppa_ca_action" value="save_settings"><input type="hidden" name="return_tab" value="settings"><h3>SMS Gateway & Homepage Slideshow</h3><div class="ppa-ca-form-grid">';
-            foreach(array('sms_gateway_url'=>'SMS Gateway URL','sms_api_key'=>'SMS API Key','sms_sender_id'=>'Sender ID','slideshow_urls'=>'Slideshow Image URLs (one per line)') as $key=>$label) {
+            foreach(array('sms_gateway_url'=>'SMS Gateway URL','sms_sender_id'=>'Sender ID','slideshow_urls'=>'Slideshow Image URLs (one per line)') as $key=>$label) {
                 $value=get_option('ppa_ca_'.$key,'');
                 echo '<label class="'.($key==='slideshow_urls'?'is-wide':'').'">'.esc_html($label);
                 if($key==='slideshow_urls') echo '<textarea rows="5" name="slideshow_urls">'.esc_textarea($value).'</textarea>';
-                else echo '<input type="'.($key==='sms_api_key'?'password':'text').'" name="'.esc_attr($key).'" value="'.esc_attr($value).'">';
+                else echo '<input type="text" name="'.esc_attr($key).'" value="'.esc_attr($value).'">';
                 echo '</label>';
             }
             echo '</div><button class="ppa-ca-primary" type="submit">Save Settings</button></form>';
