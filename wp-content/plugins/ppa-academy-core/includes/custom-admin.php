@@ -90,6 +90,14 @@ function ppa_ca_handle_post() {
         }
         ppa_ca_redirect('notices','created');
     }
+    if ($action==='toggle_notice') {
+        $notice_id=absint($_POST['notice_id'] ?? 0);
+        $notice=get_post($notice_id);
+        if($notice && $notice->post_type==='ppa_notice') {
+            wp_update_post(array('ID'=>$notice_id,'post_status'=>$notice->post_status==='publish'?'draft':'publish'));
+        }
+        ppa_ca_redirect('notices','updated');
+    }
     if ($action==='delete_notice') {
         $notice_id=absint($_POST['notice_id'] ?? 0);
         $notice=get_post($notice_id);
@@ -166,7 +174,7 @@ function ppa_ca_next_student_id($reserve=false) {
 }
 function ppa_ca_table($posts,$type,$tab) {
     if (!$posts) { echo '<div class="ppa-ca-empty">No records yet. Add your first record using the form below.</div>'; return; }
-    $columns = array('ppa_student'=>array('Student ID'=>'student_id','Class'=>'class_level','Batch'=>'batch_name','Guardian Mobile'=>'guardian_phone','Monthly Fee'=>'monthly_fee'),'ppa_batch'=>array('Class Level'=>'class_level','Capacity'=>'max_capacity','Schedule Days'=>'schedule_days','Class Time'=>'time_slot','Instructor'=>'instructor'),'ppa_fee_payment'=>array('Receipt No.'=>'receipt_number','Student ID'=>'student_id','Billing Month'=>'billing_month','Year'=>'billing_year','Payable'=>'payable_amount','Paid'=>'paid_amount','Due'=>'due_amount','Method'=>'payment_method','Payment Date'=>'payment_date'),'ppa_exam_result'=>array('Student ID'=>'student_id','Exam'=>'exam_name','Chapter'=>'chapter','Total'=>'total_marks','Obtained'=>'marks','Highest'=>'highest_marks','Grade'=>'grade','Exam Date'=>'exam_date'));
+    $columns = array('ppa_student'=>array('Student ID'=>'student_id','Class'=>'class_level','Batch'=>'batch_name','Student Mobile'=>'phone','Guardian Mobile'=>'guardian_phone','WhatsApp'=>'whatsapp_phone','Institution'=>'institution','Monthly Fee'=>'monthly_fee'),'ppa_batch'=>array('Class Level'=>'class_level','Capacity'=>'max_capacity','Schedule Days'=>'schedule_days','Class Time'=>'time_slot','Instructor'=>'instructor'),'ppa_fee_payment'=>array('Receipt No.'=>'receipt_number','Student ID'=>'student_id','Billing Month'=>'billing_month','Year'=>'billing_year','Payable'=>'payable_amount','Paid'=>'paid_amount','Due'=>'due_amount','Method'=>'payment_method','Status'=>'payment_status','Payment Date'=>'payment_date'),'ppa_exam_result'=>array('Student ID'=>'student_id','Exam'=>'exam_name','Chapter'=>'chapter','Total'=>'total_marks','Obtained'=>'marks','Highest'=>'highest_marks','Grade'=>'grade','Exam Date'=>'exam_date'));
     $meta_columns = isset($columns[$type]) ? $columns[$type] : array();
     echo '<div class="ppa-ca-table-wrap"><table class="ppa-ca-table"><thead><tr><th>Name / Title</th>';
     foreach($meta_columns as $label=>$key) echo '<th>'.esc_html($label).'</th>';
@@ -178,6 +186,13 @@ function ppa_ca_table($posts,$type,$tab) {
             if($key==='monthly_fee' && $value!=='') $value='৳'.number_format_i18n((float)$value);
             if($key==='paid_amount' && $value==='') $value=get_post_meta($p->ID,'_ppa_amount',true);
             if($key==='receipt_number' && $value==='') $value='—';
+            if($key==='payment_status') {
+                $paid=(float)get_post_meta($p->ID,'_ppa_paid_amount',true);
+                if($paid===0.0) $paid=(float)get_post_meta($p->ID,'_ppa_amount',true);
+                $payable=(float)get_post_meta($p->ID,'_ppa_payable_amount',true);
+                $due=(float)get_post_meta($p->ID,'_ppa_due_amount',true);
+                $value=($due<=0 && $payable>0 && $paid>0)?'Paid':(($paid>0)?'Partial':'Due');
+            }
             if(in_array($key,array('amount','payable_amount','paid_amount','due_amount'),true) && $value!=='') $value='৳'.number_format_i18n((float)$value);
             echo '<td>'.esc_html($value!=='' ? $value : '—').'</td>';
         }
@@ -558,6 +573,8 @@ document.addEventListener('DOMContentLoaded',function(){
 <?php }
 
 function ppa_ca_visual_parity_styles() { ?><style>
+.ppa-ca-notice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.ppa-ca-notice-card{display:flex;flex-direction:column;min-width:0;padding:18px;border:1px solid #e2e8f0;border-radius:12px;background:#fff}.ppa-ca-notice-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:13px}.ppa-ca-notice-category{padding:5px 8px;border:1px solid #dbeafe;border-radius:6px;background:#eff6ff;color:#1d4ed8;font-size:10px;font-weight:750}.ppa-ca-notice-card time{color:#94a3b8;font-size:10px}.ppa-ca-notice-card h3{margin:0 0 7px;color:#0f172a;font-size:14px;font-weight:800;line-height:1.5}.ppa-ca-notice-card>p{flex:1;margin:0 0 16px;color:#64748b;font-size:11px;line-height:1.7}.ppa-ca-notice-card-actions{display:flex;align-items:center;gap:8px;padding-top:12px;border-top:1px solid #f1f5f9}.ppa-ca-notice-card-actions form{margin:0}.ppa-ca-notice-status{margin-right:auto;padding:5px 8px;border-radius:6px;font-size:10px;font-weight:750}.ppa-ca-notice-status.is-published{background:#ecfdf5;color:#047857}.ppa-ca-notice-status.is-draft{background:#f1f5f9;color:#64748b}.ppa-ca-notice-toggle{padding:7px 10px;border:1px solid #bfdbfe;border-radius:7px;background:#eff6ff;color:#1d4ed8;font-size:10px;font-weight:750;cursor:pointer}.ppa-ca-notice-toggle:hover{background:#dbeafe}
+@media(max-width:680px){.ppa-ca-notice-grid{grid-template-columns:1fr}}
 .ppa-ca-store-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin:0 0 20px}.ppa-ca-store-heading h2{margin:4px 0 5px;color:#0f172a;font-size:24px;font-weight:850;letter-spacing:-.04em}.ppa-ca-store-heading p{margin:0;color:#64748b;font-size:12px;line-height:1.6}.ppa-ca-store-kicker{font-size:10px!important;font-weight:800!important;letter-spacing:.16em;color:#1d4ed8!important}.ppa-ca-store-refresh{display:inline-flex;align-items:center;gap:7px;padding:9px 13px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;color:#64748b;font-size:12px;font-weight:700}.ppa-ca-store-metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:20px}.ppa-ca-store-metrics article,.ppa-ca-report-grid article{padding:15px 16px;border:1px solid #e2e8f0;border-radius:12px;background:#fff}.ppa-ca-store-metrics article>div{display:flex;align-items:center;justify-content:space-between;gap:8px}.ppa-ca-store-metrics span,.ppa-ca-report-grid span{color:#64748b;font-size:11px;font-weight:650}.ppa-ca-store-metrics i{display:grid;place-items:center;width:29px;height:29px;border-radius:9px;background:#eff6ff;color:#2563eb;font-size:14px;font-style:normal}.ppa-ca-store-metrics strong,.ppa-ca-report-grid strong{display:block;margin-top:9px;color:#0f172a;font-size:24px;font-weight:850}.ppa-ca-store-tabs{display:flex;flex-wrap:wrap;gap:8px;padding:0 0 15px;margin:0 0 18px;border-bottom:1px solid #e2e8f0}.ppa-ca-store-tabs a{display:inline-flex;align-items:center;padding:10px 13px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;color:#64748b;text-decoration:none;font-size:12px;font-weight:700;white-space:nowrap}.ppa-ca-store-tabs a.is-active{border-color:#0f172a;background:#0f172a;color:#fff}.ppa-ca-store-section{display:grid;gap:14px}.ppa-ca-store-toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px}.ppa-ca-store-toolbar h3,.ppa-ca-store-settings h3{margin:0;color:#0f172a;font-size:14px;font-weight:800}.ppa-ca-store-toolbar p,.ppa-ca-store-settings p{margin:5px 0 0;color:#64748b;font-size:11px;line-height:1.6}.ppa-ca-store-search{display:flex;align-items:center;gap:9px;flex:1;max-width:420px;padding:0 12px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;color:#94a3b8}.ppa-ca-store-search input{width:100%;min-width:0;padding:10px 0;border:0;outline:0;background:transparent;font-size:12px}.ppa-ca-store-toolbar select{min-width:190px;padding:10px 12px;border:1px solid #cbd5e1;border-radius:9px;background:#fff;color:#64748b;font-size:12px}.ppa-ca-store-table{padding:0;overflow:hidden}.ppa-ca-store-table .ppa-ca-table-wrap{border:0}.ppa-ca-store-table .ppa-ca-empty{margin:14px}.ppa-ca-dark-button{background:#0f172a!important}.ppa-ca-report-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.ppa-ca-store-help{margin:0;color:#475569;font-size:12px;line-height:1.7}.ppa-ca-store-settings{display:grid;gap:18px;max-width:820px;margin:0}.ppa-ca-store-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}.ppa-ca-store-form-grid label{display:grid;gap:7px;color:#334155;font-size:11px;font-weight:700}.ppa-ca-store-form-grid label.is-wide{grid-column:1/-1}.ppa-ca-store-form-grid input,.ppa-ca-store-form-grid textarea{box-sizing:border-box;width:100%;min-height:40px;padding:10px 12px;border:1px solid #e2e8f0;border-radius:9px;background:#f8fafc;color:#64748b;font:inherit;font-size:12px}.ppa-ca-store-form-grid textarea{min-height:84px}.ppa-ca-store-form-grid input:disabled,.ppa-ca-store-form-grid textarea:disabled{opacity:1;color:#94a3b8;background:#f8fafc}.ppa-ca-store-settings .ppa-ca-primary:disabled,.ppa-ca-store-toolbar .ppa-ca-primary:disabled{opacity:.55;cursor:not-allowed;transform:none;box-shadow:none}
 @media(max-width:1100px){.ppa-ca-store-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:680px){.ppa-ca-store-heading{align-items:flex-start;flex-direction:column}.ppa-ca-store-heading h2{font-size:21px}.ppa-ca-store-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.ppa-ca-store-metrics article{padding:13px}.ppa-ca-store-metrics strong{font-size:21px}.ppa-ca-store-tabs{flex-wrap:nowrap;overflow-x:auto}.ppa-ca-store-toolbar{align-items:stretch;flex-direction:column}.ppa-ca-store-search{max-width:none;min-height:42px}.ppa-ca-store-toolbar select{width:100%}.ppa-ca-report-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ppa-ca-store-form-grid{grid-template-columns:1fr}.ppa-ca-store-form-grid label.is-wide{grid-column:auto}}
@@ -723,14 +740,18 @@ function ppa_ca_render_page() {
             $notice_terms=get_terms(array('taxonomy'=>'ppa_notice_category','hide_empty'=>false));
             if (is_wp_error($notice_terms)) $notice_terms=array();
             echo '<div class="ppa-ca-section-head"><div><h2>Notice Management</h2><p>Create, publish and manage announcements shown on the academy website.</p></div><span class="ppa-ca-section-count">'.number_format_i18n(ppa_ca_count('ppa_notice')).' published</span></div>';
-            echo '<section class="ppa-ca-panel"><div class="ppa-ca-panel-head"><div><h2>All Notices</h2><p>Drafts and published notices are managed here.</p></div><span class="ppa-ca-soft-badge">Website content</span></div>';
+            echo '<section class="ppa-ca-panel ppa-ca-notice-panel"><div class="ppa-ca-panel-head"><div><h2>All Notices</h2><p>Drafts and published notices are managed here.</p></div><span class="ppa-ca-soft-badge">Website content</span></div>';
             if($notice_posts){
-                echo '<div class="ppa-ca-notice-list">';
+                echo '<div class="ppa-ca-notice-grid">';
                 foreach($notice_posts as $notice){
                     $status=get_post_status($notice);
-                    echo '<article class="ppa-ca-notice-row"><div class="ppa-ca-notice-icon">▣</div><div class="ppa-ca-notice-copy"><strong>'.esc_html($notice->post_title).'</strong><span>'.esc_html(wp_trim_words(wp_strip_all_tags($notice->post_content),22)).'</span></div><time>'.esc_html($status==='publish'?'Published':'Draft').' · '.esc_html(get_the_date('d M Y',$notice)).'</time><form method="post" onsubmit="return confirm(\'Delete this notice?\')">';
+                    $notice_terms_for_card=get_the_terms($notice->ID,'ppa_notice_category');
+                    $category_label=(!is_wp_error($notice_terms_for_card)&&$notice_terms_for_card)?$notice_terms_for_card[0]->name:'General';
+                    echo '<article class="ppa-ca-notice-card"><div class="ppa-ca-notice-card-top"><span class="ppa-ca-notice-category">'.esc_html($category_label).'</span><time>'.esc_html(get_the_date('d M Y',$notice)).'</time></div><h3>'.esc_html($notice->post_title).'</h3><p>'.esc_html(wp_trim_words(wp_strip_all_tags($notice->post_content),26)).'</p><div class="ppa-ca-notice-card-actions"><span class="ppa-ca-notice-status '.($status==='publish'?'is-published':'is-draft').'">'.esc_html($status==='publish'?'Published':'Draft').'</span><form method="post">';
                     wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
-                    echo '<input type="hidden" name="ppa_ca_action" value="delete_notice"><input type="hidden" name="notice_id" value="'.(int)$notice->ID.'"><button class="ppa-ca-delete" type="submit">Delete</button></form></article>';
+                    echo '<input type="hidden" name="ppa_ca_action" value="toggle_notice"><input type="hidden" name="notice_id" value="'.(int)$notice->ID.'"><button class="ppa-ca-notice-toggle" type="submit">'.esc_html($status==='publish'?'Unpublish':'Publish').'</button></form><form method="post" onsubmit="return confirm(\'Delete this notice?\')">';
+                    wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
+                    echo '<input type="hidden" name="ppa_ca_action" value="delete_notice"><input type="hidden" name="notice_id" value="'.(int)$notice->ID.'"><button class="ppa-ca-delete" type="submit">Delete</button></form></div></article>';
                 }
                 echo '</div>';
             } else {
