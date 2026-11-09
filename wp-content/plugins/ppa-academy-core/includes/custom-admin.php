@@ -130,13 +130,25 @@ function ppa_ca_login_screen() {
     </form></div><?php return ob_get_clean();
 }
 function ppa_ca_records($type,$limit=100) {
-    return get_posts(array('post_type'=>$type,'post_status'=>'publish','numberposts'=>$limit,'orderby'=>'date','order'=>'DESC'));
+    $statuses = $type === 'ppa_notice' ? array('publish','draft') : array('publish');
+    return get_posts(array('post_type'=>$type,'post_status'=>$statuses,'numberposts'=>$limit,'orderby'=>'date','order'=>'DESC'));
 }
 function ppa_ca_table($posts,$type,$tab) {
     if (!$posts) { echo '<div class="ppa-ca-empty">No records yet. Add your first record using the form below.</div>'; return; }
-    echo '<div class="ppa-ca-table-wrap"><table class="ppa-ca-table"><thead><tr><th>Name / Title</th><th>Details</th><th>Created</th><th></th></tr></thead><tbody>';
+    $columns = array('ppa_student'=>array('Student ID'=>'student_id','Guardian Mobile'=>'guardian_phone','Monthly Fee'=>'monthly_fee'),'ppa_batch'=>array('Class / Schedule'=>'record_details'),'ppa_fee_payment'=>array('Billing Month'=>'billing_month','Amount'=>'amount'),'ppa_exam_result'=>array('Exam'=>'exam_name','Marks / Grade'=>'marks'));
+    $meta_columns = isset($columns[$type]) ? $columns[$type] : array();
+    echo '<div class="ppa-ca-table-wrap"><table class="ppa-ca-table"><thead><tr><th>Name / Title</th>';
+    foreach($meta_columns as $label=>$key) echo '<th>'.esc_html($label).'</th>';
+    echo '<th>Details</th><th>Created</th><th>Action</th></tr></thead><tbody>';
     foreach($posts as $p) {
-        echo '<tr><td><strong>'.esc_html($p->post_title).'</strong></td><td>'.esc_html(wp_trim_words(wp_strip_all_tags($p->post_content),18)).'</td><td>'.esc_html(get_the_date('d M Y',$p)).'</td><td><form method="post" onsubmit="return confirm(\'Delete this record?\')">';
+        echo '<tr><td><strong>'.esc_html($p->post_title).'</strong></td>';
+        foreach($meta_columns as $label=>$key) {
+            $value=$key==='record_details' ? wp_trim_words(wp_strip_all_tags($p->post_content),12) : get_post_meta($p->ID,'_ppa_'.$key,true);
+            if($key==='monthly_fee' && $value!=='') $value='৳'.number_format_i18n((float)$value);
+            if($key==='amount' && $value!=='') $value='৳'.number_format_i18n((float)$value);
+            echo '<td>'.esc_html($value!=='' ? $value : '—').'</td>';
+        }
+        echo '<td>'.esc_html(wp_trim_words(wp_strip_all_tags($p->post_content),16)).'</td><td>'.esc_html(get_the_date('d M Y',$p)).'</td><td><form method="post" onsubmit="return confirm(\'Delete this record?\')">';
         wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
         echo '<input type="hidden" name="ppa_ca_action" value="delete_record"><input type="hidden" name="record_id" value="'.(int)$p->ID.'"><input type="hidden" name="return_tab" value="'.esc_attr($tab).'"><button class="ppa-ca-delete" type="submit">Delete</button></form></td></tr>';
     }
