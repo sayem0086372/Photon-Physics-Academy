@@ -155,12 +155,12 @@ function ppa_ca_table($posts,$type,$tab) {
     echo '</tbody></table></div>';
 }
 function ppa_ca_filter_records($posts,$query) {
-    $query=mb_strtolower(trim((string)$query));
+    $query=strtolower(trim((string)$query));
     if ($query==='') return $posts;
     return array_values(array_filter($posts,function($post) use ($query) {
-        $haystack=mb_strtolower($post->post_title.' '.wp_strip_all_tags($post->post_content));
-        foreach(array('student_id','guardian_phone','phone','billing_month','amount','exam_name','marks','class_level','batch_name') as $key) $haystack.=' '.mb_strtolower((string)get_post_meta($post->ID,'_ppa_'.$key,true));
-        return mb_strpos($haystack,$query)!==false;
+        $haystack=strtolower($post->post_title.' '.wp_strip_all_tags($post->post_content));
+        foreach(array('student_id','guardian_phone','phone','billing_month','amount','exam_name','marks','class_level','batch_name') as $key) $haystack.=' '.strtolower((string)get_post_meta($post->ID,'_ppa_'.$key,true));
+        return strpos($haystack,$query)!==false;
     }));
 }
 function ppa_ca_search_toolbar($placeholder) {
