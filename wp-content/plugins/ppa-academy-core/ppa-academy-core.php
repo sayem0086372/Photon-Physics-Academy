@@ -37,7 +37,6 @@ function ppa_core_register_content_types() {
         'public' => false, 'publicly_queryable' => false, 'show_ui' => true, 'show_in_rest' => true, 'has_archive' => false, 'rewrite' => false,
         'menu_icon' => 'dashicons-welcome-learn-more',
         'supports' => array('title', 'editor', 'excerpt', 'thumbnail', 'page-attributes'),
-        'rewrite' => array('slug' => 'program'),
     ));
 }
 add_action('init', 'ppa_core_register_content_types');
