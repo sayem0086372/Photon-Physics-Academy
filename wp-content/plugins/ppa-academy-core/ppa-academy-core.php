@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Photon Physics Academy Core
  * Description: Persistent academy content types and core site features for Photon Physics Academy.
- * Version: 1.1.0
+ * Version: 1.1.1
  * Author: OATHWILD (Sayeem)
  * Text Domain: photon-physics-academy
  */
@@ -34,7 +34,7 @@ function ppa_core_register_content_types() {
             'all_items' => __('All Courses', 'photon-physics-academy'),
             'view_item' => __('View Course Details', 'photon-physics-academy'),
         ),
-        'public' => true, 'show_in_rest' => true, 'has_archive' => false,
+        'public' => false, 'publicly_queryable' => false, 'show_ui' => true, 'show_in_rest' => true, 'has_archive' => false, 'rewrite' => false,
         'menu_icon' => 'dashicons-welcome-learn-more',
         'supports' => array('title', 'editor', 'excerpt', 'thumbnail', 'page-attributes'),
         'rewrite' => array('slug' => 'program'),
@@ -96,9 +96,9 @@ add_action('init', 'ppa_core_seed_default_courses', 30);
 
 /** Refresh rewrite rules once after a plugin upgrade adds the course permalink type. */
 function ppa_core_upgrade_rewrites() {
-    if (get_option('ppa_core_version') !== '1.1.0') {
+    if (get_option('ppa_core_version') !== '1.1.1') {
         flush_rewrite_rules(false);
-        update_option('ppa_core_version', '1.1.0');
+        update_option('ppa_core_version', '1.1.1');
     }
 }
 add_action('init', 'ppa_core_upgrade_rewrites', 99);
