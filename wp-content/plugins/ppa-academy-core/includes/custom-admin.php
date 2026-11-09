@@ -97,7 +97,7 @@ function ppa_ca_login_screen() {
     $error=isset($_GET['ppa_notice']) && $_GET['ppa_notice']==='login_error';
     ob_start(); ?>
     <div class="ppa-ca-login"><form method="post" class="ppa-ca-login-card">
-      <div class="ppa-ca-brand-mark">P</div><div class="ppa-ca-kicker">PHOTON PHYSICS ACADEMY</div>
+      <div class="ppa-ca-brand-mark"><img src="https://cdn.phototourl.com/member/2026-10-26-00b8c0d9-38d9-4d60-a377-dfd8928013de.png" alt="Photon Physics Academy"></div><div class="ppa-ca-kicker">PHOTON PHYSICS ACADEMY</div>
       <h1>Admin Login</h1><p>Sign in to manage your academy website.</p>
       <?php if($error): ?><div class="ppa-ca-alert is-error">Incorrect username or password. Please try again.</div><?php endif; ?>
       <?php wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce'); ?>
@@ -287,6 +287,7 @@ document.addEventListener('DOMContentLoaded',function(){
  if(toggle&&shell){toggle.addEventListener('click',function(){shell.classList.toggle('is-nav-open');toggle.setAttribute('aria-expanded',shell.classList.contains('is-nav-open')?'true':'false');});}
  document.querySelectorAll('.ppa-ca-nav a').forEach(function(link){link.addEventListener('click',function(){if(shell)shell.classList.remove('is-nav-open');});});
  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&shell)shell.classList.remove('is-nav-open');});
+ if(shell){shell.addEventListener('click',function(e){if(e.target===shell&&shell.classList.contains('is-nav-open'))shell.classList.remove('is-nav-open');});}
 });
 </script>
 <?php }
