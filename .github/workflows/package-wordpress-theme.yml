@@ -1,0 +1,28 @@
+name: Package WordPress Theme
+on:
+  push:
+    branches:
+      - wordpress-migration
+    paths:
+      - 'wp-content/themes/photon-physics-academy/**'
+      - 'wp-content/plugins/ppa-academy-core/**'
+      - '.github/workflows/package-wordpress-theme.yml'
+  workflow_dispatch:
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Package theme and companion plugin
+        run: |
+          zip -r photon-physics-academy-theme.zip wp-content/themes/photon-physics-academy
+          zip -r ppa-academy-core-plugin.zip wp-content/plugins/ppa-academy-core
+      - name: Upload installable ZIPs
+        uses: actions/upload-artifact@v4
+        with:
+          name: photon-physics-academy-wordpress-packages
+          path: |
+            photon-physics-academy-theme.zip
+            ppa-academy-core-plugin.zip
+          retention-days: 14
