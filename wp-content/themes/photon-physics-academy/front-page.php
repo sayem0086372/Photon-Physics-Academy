@@ -9,7 +9,7 @@ get_header();
 <main id="primary">
   <section class="ppa-store-banner" aria-labelledby="ppa-store-title"><div class="ppa-container"><div class="ppa-store-box">
     <div><div class="ppa-eyebrow" style="margin:0">PHOTON PHYSICS ACADEMY</div><h2 id="ppa-store-title" class="ppa-store-title">Find Your Next Book</h2><p style="margin:0;color:#64748b">Explore concept books and other learning resources, and order online.</p></div>
-    <a class="ppa-store-button" href="<?php echo esc_url(function_exists('wc_get_page_permalink') ? wc_get_page_permalink('shop') : home_url('/store/')); ?>">Browse &amp; Buy Books ↗</a>
+    <a class="ppa-store-button" href="<?php echo esc_url(home_url('/store/')); ?>">Browse &amp; Buy Books ↗</a>
   </div></div></section>
 
   <section id="home" class="ppa-hero"><div class="ppa-container">
@@ -62,8 +62,8 @@ get_header();
     <p class="ppa-eyebrow">LEARNING PATHWAYS — শিক্ষা কার্যক্রম</p><h2 class="ppa-bangla">শ্রেণিভিত্তিক অ্যাকাডেমিক কার্যক্রম</h2><p class="ppa-lead ppa-bangla">নবম ও দশম শ্রেণির শিক্ষার্থীদের জন্য পদার্থবিজ্ঞানের সমন্বিত ও নিবিড় পাঠদান রূপরেখা।</p>
     <div class="ppa-cards">
       <article class="ppa-card"><img src="https://cdn.phototourl.com/member/2026-10-24-d41bef46-5d75-4bd3-b5d7-8dc5cc22ea39.png" alt="Class eight learning programme" loading="lazy"><div class="ppa-card-body"><h3 class="ppa-bangla">অষ্টম শ্রেণি</h3><p class="ppa-bangla">পদার্থবিজ্ঞানের ভিত্তি ও প্রাথমিক ধারণা গড়ে তোলার পাঠদান।</p></div></article>
-      <article class="ppa-card"><img src="https://cdn.phototourl.com/member/2026-10-24-PLACEHOLDER-class-nine.png" alt="Class nine physics programme" loading="lazy"><div class="ppa-card-body"><h3 class="ppa-bangla">নবম শ্রেণি</h3><p class="ppa-bangla">কনসেপ্ট, থিওরি, গাণিতিক সমস্যা ও নিয়মিত অনুশীলন।</p></div></article>
-      <article class="ppa-card"><img src="https://cdn.phototourl.com/member/2026-10-24-PLACEHOLDER-class-ten.png" alt="Class ten physics programme" loading="lazy"><div class="ppa-card-body"><h3 class="ppa-bangla">দশম শ্রেণি</h3><p class="ppa-bangla">এসএসসি প্রস্তুতি, অধ্যায়ভিত্তিক মূল্যায়ন ও প্রশ্ন সমাধান।</p></div></article>
+      <article class="ppa-card"><img src="https://cdn.phototourl.com/member/2026-10-24-b370d7b1-7e0f-4454-9623-fbca99e4b95a.png" alt="Class nine physics programme" loading="lazy"><div class="ppa-card-body"><h3 class="ppa-bangla">নবম শ্রেণি</h3><p class="ppa-bangla">কনসেপ্ট, থিওরি, গাণিতিক সমস্যা ও নিয়মিত অনুশীলন।</p></div></article>
+      <article class="ppa-card"><img src="https://cdn.phototourl.com/member/2026-10-24-eab7643b-7bec-4dd6-b5aa-7a8cfd4bc8ac.png" alt="Class ten physics programme" loading="lazy"><div class="ppa-card-body"><h3 class="ppa-bangla">দশম শ্রেণি</h3><p class="ppa-bangla">এসএসসি প্রস্তুতি, অধ্যায়ভিত্তিক মূল্যায়ন ও প্রশ্ন সমাধান।</p></div></article>
     </div>
     <p class="ppa-bangla" style="margin-top:20px;color:#64748b">বর্তমান সক্রিয় ব্যাচ ও রুটিন নিশ্চিতকরণের জন্য সরাসরি একাডেমি অফিসে যোগাযোগ করুন।</p>
   </div></section>
