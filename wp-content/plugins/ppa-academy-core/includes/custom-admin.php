@@ -50,6 +50,10 @@ function ppa_ca_icon_svg($name) {
     return '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'.(isset($icons[$name])?$icons[$name]:'').'</svg>';
 }
 function ppa_ca_count($type) {
+    if (function_exists('ppa_db_admin_record_count')) {
+        $database_count=ppa_db_admin_record_count($type);
+        if ($database_count !== null) return $database_count;
+    }
     $counts=wp_count_posts($type);
     return $counts ? (int)$counts->publish : 0;
 }
@@ -330,6 +334,10 @@ function ppa_ca_custom_login_url($login_url, $redirect, $force_reauth) {
 add_filter('login_url', 'ppa_ca_custom_login_url', 10, 3);
 
 function ppa_ca_records($type,$limit=100) {
+    if (function_exists('ppa_db_read_admin_records')) {
+        $database_records=ppa_db_read_admin_records($type,$limit);
+        if (is_array($database_records)) return $database_records;
+    }
     $statuses = $type === 'ppa_notice' ? array('publish','draft') : array('publish');
     return get_posts(array('post_type'=>$type,'post_status'=>$statuses,'numberposts'=>$limit,'orderby'=>'date','order'=>'DESC'));
 }
