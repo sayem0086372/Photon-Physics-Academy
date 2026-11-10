@@ -134,7 +134,10 @@ function ppa_db_install_schema() {
     update_option('ppa_db_schema_version', '1.0.1', false);
 }
 function ppa_db_meta($post_id, $key, $default = '') {
+    $was_bypassed = !empty($GLOBALS['ppa_db_meta_bypass']);
+    $GLOBALS['ppa_db_meta_bypass'] = true;
     $value = get_post_meta($post_id, '_ppa_' . $key, true);
+    if (!$was_bypassed) { unset($GLOBALS['ppa_db_meta_bypass']); }
     return ($value === '' || $value === null) ? $default : $value;
 }
 function ppa_db_datetime($post) {
@@ -375,4 +378,83 @@ function ppa_db_delete_record($post_id) {
     } elseif ($post->post_type === 'ppa_exam_result') {
         $wpdb->delete($results, array('legacy_post_id'=>$post->ID), array('%d'));
     }
+}
+
+
+/**
+ * Read the admin's student/batch/fee/result lists from dedicated MySQL tables.
+ * Legacy post IDs are retained as compatibility references for existing UI
+ * actions, while displayed values come from the dedicated tables.
+ */
+function ppa_db_read_admin_records($post_type, $limit = 100) {
+    global $wpdb;
+    if (!get_option('ppa_db_legacy_migration_v1_complete')) { return null; }
+    $limit = max(1, min(5000, absint($limit)));
+    $students = $wpdb->prefix . 'ppa_students';
+    $batches = $wpdb->prefix . 'ppa_batches';
+    $fees = $wpdb->prefix . 'ppa_fee_records';
+    $tx = $wpdb->prefix . 'ppa_payment_transactions';
+    $results = $wpdb->prefix . 'ppa_exam_results';
+    $sql = '';
+    $meta_fields = array();
+    $name_field = 'student_name';
+    if ($post_type === 'ppa_student') {
+        $sql = $wpdb->prepare("SELECT s.*, s.full_name AS display_name FROM {$students} s WHERE s.legacy_post_id IS NOT NULL ORDER BY s.created_at DESC, s.id DESC LIMIT %d", $limit);
+        $meta_fields = array('student_id'=>'student_code','bangla_name'=>'bangla_name','class_level'=>'class_level','batch_name'=>'batch_name','institution'=>'institution','phone'=>'student_phone','guardian_name'=>'guardian_name','guardian_phone'=>'guardian_phone','whatsapp_phone'=>'whatsapp_phone','monthly_fee'=>'monthly_fee');
+        $name_field = 'full_name';
+    } elseif ($post_type === 'ppa_batch') {
+        $sql = $wpdb->prepare("SELECT b.*, b.batch_name AS display_name FROM {$batches} b WHERE b.legacy_post_id IS NOT NULL ORDER BY b.created_at DESC, b.id DESC LIMIT %d", $limit);
+        $meta_fields = array('class_level'=>'class_level','max_capacity'=>'max_capacity','schedule_days'=>'schedule_days','time_slot'=>'time_slot','instructor'=>'instructor');
+        $name_field = 'batch_name';
+    } elseif ($post_type === 'ppa_fee_payment') {
+        $sql = $wpdb->prepare("SELECT f.*, f.student_name AS display_name, t.payment_method, t.transaction_reference, t.receipt_number, t.payment_date FROM {$fees} f LEFT JOIN {$tx} t ON t.legacy_post_id = f.legacy_post_id WHERE f.legacy_post_id IS NOT NULL ORDER BY f.created_at DESC, f.id DESC LIMIT %d", $limit);
+        $meta_fields = array('student_id'=>'student_code','billing_month'=>'billing_month','billing_year'=>'billing_year','payable_amount'=>'payable_amount','paid_amount'=>'paid_amount','due_amount'=>'due_amount','payment_status'=>'payment_status','amount'=>'paid_amount','payment_method'=>'payment_method','transaction_reference'=>'transaction_reference','receipt_number'=>'receipt_number','payment_date'=>'payment_date');
+        $name_field = 'student_name';
+    } elseif ($post_type === 'ppa_exam_result') {
+        $sql = $wpdb->prepare("SELECT r.*, r.student_name AS display_name FROM {$results} r WHERE r.legacy_post_id IS NOT NULL ORDER BY r.created_at DESC, r.id DESC LIMIT %d", $limit);
+        $meta_fields = array('student_id'=>'student_code','exam_name'=>'exam_name','chapter'=>'chapter','marks'=>'marks','total_marks'=>'total_marks','highest_marks'=>'highest_marks','grade'=>'grade','exam_date'=>'exam_date');
+        $name_field = 'student_name';
+    } else {
+        return null;
+    }
+    $rows = $wpdb->get_results($sql);
+    if (!is_array($rows)) { return null; }
+    $posts = array();
+    if (!isset($GLOBALS['ppa_db_admin_meta']) || !is_array($GLOBALS['ppa_db_admin_meta'])) { $GLOBALS['ppa_db_admin_meta'] = array(); }
+    foreach ($rows as $row) {
+        $legacy_id = absint($row->legacy_post_id);
+        if (!$legacy_id) { continue; }
+        $post = get_post($legacy_id);
+        if (!$post || $post->post_type !== $post_type || !in_array($post->post_status, array('publish','draft','private'), true)) { continue; }
+        $GLOBALS['ppa_db_admin_meta'][$legacy_id] = array();
+        foreach ($meta_fields as $meta_key=>$column) {
+            $GLOBALS['ppa_db_admin_meta'][$legacy_id]['_ppa_' . $meta_key] = isset($row->$column) ? $row->$column : '';
+        }
+        $posts[] = clone $post;
+        $last = count($posts) - 1;
+        $posts[$last]->post_title = isset($row->$name_field) ? (string)$row->$name_field : $post->post_title;
+        if (isset($row->details)) { $posts[$last]->post_content = (string)$row->details; }
+    }
+    return $posts;
+}
+function ppa_db_filter_legacy_post_meta($value, $object_id, $meta_key, $single) {
+    if (!empty($GLOBALS['ppa_db_meta_bypass'])) { return $value; }
+    $object_id = absint($object_id);
+    if (!isset($GLOBALS['ppa_db_admin_meta'][$object_id]) || !array_key_exists($meta_key, $GLOBALS['ppa_db_admin_meta'][$object_id])) { return $value; }
+    $stored = $GLOBALS['ppa_db_admin_meta'][$object_id][$meta_key];
+    return $single ? $stored : array($stored);
+}
+add_filter('get_post_metadata', 'ppa_db_filter_legacy_post_meta', 10, 4);
+function ppa_db_admin_record_count($post_type) {
+    global $wpdb;
+    if (!get_option('ppa_db_legacy_migration_v1_complete')) { return null; }
+    $tables = array(
+        'ppa_student'=>$wpdb->prefix . 'ppa_students',
+        'ppa_batch'=>$wpdb->prefix . 'ppa_batches',
+        'ppa_fee_payment'=>$wpdb->prefix . 'ppa_fee_records',
+        'ppa_exam_result'=>$wpdb->prefix . 'ppa_exam_results'
+    );
+    if (!isset($tables[$post_type])) { return null; }
+    $count = $wpdb->get_var("SELECT COUNT(*) FROM {$tables[$post_type]}");
+    return is_numeric($count) ? (int)$count : null;
 }
