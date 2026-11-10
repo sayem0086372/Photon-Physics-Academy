@@ -1,0 +1,40 @@
+name: Build WordPress Plugin ZIP
+
+on:
+  push:
+    branches:
+      - wordpress-v2-restoration
+    paths:
+      - '.github/workflows/build-wordpress-plugin.yml'
+      - 'wp-content/plugins/ppa-academy-core/**'
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout restoration branch
+        uses: actions/checkout@v4
+        with:
+          ref: wordpress-v2-restoration
+
+      - name: Validate PHP syntax
+        run: |
+          find wp-content/plugins/ppa-academy-core -type f -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Build installable plugin ZIP
+        run: |
+          mkdir -p dist
+          cp -R wp-content/plugins/ppa-academy-core dist/ppa-academy-core
+          cd dist
+          zip -r ppa-academy-core.zip ppa-academy-core
+
+      - name: Upload installable ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: photon-physics-academy-core-plugin
+          path: dist/ppa-academy-core.zip
+          if-no-files-found: error
+          retention-days: 30
