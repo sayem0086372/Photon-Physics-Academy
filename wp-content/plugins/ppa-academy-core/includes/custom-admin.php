@@ -742,6 +742,44 @@ function ppa_ca_store_preview($store_view) {
     echo '<div class="ppa-ca-info-panel"><strong>Store integration is loading.</strong></div>';
 }
 
+function ppa_ca_polished_ui_styles() { ?>
+<style>
+/* Subtle admin UI refinement: keep the existing dashboard structure and controls. */
+body.ppa-ca-body{font-family:Inter,'Plus Jakarta Sans','Hind Siliguri',Arial,sans-serif!important;-webkit-font-smoothing:antialiased}
+.ppa-ca-shell{background:#f4f7fb}
+.ppa-ca-sidebar{background:linear-gradient(180deg,#10233d 0%,#0b1a2e 100%);border-right-color:#1b3554}
+.ppa-ca-brand{height:72px;border-bottom-color:rgba(255,255,255,.09)}
+.ppa-ca-brand-mark{border-radius:11px;box-shadow:0 4px 12px rgba(0,0,0,.12)}
+.ppa-ca-nav{padding:16px 12px}
+.ppa-ca-nav a{min-height:42px;border-radius:9px;font-size:13px;transition:background .18s ease,color .18s ease,transform .18s ease}
+.ppa-ca-nav a:hover{transform:translateX(2px);background:rgba(255,255,255,.08)}
+.ppa-ca-nav a.is-active{background:linear-gradient(110deg,#2563eb,#1d4ed8);box-shadow:0 5px 14px rgba(37,99,235,.22)}
+.ppa-ca-side-bottom{border-top-color:rgba(255,255,255,.1)}
+.ppa-ca-header{height:72px;padding:0 30px;border-bottom-color:#e7edf4;box-shadow:0 3px 12px rgba(15,35,60,.025)}
+.ppa-ca-header h1{font-size:19px;letter-spacing:-.025em}
+.ppa-ca-user{gap:12px;font-size:13px}
+.ppa-ca-avatar{border-radius:10px}
+.ppa-ca-content{padding:30px}
+.ppa-ca-welcome h2{letter-spacing:-.035em;color:#14243a}
+.ppa-ca-welcome p{color:#66778d}
+.ppa-ca-card,.ppa-ca-panel,.ppa-ca-metric,.ppa-ca-program-card,.ppa-ca-store-card,.ppa-ca-info-panel{border-color:#e3eaf2!important;border-radius:14px!important;box-shadow:0 4px 16px rgba(20,45,75,.035)!important}
+.ppa-ca-card,.ppa-ca-metric,.ppa-ca-program-card,.ppa-ca-store-card{transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+.ppa-ca-card:hover,.ppa-ca-metric:hover,.ppa-ca-program-card:hover,.ppa-ca-store-card:hover{transform:translateY(-2px);border-color:#d1deec!important;box-shadow:0 10px 24px rgba(20,45,75,.07)!important}
+.ppa-ca-panel{padding:22px}
+.ppa-ca-panel h2,.ppa-ca-panel-head h2{letter-spacing:-.02em}
+.ppa-ca-table th{background:#f8fafc;color:#64748b;font-size:11px;letter-spacing:.055em}
+.ppa-ca-table td{color:#33465d}
+.ppa-ca-table tbody tr:hover{background:#f8fbff}
+.ppa-ca-primary,.ppa-ca-logout,.ppa-ca-public-site,.ppa-ca-view-all,.ppa-ca-shortcuts a{border-radius:9px;transition:background .18s ease,box-shadow .18s ease,transform .18s ease}
+.ppa-ca-primary{box-shadow:0 4px 12px rgba(37,99,235,.14)}
+.ppa-ca-primary:hover{transform:translateY(-1px);box-shadow:0 7px 16px rgba(37,99,235,.2)}
+.ppa-ca-content input,.ppa-ca-content select,.ppa-ca-content textarea,.ppa-ca-modal input,.ppa-ca-modal select,.ppa-ca-modal textarea{border-radius:8px}
+.ppa-ca-content input:focus,.ppa-ca-content select:focus,.ppa-ca-content textarea:focus,.ppa-ca-modal input:focus,.ppa-ca-modal select:focus,.ppa-ca-modal textarea:focus{outline:0;border-color:#8bb2ed;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.ppa-ca-store-banner{border-radius:16px;box-shadow:0 10px 25px rgba(16,43,78,.12)}
+@media(max-width:680px){.ppa-ca-header{height:64px;padding:0 16px}.ppa-ca-content{padding:18px}.ppa-ca-panel{padding:17px}}
+</style>
+<?php }
+
 function ppa_ca_render_page() {
     status_header(200); nocache_headers();
     $user=wp_get_current_user();
@@ -754,6 +792,7 @@ function ppa_ca_render_page() {
     ppa_ca_enhanced_styles();
     ppa_ca_section_styles();
     ppa_ca_visual_parity_styles();
+    ppa_ca_polished_ui_styles();
     if(!is_user_logged_in() || !current_user_can('manage_options')) {
         echo ppa_ca_login_screen();
     } else {
