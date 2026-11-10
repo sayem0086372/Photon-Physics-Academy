@@ -75,7 +75,7 @@ function ppa_store_handle_admin_post() {
         if (isset($_POST['payment_received'])) {
             $order->update_meta_data('_ppa_payment_verified','yes');
             $order->add_order_note('Manual payment marked received by academy administrator.');
-            if ($order->has_status(array('pending','on-hold'))) $order->update_status('processing','Payment verified by academy administrator.');
+            if ($order->has_status(array('pending','on-hold'))) $order->payment_complete();
         }
         if (isset($_POST['payment_not_received'])) {
             $order->update_meta_data('_ppa_payment_verified','no');
@@ -132,6 +132,26 @@ function ppa_store_register_settings() {
     },10,2);
 }
 add_action('woocommerce_init','ppa_store_register_settings');
+
+add_filter('woocommerce_available_payment_gateways',function($gateways) {
+    if (isset($gateways['cod']) && get_option('ppa_store_cod_enabled','yes')!=='yes') unset($gateways['cod']);
+    return $gateways;
+});
+add_action('woocommerce_cart_calculate_fees',function($cart) {
+    if (is_admin() && !defined('DOING_AJAX')) return;
+    if (!$cart || $cart->is_empty()) return;
+    $fee=(float)get_option('ppa_store_delivery_fee',0);
+    $threshold=(float)get_option('ppa_store_free_delivery',0);
+    if ($threshold>0 && (float)$cart->get_subtotal()>=$threshold) return;
+    if ($fee>0) $cart->add_fee(__('Delivery charge','photon-physics-academy'),$fee,false);
+});
+add_action('woocommerce_checkout_create_order',function($order,$data) {
+    if (!empty($_POST['ppa_wallet_transaction_id'])) {
+        $order->update_meta_data('_ppa_wallet_transaction_id',sanitize_text_field(wp_unslash($_POST['ppa_wallet_transaction_id'])));
+        $order->update_meta_data('_ppa_payment_verified','no');
+    }
+},20,2);
+
 
 function ppa_store_register_gateways($gateways) {
     if (!class_exists('WC_Payment_Gateway')) return $gateways;
