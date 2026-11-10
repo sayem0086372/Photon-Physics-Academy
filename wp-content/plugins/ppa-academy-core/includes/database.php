@@ -87,7 +87,7 @@ function ppa_db_tables() {
             created_at datetime NOT NULL,
             PRIMARY KEY  (id),
             UNIQUE KEY legacy_post_id (legacy_post_id),
-            UNIQUE KEY receipt_number (receipt_number),
+            KEY receipt_number (receipt_number),
             KEY fee_record_id (fee_record_id),
             KEY student_id (student_id),
             KEY payment_date (payment_date)
@@ -219,4 +219,131 @@ function ppa_db_migrate_legacy_records() {
 function ppa_db_maybe_upgrade() {
     if (get_option('ppa_db_schema_version') !== '1.0.0') { ppa_db_install_schema(); }
     if (!get_option('ppa_db_legacy_migration_v1_complete')) { ppa_db_migrate_legacy_records(); }
+}
+
+/**
+ * Mirror a custom-admin legacy post into the dedicated Academy tables.
+ * The CPT row remains as a compatibility mirror for existing public/theme code;
+ * the dedicated tables are also updated for every admin create/edit operation.
+ */
+function ppa_db_find_student($student_code) {
+    global $wpdb;
+    $table = $wpdb->prefix . 'ppa_students';
+    return $wpdb->get_row($wpdb->prepare("SELECT id, student_code, full_name FROM {$table} WHERE student_code = %s LIMIT 1", $student_code));
+}
+function ppa_db_sync_record($post_id) {
+    global $wpdb;
+    $post = get_post(absint($post_id));
+    if (!$post) { return new WP_Error('ppa_db_missing_post', 'The record could not be found.'); }
+    $now = current_time('mysql');
+    $created = ppa_db_datetime($post);
+    $type = $post->post_type;
+    $code = (string) ppa_db_meta($post->ID, 'student_id');
+    $students = $wpdb->prefix . 'ppa_students';
+    $batches = $wpdb->prefix . 'ppa_batches';
+    $fees = $wpdb->prefix . 'ppa_fee_records';
+    $transactions = $wpdb->prefix . 'ppa_payment_transactions';
+    $results = $wpdb->prefix . 'ppa_exam_results';
+
+    if ($type === 'ppa_student') {
+        $student_code = (string) ppa_db_meta($post->ID, 'student_id');
+        if ($student_code === '') { return new WP_Error('ppa_db_student_code', 'Student ID is missing.'); }
+        $ok = $wpdb->replace($students, array(
+            'legacy_post_id'=>$post->ID,'student_code'=>$student_code,'full_name'=>$post->post_title,
+            'bangla_name'=>ppa_db_meta($post->ID,'bangla_name'),'class_level'=>ppa_db_meta($post->ID,'class_level'),
+            'batch_name'=>ppa_db_meta($post->ID,'batch_name'),'institution'=>ppa_db_meta($post->ID,'institution'),
+            'student_phone'=>ppa_db_meta($post->ID,'phone'),'guardian_name'=>ppa_db_meta($post->ID,'guardian_name'),
+            'guardian_phone'=>ppa_db_meta($post->ID,'guardian_phone'),'whatsapp_phone'=>ppa_db_meta($post->ID,'whatsapp_phone'),
+            'monthly_fee'=>(float)ppa_db_meta($post->ID,'monthly_fee',0),'details'=>$post->post_content,
+            'status'=>'active','created_at'=>$created,'updated_at'=>$now
+        ));
+    } elseif ($type === 'ppa_batch') {
+        $ok = $wpdb->replace($batches, array(
+            'legacy_post_id'=>$post->ID,'batch_name'=>$post->post_title,
+            'class_level'=>ppa_db_meta($post->ID,'class_level'),'max_capacity'=>(int)ppa_db_meta($post->ID,'max_capacity',0),
+            'schedule_days'=>ppa_db_meta($post->ID,'schedule_days'),'time_slot'=>ppa_db_meta($post->ID,'time_slot'),
+            'instructor'=>ppa_db_meta($post->ID,'instructor'),'details'=>$post->post_content,
+            'status'=>'active','created_at'=>$created,'updated_at'=>$now
+        ));
+    } elseif ($type === 'ppa_fee_payment') {
+        $student = $code !== '' ? ppa_db_find_student($code) : null;
+        $student_id = $student ? (int)$student->id : 0;
+        $paid = (float)ppa_db_meta($post->ID,'paid_amount',ppa_db_meta($post->ID,'amount',0));
+        $payable = (float)ppa_db_meta($post->ID,'payable_amount',0);
+        $due_value = ppa_db_meta($post->ID,'due_amount',null);
+        $due = ($due_value === null || $due_value === '') ? max(0, $payable - $paid) : max(0, (float)$due_value);
+        $status = $paid > 0 ? ($due <= 0 ? 'paid' : 'partial') : 'due';
+        $ok = $wpdb->replace($fees, array(
+            'legacy_post_id'=>$post->ID,'student_id'=>$student_id,'student_code'=>$code,
+            'student_name'=>$post->post_title,'billing_month'=>ppa_db_meta($post->ID,'billing_month','Unknown'),
+            'billing_year'=>(int)ppa_db_meta($post->ID,'billing_year',0),'payable_amount'=>$payable,
+            'paid_amount'=>$paid,'due_amount'=>$due,'payment_status'=>$status,'details'=>$post->post_content,
+            'created_at'=>$created,'updated_at'=>$now
+        ));
+        if ($ok === false) { return new WP_Error('ppa_db_fee_write', 'Could not save the fee record: ' . $wpdb->last_error); }
+        $fee_id = (int)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$fees} WHERE legacy_post_id = %d", $post->ID));
+        $receipt = (string)ppa_db_meta($post->ID,'receipt_number');
+        if ($receipt === '') { $receipt = 'PPA-' . wp_date('ym') . '-' . str_pad((string)$post->ID, 6, '0', STR_PAD_LEFT); }
+        if ($paid > 0) {
+            $ok = $wpdb->replace($transactions, array(
+                'fee_record_id'=>$fee_id,'student_id'=>$student_id,'student_code'=>$code,
+                'amount'=>$paid,'payment_method'=>ppa_db_meta($post->ID,'payment_method','Cash'),
+                'transaction_reference'=>ppa_db_meta($post->ID,'transaction_reference'),
+                'receipt_number'=>$receipt,'payment_date'=>ppa_db_meta($post->ID,'payment_date') ?: null,
+                'legacy_post_id'=>$post->ID,'created_at'=>$created
+            ));
+        } else {
+            $wpdb->delete($transactions, array('legacy_post_id'=>$post->ID), array('%d'));
+            $ok = true;
+        }
+    } elseif ($type === 'ppa_exam_result') {
+        $student = $code !== '' ? ppa_db_find_student($code) : null;
+        $ok = $wpdb->replace($results, array(
+            'legacy_post_id'=>$post->ID,'student_id'=>$student ? (int)$student->id : 0,'student_code'=>$code,
+            'student_name'=>$post->post_title,'exam_name'=>ppa_db_meta($post->ID,'exam_name'),
+            'chapter'=>ppa_db_meta($post->ID,'chapter'),'marks'=>(float)ppa_db_meta($post->ID,'marks',0),
+            'total_marks'=>(float)ppa_db_meta($post->ID,'total_marks',0),
+            'highest_marks'=>(float)ppa_db_meta($post->ID,'highest_marks',0),'grade'=>ppa_db_meta($post->ID,'grade'),
+            'exam_date'=>ppa_db_meta($post->ID,'exam_date') ?: null,'details'=>$post->post_content,'created_at'=>$created
+        ));
+    } else {
+        return new WP_Error('ppa_db_unsupported_type', 'This record type is not managed by Academy MySQL storage.');
+    }
+    if ($ok === false) {
+        return new WP_Error('ppa_db_write_failed', 'Could not save the record to the Academy database: ' . $wpdb->last_error);
+    }
+    return true;
+}
+
+/** Keep the dedicated tables in step when a legacy record is permanently deleted. */
+function ppa_db_delete_record($post_id) {
+    global $wpdb;
+    $post = get_post(absint($post_id));
+    if (!$post) { return; }
+    $students = $wpdb->prefix . 'ppa_students';
+    $fees = $wpdb->prefix . 'ppa_fee_records';
+    $transactions = $wpdb->prefix . 'ppa_payment_transactions';
+    $results = $wpdb->prefix . 'ppa_exam_results';
+    if ($post->post_type === 'ppa_student') {
+        $student_code = (string)ppa_db_meta($post->ID,'student_id');
+        $student = $student_code !== '' ? ppa_db_find_student($student_code) : null;
+        $student_id = $student ? (int)$student->id : 0;
+        if ($student_id) {
+            $fee_ids = $wpdb->get_col($wpdb->prepare("SELECT id FROM {$fees} WHERE student_id = %d", $student_id));
+            if ($fee_ids) {
+                foreach ($fee_ids as $fee_id) { $wpdb->delete($transactions, array('fee_record_id'=>(int)$fee_id), array('%d')); }
+            }
+            $wpdb->delete($fees, array('student_id'=>$student_id), array('%d'));
+            $wpdb->delete($transactions, array('student_id'=>$student_id), array('%d'));
+            $wpdb->delete($results, array('student_id'=>$student_id), array('%d'));
+            $wpdb->delete($students, array('id'=>$student_id), array('%d'));
+        }
+    } elseif ($post->post_type === 'ppa_fee_payment') {
+        $wpdb->delete($transactions, array('legacy_post_id'=>$post->ID), array('%d'));
+        $wpdb->delete($fees, array('legacy_post_id'=>$post->ID), array('%d'));
+    } elseif ($post->post_type === 'ppa_batch') {
+        $wpdb->delete($wpdb->prefix . 'ppa_batches', array('legacy_post_id'=>$post->ID), array('%d'));
+    } elseif ($post->post_type === 'ppa_exam_result') {
+        $wpdb->delete($results, array('legacy_post_id'=>$post->ID), array('%d'));
+    }
 }
