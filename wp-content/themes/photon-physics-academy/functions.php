@@ -65,3 +65,33 @@ function ppa_excerpt($post_id = null, $length = 24) {
     $text = has_excerpt($post) ? get_the_excerpt($post) : wp_strip_all_tags($post->post_content);
     return wp_trim_words($text, $length, '…');
 }
+
+
+/**
+ * Use the academy logo as the browser tab/site icon.
+ */
+function ppa_academy_site_icon() {
+    $icon = 'https://cdn.phototourl.com/member/2026-10-26-00b8c0d9-38d9-4d60-a377-dfd8928013de.png';
+    printf(
+        '<link rel="icon" href="%1$s" type="image/png"><link rel="apple-touch-icon" href="%1$s">',
+        esc_url($icon)
+    );
+}
+add_action('wp_head', 'ppa_academy_site_icon', 1);
+remove_action('wp_head', 'wp_site_icon', 99);
+
+/**
+ * Move WordPress's untouched default "Hello world!" sample post to Trash once.
+ * Other posts and pages are left unchanged.
+ */
+function ppa_trash_default_hello_world_post() {
+    if (get_option('ppa_hello_world_cleanup_v1')) {
+        return;
+    }
+    $sample = get_page_by_path('hello-world', OBJECT, 'post');
+    if ($sample && $sample->post_title === 'Hello world!' && $sample->post_status !== 'trash') {
+        wp_trash_post($sample->ID);
+    }
+    update_option('ppa_hello_world_cleanup_v1', 1, false);
+}
+add_action('admin_init', 'ppa_trash_default_hello_world_post');
