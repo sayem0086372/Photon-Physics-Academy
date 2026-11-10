@@ -354,8 +354,8 @@ function ppa_db_delete_record($post_id) {
     $transactions = $wpdb->prefix . 'ppa_payment_transactions';
     $results = $wpdb->prefix . 'ppa_exam_results';
     if ($post->post_type === 'ppa_student') {
-        $student_code = (string)ppa_db_meta($post->ID,'student_id');
-        $student = $student_code !== '' ? ppa_db_find_student($student_code) : null;
+        $student = $wpdb->get_row($wpdb->prepare("SELECT id, student_code FROM {$students} WHERE legacy_post_id = %d LIMIT 1", $post->ID));
+        $student_code = $student ? (string)$student->student_code : (string)ppa_db_meta($post->ID,'student_id');
         $student_id = $student ? (int)$student->id : 0;
         if ($student_id) {
             $fee_ids = $wpdb->get_col($wpdb->prepare("SELECT id FROM {$fees} WHERE student_id = %d OR student_code = %s", $student_id, $student_code));
