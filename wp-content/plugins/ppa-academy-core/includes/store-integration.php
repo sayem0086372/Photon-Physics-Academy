@@ -50,7 +50,6 @@ function ppa_store_handle_admin_post() {
         $name=sanitize_text_field(wp_unslash($_POST['product_name'] ?? ''));
         if ($name==='') ppa_store_redirect('books','product_required');
         $product->set_name($name);
-        update_post_meta($id ?: 0, '_ppa_book_author', sanitize_text_field(wp_unslash($_POST['book_author'] ?? '')));
         $product->set_status(isset($_POST['published'])?'publish':'draft');
         $product->set_catalog_visibility(isset($_POST['visible'])?'visible':'hidden');
         $product->set_regular_price(wc_format_decimal(wp_unslash($_POST['regular_price'] ?? '0')));
@@ -255,7 +254,7 @@ function ppa_store_render_admin($view) {
         $search=strtolower(sanitize_text_field(wp_unslash($_GET['store_search'] ?? '')));
         $shown=0;
         foreach($products as $p) {
-            if($search && strpos(strtolower($p->get_name().' '.$p->get_sku()),$search)===false) continue;
+            if($search && strpos(strtolower($p->get_name().' '.get_post_meta($p->get_id(),'_ppa_book_author',true).' '.$p->get_sku()),$search)===false) continue;
             $shown++; echo '<tr><td><strong>'.esc_html($p->get_name()).'</strong></td><td>'.esc_html(get_post_meta($p->get_id(),'_ppa_book_author',true)?:'—').'</td><td>'.esc_html($p->get_sku()?:'—').'</td><td>'.wp_kses_post($p->get_price_html()).'</td><td>'.esc_html($p->managing_stock()?(string)$p->get_stock_quantity():'Not managed').'</td><td>'.esc_html($p->get_status()==='publish'?'Published':'Draft').'</td><td><a href="'.esc_url(add_query_arg(array('ppa_tab'=>'store','ppa_store_view'=>'books','edit_product'=>$p->get_id()),home_url('/admin/'))).'">Edit</a> ';
             ppa_store_admin_form('delete_product','books'); echo '<input type="hidden" name="product_id" value="'.$p->get_id().'"><button class="ppa-ca-delete" onclick="return confirm(\'Delete this product?\')">Delete</button></form></td></tr>';
         }
