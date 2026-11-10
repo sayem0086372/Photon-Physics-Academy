@@ -38,3 +38,5 @@ jobs:
 # Rebuild after PHP syntax correction in the admin route.
 
 # Package after removal of duplicate route fragment.
+
+# Rebuild packages for the November 10 admin route correction.
