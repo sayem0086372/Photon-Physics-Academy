@@ -158,6 +158,8 @@ function ppa_ca_handle_post() {
         }
         if(!$recipients) ppa_ca_redirect('sms','sms_no_recipients');
         if(count($recipients)>100) ppa_ca_redirect('sms','sms_too_many');
+        delete_transient('ppa_ca_sms_last_result_'.get_current_user_id());
+        delete_transient('ppa_ca_sms_last_error_'.get_current_user_id());
         $sent=0;$failed=0;$first_error='';
         foreach($recipients as $phone){$result=ppa_ca_sms_send_one($phone,$message);if(is_wp_error($result)){$failed++;if($first_error==='')$first_error=$result->get_error_message();}else{$sent++;}}
         set_transient('ppa_ca_sms_last_result_'.get_current_user_id(),array('sent'=>$sent,'failed'=>$failed),5*MINUTE_IN_SECONDS);
@@ -894,9 +896,182 @@ body.ppa-ca-body{font-family:Inter,'Plus Jakarta Sans','Hind Siliguri',Arial,san
 .ppa-ca-content input,.ppa-ca-content select,.ppa-ca-content textarea,.ppa-ca-modal input,.ppa-ca-modal select,.ppa-ca-modal textarea{border-radius:8px}
 .ppa-ca-content input:focus,.ppa-ca-content select:focus,.ppa-ca-content textarea:focus,.ppa-ca-modal input:focus,.ppa-ca-modal select:focus,.ppa-ca-modal textarea:focus{outline:0;border-color:#8bb2ed;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
 .ppa-ca-store-banner{border-radius:16px;box-shadow:0 10px 25px rgba(16,43,78,.12)}
-@media(max-width:680px){.ppa-ca-header{height:64px;padding:0 16px}.ppa-ca-content{padding:18px}.ppa-ca-panel{padding:17px}}
+/* Consistent, accessible admin refinement */
+.ppa-ca-section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin:0 0 20px}
+.ppa-ca-section-head h2{margin:0;color:#14243a;font-size:24px;font-weight:850;letter-spacing:-.035em}
+.ppa-ca-section-head p{margin:6px 0 0;color:#6b7b90;font-size:13px;line-height:1.7}
+.ppa-ca-panel-head{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.ppa-ca-panel-head p{margin:5px 0 0;color:#718198;font-size:12px;line-height:1.6}
+.ppa-ca-content button,.ppa-ca-content a,.ppa-ca-modal button{ -webkit-tap-highlight-color:transparent}
+.ppa-ca-table-wrap{border:1px solid #e8edf4;border-radius:12px}
+.ppa-ca-table{min-width:680px}
+.ppa-ca-table th{white-space:nowrap;padding:13px 14px}
+.ppa-ca-table td{padding:13px 14px;line-height:1.55}
+.ppa-ca-content input:not([type=checkbox]),.ppa-ca-content select,.ppa-ca-content textarea{min-height:42px;border:1px solid #d7e0eb;background:#fff;color:#24364b;padding:10px 12px}
+.ppa-ca-content textarea{line-height:1.65}
+.ppa-ca-primary{min-height:42px;padding:11px 18px}
+.ppa-ca-settings-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(260px,.65fr);gap:18px;align-items:start}
+.ppa-ca-settings-card{margin:0!important;padding:22px!important}
+.ppa-ca-settings-card h3{margin:0 0 7px;color:#14243a;font-size:16px;font-weight:800}
+.ppa-ca-settings-card>p{margin:0 0 18px;color:#718198;font-size:12px;line-height:1.7}
+.ppa-ca-settings-form{display:grid;gap:18px}
+.ppa-ca-settings-form label{display:grid;gap:7px;color:#33465d;font-size:12px;font-weight:750}
+.ppa-ca-settings-form input,.ppa-ca-settings-form textarea{width:100%;box-sizing:border-box}
+.ppa-ca-settings-form textarea{min-height:145px;resize:vertical}
+.ppa-ca-settings-help{display:block;color:#8291a4;font-size:11px;font-weight:400;line-height:1.65}
+.ppa-ca-settings-status{display:flex;align-items:center;gap:10px;padding:13px;border:1px solid #e2eaf3;border-radius:11px;background:#f8fafc;color:#33465d;font-size:12px}
+.ppa-ca-settings-status i{width:9px;height:9px;flex:0 0 9px;border-radius:50%;background:#16a34a}
+.ppa-ca-settings-status.is-warning i{background:#d97706}
+.ppa-ca-settings-link{display:inline-flex;align-items:center;gap:7px;margin-top:14px;color:#1d4ed8;font-size:12px;font-weight:750;text-decoration:none}
+.ppa-ca-sms-balance-layout{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:center}
+.ppa-ca-sms-balance-value{margin:7px 0 3px;color:#102b4e;font-size:30px;font-weight:850;letter-spacing:-.04em}
+.ppa-ca-sms-muted{color:#718198;font-size:11px;line-height:1.7}
+.ppa-ca-sms-status{display:inline-flex;align-items:center;gap:7px;padding:6px 9px;border-radius:999px;background:#ecfdf5;color:#047857;font-size:10px;font-weight:800}
+.ppa-ca-sms-status.is-warning{background:#fff7ed;color:#b45309}
+.ppa-ca-sms-composer{padding:0!important;overflow:hidden}
+.ppa-ca-sms-composer-head{padding:20px 22px;border-bottom:1px solid #edf1f6}
+.ppa-ca-sms-composer-head h3{margin:0;color:#14243a;font-size:16px;font-weight:850}
+.ppa-ca-sms-composer-head p{margin:5px 0 0;color:#718198;font-size:12px;line-height:1.6}
+.ppa-ca-sms-form{display:grid;gap:18px;padding:22px}
+.ppa-ca-sms-filter-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.ppa-ca-sms-form label.ppa-ca-sms-field{display:grid;gap:7px;color:#33465d;font-size:12px;font-weight:750}
+.ppa-ca-sms-form label.ppa-ca-sms-field select{width:100%;box-sizing:border-box}
+.ppa-ca-sms-recipient-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.ppa-ca-sms-recipient-option{display:flex;align-items:flex-start;gap:10px;padding:14px;border:1px solid #e1e8f0;border-radius:11px;background:#fff;color:#33465d;cursor:pointer}
+.ppa-ca-sms-recipient-option:has(input:checked){border-color:#9bbcf0;background:#f5f9ff}
+.ppa-ca-sms-recipient-option input{margin:3px 0 0;accent-color:#2563eb}
+.ppa-ca-sms-recipient-option strong{display:block;font-size:12px}
+.ppa-ca-sms-recipient-option small{display:block;margin-top:3px;color:#8291a4;font-size:10px;font-weight:400;line-height:1.5}
+.ppa-ca-sms-recipient-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border:1px solid #dbeafe;border-radius:11px;background:#f3f8ff}
+.ppa-ca-sms-recipient-summary strong{color:#1d4ed8;font-size:22px;font-weight:850}
+.ppa-ca-sms-recipient-summary span{color:#526b8a;font-size:11px;line-height:1.5}
+.ppa-ca-sms-form textarea{width:100%;box-sizing:border-box;min-height:135px;resize:vertical}
+.ppa-ca-sms-form-footer{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.ppa-ca-sms-form-footer small{color:#8291a4;font-size:10px;line-height:1.6}
+.ppa-ca-sms-form-footer button:disabled{opacity:.48;cursor:not-allowed;transform:none;box-shadow:none}
+.ppa-ca-sms-result{margin:0 0 16px;padding:14px 16px;border:1px solid #bbf7d0;border-radius:11px;background:#f0fdf4;color:#166534;font-size:12px;line-height:1.7}
+.ppa-ca-sms-result.is-error{border-color:#fecaca;background:#fef2f2;color:#991b1b}
+.ppa-ca-sms-portal{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:15px;padding-top:15px;border-top:1px solid #edf1f6}
+.ppa-ca-sms-portal p{margin:0;color:#718198;font-size:11px;line-height:1.6}
+.ppa-ca-sms-portal a{color:#1d4ed8;font-size:11px;font-weight:750;text-decoration:none}
+@media(max-width:900px){.ppa-ca-settings-grid{grid-template-columns:1fr}}
+@media(max-width:680px){.ppa-ca-header{height:64px;padding:0 16px}.ppa-ca-content{padding:18px}.ppa-ca-panel{padding:17px}.ppa-ca-section-head{align-items:flex-start;flex-direction:column}.ppa-ca-section-head h2{font-size:21px}.ppa-ca-sms-filter-grid,.ppa-ca-sms-recipient-options{grid-template-columns:1fr}.ppa-ca-sms-form{padding:16px}.ppa-ca-sms-composer-head{padding:17px}.ppa-ca-sms-balance-layout{grid-template-columns:1fr}.ppa-ca-sms-form-footer,.ppa-ca-sms-portal{align-items:flex-start;flex-direction:column}.ppa-ca-settings-card{padding:17px!important}.ppa-ca-sms-recipient-summary{align-items:flex-start}}
 </style>
 <?php }
+
+function ppa_ca_render_sms_tab() {
+    $students=ppa_ca_records('ppa_student',2000);
+    $recipient_data=array(); $classes=array(); $batches=array();
+    foreach($students as $student) {
+        $class=(string)get_post_meta($student->ID,'_ppa_class_level',true);
+        $batch=(string)get_post_meta($student->ID,'_ppa_batch_name',true);
+        $guardian=(string)get_post_meta($student->ID,'_ppa_guardian_phone',true);
+        $mobile=(string)get_post_meta($student->ID,'_ppa_phone',true);
+        if($class!=='') $classes[$class]=$class;
+        if($batch!=='') $batches[$batch]=$batch;
+        $recipient_data[]=array('class'=>$class,'batch'=>$batch,'guardian'=>$guardian,'student'=>$mobile);
+    }
+    if(!$classes) $classes=array('Class 8'=>'Class 8','Class 9'=>'Class 9','Class 10'=>'Class 10');
+    natcasesort($classes); natcasesort($batches);
+    $balance=ppa_ca_sms_balance(!empty($_GET['ppa_sms_refresh']));
+    $api_ready=ppa_ca_sms_api_key()!=='';
+    $refresh_url=add_query_arg(array('ppa_tab'=>'sms','ppa_sms_refresh'=>'1'),home_url('/academyadmin/'));
+    $portal='https://portal.sms.net.bd/login/';
+    echo '<div class="ppa-ca-section-head"><div><h2>SMS Management</h2><p>Send academy updates to students and guardians, with recipient filters and a live gateway balance.</p></div><span class="ppa-ca-section-count">sms.net.bd gateway</span></div>';
+    if(isset($_GET['ppa_notice']) && sanitize_key(wp_unslash($_GET['ppa_notice']))==='sms_result') {
+        $result=get_transient('ppa_ca_sms_last_result_'.get_current_user_id());
+        $error=get_transient('ppa_ca_sms_last_error_'.get_current_user_id());
+        if(is_array($result)) {
+            echo '<div class="ppa-ca-sms-result'.(!empty($result['failed'])?' is-error':'').'"><strong>Sending summary</strong><br>'.(int)$result['sent'].' accepted by gateway · '.(int)$result['failed'].' failed.';
+            if($error) echo '<br>'.esc_html($error);
+            echo '<br><small>Results are temporary and are not saved as an SMS history.</small></div>';
+        }
+        delete_transient('ppa_ca_sms_last_result_'.get_current_user_id());
+        delete_transient('ppa_ca_sms_last_error_'.get_current_user_id());
+    }
+    echo '<section class="ppa-ca-panel"><div class="ppa-ca-sms-balance-layout"><div><span class="ppa-ca-sms-status'.(is_wp_error($balance)?' is-warning':'').'">'.(is_wp_error($balance)?'Gateway status':'Gateway connected').'</span><h3 style="margin:10px 0 0;color:#14243a;font-size:15px;font-weight:800">SMS Gateway Balance</h3>';
+    if(is_wp_error($balance)) {
+        echo '<p class="ppa-ca-sms-muted" style="margin:6px 0 0">'.esc_html($balance->get_error_message()).'</p>';
+        if(!$api_ready) echo '<p class="ppa-ca-sms-muted" style="margin:5px 0 0">Add the gateway API key to the server-side wp-config.php file. The key is never shown in this panel.</p>';
+    } else {
+        echo '<div class="ppa-ca-sms-balance-value">'.esc_html($balance['balance']).'</div><p class="ppa-ca-sms-muted">Balance checked '.esc_html(wp_date('d M Y, h:i A',(int)$balance['checked_at'])).'. Checking the balance does not send an SMS.</p>';
+    }
+    echo '</div><div><a class="ppa-ca-primary" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none" href="'.esc_url($refresh_url).'">↻ Refresh Balance</a></div></div><div class="ppa-ca-sms-portal"><p>Manage your gateway account, recharge and review provider-side reports.</p><a href="'.esc_url($portal).'" target="_blank" rel="noopener noreferrer">Open official SMS portal ↗</a></div></section>';
+    echo '<section class="ppa-ca-panel ppa-ca-sms-composer"><div class="ppa-ca-sms-composer-head"><h3>Compose an Academy SMS</h3><p>Choose who should receive the message. Duplicate phone numbers are counted once.</p></div>';
+    echo '<form method="post" class="ppa-ca-sms-form" data-sms-enabled="'.($api_ready?'1':'0').'" data-sms-students="'.esc_attr(wp_json_encode($recipient_data,JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_AMP|JSON_HEX_QUOT)).'">';
+    wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
+    echo '<input type="hidden" name="ppa_ca_action" value="send_academy_sms"><input type="hidden" name="return_tab" value="sms">';
+    echo '<div class="ppa-ca-sms-filter-grid"><label class="ppa-ca-sms-field">Class<select name="sms_class" data-ppa-sms-filter><option value="">All classes</option>';
+    foreach($classes as $class) echo '<option value="'.esc_attr($class).'">'.esc_html($class).'</option>';
+    echo '</select></label><label class="ppa-ca-sms-field">Batch<select name="sms_batch" data-ppa-sms-filter><option value="">All batches</option>';
+    foreach($batches as $batch) echo '<option value="'.esc_attr($batch).'">'.esc_html($batch).'</option>';
+    echo '</select></label></div>';
+    echo '<div><div style="margin-bottom:9px;color:#33465d;font-size:12px;font-weight:800">Recipient groups</div><div class="ppa-ca-sms-recipient-options"><label class="ppa-ca-sms-recipient-option"><input type="checkbox" name="sms_guardians" value="1" checked data-ppa-sms-target="guardian"><span><strong>Guardian mobile numbers</strong><small>Recommended for academy notices. Blank numbers are skipped.</small></span></label><label class="ppa-ca-sms-recipient-option"><input type="checkbox" name="sms_students" value="1" data-ppa-sms-target="student"><span><strong>Student mobile numbers</strong><small>Optional. Student contact numbers are included only when selected.</small></span></label></div></div>';
+    echo '<div class="ppa-ca-sms-recipient-summary"><div><strong data-ppa-sms-count>—</strong><br><span data-ppa-sms-count-label>Calculating eligible unique recipients…</span></div><span>Maximum 100 recipients per send</span></div>';
+    echo '<label class="ppa-ca-sms-field">Message<textarea name="sms_message" rows="5" maxlength="1000" required placeholder="Write your SMS in Bangla or English…"></textarea></label>';
+    echo '<div class="ppa-ca-sms-form-footer"><small><span data-ppa-sms-length>0</span>/1000 characters · Gateway charges may apply.<br>Sent messages, message bodies and recipient lists are not stored as an SMS history.</small><button class="ppa-ca-primary" type="submit" disabled data-ppa-sms-send>➤ Send SMS</button></div>';
+    echo '</form></section>';
+    ?>
+    <script>
+    (function(){
+      var form=document.querySelector('.ppa-ca-sms-form');
+      if(!form)return;
+      var rows=[];
+      try{rows=JSON.parse(form.getAttribute('data-sms-students')||'[]');}catch(e){rows=[];}
+      var countNode=form.querySelector('[data-ppa-sms-count]');
+      var labelNode=form.querySelector('[data-ppa-sms-count-label]');
+      var sendButton=form.querySelector('[data-ppa-sms-send]');
+      var message=form.querySelector('[name="sms_message"]');
+      var lengthNode=form.querySelector('[data-ppa-sms-length]');
+      var enabled=form.getAttribute('data-sms-enabled')==='1';
+      function update(){
+        var classValue=form.querySelector('[name="sms_class"]').value;
+        var batchValue=form.querySelector('[name="sms_batch"]').value;
+        var useGuardian=!!form.querySelector('[data-ppa-sms-target="guardian"]:checked');
+        var useStudent=!!form.querySelector('[data-ppa-sms-target="student"]:checked');
+        var numbers=Object.create(null);
+        rows.forEach(function(row){
+          if(classValue && row.class!==classValue)return;
+          if(batchValue && row.batch!==batchValue)return;
+          if(useGuardian && row.guardian)numbers[row.guardian]=true;
+          if(useStudent && row.student)numbers[row.student]=true;
+        });
+        var total=Object.keys(numbers).length;
+        countNode.textContent=String(total);
+        if(!enabled)labelNode.textContent='Gateway API key is not configured on the server.';
+        else if(total===0)labelNode.textContent='No matching phone numbers. Adjust filters or recipient groups.';
+        else if(total>100)labelNode.textContent='Too many recipients. Narrow the filters to 100 or fewer.';
+        else labelNode.textContent='Unique recipients from '+rows.filter(function(row){return (!classValue||row.class===classValue)&&(!batchValue||row.batch===batchValue);}).length+' matching student records.';
+        sendButton.disabled=!enabled || total===0 || total>100;
+        sendButton.setAttribute('data-recipient-count',String(total));
+      }
+      form.querySelectorAll('[data-ppa-sms-filter],[data-ppa-sms-target]').forEach(function(el){el.addEventListener('change',update);});
+      message.addEventListener('input',function(){lengthNode.textContent=String(message.value.length);});
+      form.addEventListener('submit',function(event){
+        update();
+        var total=parseInt(sendButton.getAttribute('data-recipient-count')||'0',10);
+        if(sendButton.disabled || !message.value.trim()){event.preventDefault();return;}
+        if(!window.confirm('Send this SMS to '+total+' unique phone number(s)? Gateway charges may apply.'))event.preventDefault();
+      });
+      update();
+    })();
+    </script>
+    <?php
+}
+
+function ppa_ca_render_settings_tab() {
+    $sender_id=(string)get_option('ppa_ca_sms_sender_id','');
+    $slideshow_urls=(string)get_option('ppa_ca_slideshow_urls','');
+    $api_ready=ppa_ca_sms_api_key()!=='';
+    echo '<div class="ppa-ca-section-head"><div><h2>Academy Settings</h2><p>Manage essential website presentation settings and secure SMS gateway preferences.</p></div><span class="ppa-ca-section-count">Configuration</span></div>';
+    echo '<div class="ppa-ca-settings-grid"><section class="ppa-ca-panel ppa-ca-settings-card"><h3>Website presentation</h3><p>Update the images used in the homepage slideshow. Keep one image URL on each line; image files remain hosted at their existing URLs.</p><form method="post" class="ppa-ca-settings-form">';
+    wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
+    echo '<input type="hidden" name="ppa_ca_action" value="save_settings"><input type="hidden" name="return_tab" value="settings">';
+    echo '<label>Homepage slideshow image URLs<textarea name="slideshow_urls" rows="6" placeholder="https://example.com/slide-1.jpg">'.esc_textarea($slideshow_urls).'</textarea><span class="ppa-ca-settings-help">Paste direct HTTPS image links, one per line. Avoid sharing private or temporary image URLs.</span></label>';
+    echo '<div style="height:1px;background:#edf1f6"></div><div><h3>SMS sender preferences</h3><p style="margin:5px 0 12px">The sender name/ID is optional and must be supported by your SMS provider account.</p><label>SMS Sender ID<input name="sms_sender_id" maxlength="30" value="'.esc_attr($sender_id).'" placeholder="Approved sender ID"><span class="ppa-ca-settings-help">Leave blank to use the gateway account default.</span></label></div>';
+    echo '<button class="ppa-ca-primary" type="submit">Save Settings</button></form></section>';
+    echo '<aside class="ppa-ca-panel ppa-ca-settings-card"><h3>SMS gateway connection</h3><p>Connection credentials are kept on the server and are never displayed or editable in this browser form.</p><div class="ppa-ca-settings-status'.($api_ready?'':' is-warning').'"><i></i><span>'.($api_ready?'API key detected in server configuration':'API key not detected in server configuration').'</span></div><a class="ppa-ca-settings-link" href="https://portal.sms.net.bd/login/" target="_blank" rel="noopener noreferrer">Open sms.net.bd account portal ↗</a><div style="height:1px;background:#edf1f6;margin:18px 0"></div><h3>Privacy & data</h3><p style="margin:5px 0 0">The Academy panel does not save sent-message history, message bodies or recipient lists. The SMS provider may retain its own operational records under its policies.</p><div style="height:1px;background:#edf1f6;margin:18px 0"></div><h3>Configuration safety</h3><p style="margin:5px 0 0">Do not paste API keys into website content, slideshow fields or public code. Keep gateway credentials in the server-side wp-config.php file only.</p></aside></div>';
+}
 
 function ppa_ca_render_page() {
     status_header(200); nocache_headers();
@@ -926,7 +1101,7 @@ function ppa_ca_render_page() {
         }
         if(isset($_GET['ppa_notice']) && $_GET['ppa_notice']!=='login_error') {
             $notice=sanitize_key(wp_unslash($_GET['ppa_notice']));
-            $messages=array('saved'=>'Settings saved.','database_error'=>'The record was kept in WordPress, but the Academy MySQL table could not be updated. Please contact the site administrator.','student_not_found'=>'Select a valid student ID before saving this record.','invalid_amount'=>'Payment amounts are invalid. Paid amount cannot exceed payable amount.','student_id_limit'=>'Student ID sequence is full for this year.','created'=>'Record saved successfully.','updated'=>'Record updated successfully.','deleted'=>'Record deleted successfully.');
+            $messages=array('saved'=>'Settings saved successfully.','database_error'=>'The record was kept in WordPress, but the Academy MySQL table could not be updated. Please contact the site administrator.','student_not_found'=>'Select a valid student ID before saving this record.','invalid_amount'=>'Payment amounts are invalid. Paid amount cannot exceed payable amount.','student_id_limit'=>'Student ID sequence is full for this year.','created'=>'Record saved successfully.','updated'=>'Record updated successfully.','deleted'=>'Record deleted successfully.','sms_result'=>'SMS sending finished. Review the delivery summary below.','sms_invalid'=>'Write a message and choose at least one recipient group.','sms_too_long'=>'The message is longer than the 1,000 character limit.','sms_no_recipients'=>'No eligible phone numbers were found for these filters.','sms_too_many'=>'This send is limited to 100 unique phone numbers. Narrow the class or batch selection.');
             echo '<div class="ppa-ca-alert'.($notice==='database_error'?' is-error':'').'">'.esc_html(isset($messages[$notice])?$messages[$notice]:'Action completed.').'</div>';
         }
         if($tab==='overview') {
@@ -1073,22 +1248,9 @@ function ppa_ca_render_page() {
             ppa_ca_add_form('result','Add Exam Result',array('record_title'=>'Student Name / ID','student_id'=>'Student ID','exam_name'=>'Exam Name','chapter'=>'Chapter / Subject','marks'=>'Obtained Marks','total_marks'=>'Total Marks','highest_marks'=>'Highest Marks','grade'=>'Grade','exam_date'=>'Exam Date','record_details'=>'Result notes'),$tab);
             ppa_ca_table($result_posts,'ppa_exam_result',$tab);
         } elseif ($tab === 'sms') {
-            $balance = ppa_ca_sms_balance();
-            echo '<div class="ppa-ca-section-head"><div><h2>SMS Management</h2><p>Check gateway balance and send academy updates to selected contacts.</p></div></div>';
-            if (is_wp_error($balance)) {
-                echo '<section class="ppa-ca-panel"><p>'.esc_html($balance->get_error_message()).'</p><p>Configure the API key in wp-config.php to enable gateway access.</p></section>';
-            } else {
-                echo '<section class="ppa-ca-panel"><h2>SMS Gateway Balance</h2><p class="ppa-ca-metric-value">'.esc_html($balance['balance']).'</p><small>Balance lookup only — no SMS has been sent.</small></section>';
-            }
-            echo '<section class="ppa-ca-panel"><p>Gateway portal: <a href="https://portal.sms.net.bd/login/" target="_blank" rel="noopener">sms.net.bd login</a></p></section>';
+            ppa_ca_render_sms_tab();
         } elseif ($tab === 'settings') {
-            echo '<div class="ppa-ca-section-head"><div><h2>Academy Settings</h2><p>Manage homepage slideshow images and SMS sender details.</p></div></div>';
-            echo '<section class="ppa-ca-panel"><form method="post">';
-            wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
-            echo '<input type="hidden" name="ppa_ca_action" value="save_settings"><input type="hidden" name="return_tab" value="settings">';
-            echo '<label>SMS Sender ID<input name="sms_sender_id" value="'.esc_attr(get_option('ppa_ca_sms_sender_id','')).'"></label>';
-            echo '<label>Homepage slideshow image URLs<textarea name="slideshow_urls" rows="5">'.esc_textarea(get_option('ppa_ca_slideshow_urls','')).'</textarea></label>';
-            echo '<button class="ppa-ca-primary" type="submit">Save Settings</button></form></section>';
+            ppa_ca_render_settings_tab();
         } elseif ($tab === 'store') {
             $store_view = isset($_GET['ppa_store_view']) ? sanitize_key(wp_unslash($_GET['ppa_store_view'])) : 'books';
             ppa_store_render_admin($store_view);
