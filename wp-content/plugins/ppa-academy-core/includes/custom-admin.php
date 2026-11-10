@@ -223,6 +223,24 @@ function ppa_ca_admin_query_vars($vars) {
 }
 add_filter("query_vars", "ppa_ca_admin_query_vars");
 
+/**
+ * Force the admin route into the main WordPress query as early as possible.
+ * This avoids homepage fallbacks caused by stale rewrite rules or a page
+ * with a conflicting slug.
+ */
+function ppa_ca_force_admin_query($wp) {
+    $request_path = isset($_SERVER['REQUEST_URI'])
+        ? (string) parse_url(wp_unslash($_SERVER['REQUEST_URI']), PHP_URL_PATH)
+        : '';
+    $home_path = (string) parse_url(home_url('/'), PHP_URL_PATH);
+    $admin_path = untrailingslashit($home_path . '/admin');
+
+    if ($request_path !== '' && untrailingslashit($request_path) === $admin_path) {
+        $wp->query_vars['ppa_ca_admin'] = '1';
+    }
+}
+add_action('parse_request', 'ppa_ca_force_admin_query', 0);
+
 function ppa_ca_flush_admin_route_once() {
     if (get_option("ppa_ca_admin_route_version") !== "1.0.1") {
         flush_rewrite_rules(false);
@@ -249,7 +267,7 @@ function ppa_ca_render_admin_route() {
     ppa_ca_render_page();
     exit;
 }
-add_action("template_redirect", "ppa_ca_render_admin_route", 2);
+add_action("template_redirect", "ppa_ca_render_admin_route", 0);
 
 function ppa_ca_login_screen() {
     $error=isset($_GET['ppa_notice']) && $_GET['ppa_notice']==='login_error';
