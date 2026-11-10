@@ -53,9 +53,12 @@ function ppa_store_handle_admin_post() {
         $saved=$product->save();
         if (!$id) $id=$saved;
         $image_url=esc_url_raw(wp_unslash($_POST['image_url'] ?? ''));
-        if ($image_url) {
+        if ($image_url && wp_http_validate_url($image_url)) {
+            update_post_meta($id,'_ppa_external_image_url',$image_url);
             $attachment_id=attachment_url_to_postid($image_url);
             if ($attachment_id) set_post_thumbnail($id,$attachment_id);
+        } else {
+            delete_post_meta($id,'_ppa_external_image_url');
         }
         ppa_store_redirect('books','product_saved');
     }
@@ -242,7 +245,7 @@ function ppa_store_render_admin($view) {
         $cats=get_terms(array('taxonomy'=>'product_cat','hide_empty'=>false));
         echo '<div class="ppa-ca-panel" style="padding:22px;margin-top:18px"><h3>'.($editing?'Edit Book':'Add a Book').'</h3>';
         ppa_store_admin_form('save_product','books');
-        echo '<input type="hidden" name="product_id" value="'.($editing?$editing->get_id():0).'"><div class="ppa-ca-form-grid"><label>Book title<input required name="product_name" value="'.esc_attr($editing?$editing->get_name():'').'"></label><label>SKU<input name="sku" value="'.esc_attr($editing?$editing->get_sku():'').'"></label><label>Regular price (৳)<input required type="number" min="0" step="0.01" name="regular_price" value="'.esc_attr($editing?$editing->get_regular_price():'').'"></label><label>Sale price (৳)<input type="number" min="0" step="0.01" name="sale_price" value="'.esc_attr($editing?$editing->get_sale_price():'').'"></label><label>Stock quantity<input type="number" min="0" name="stock" value="'.esc_attr($editing?$editing->get_stock_quantity():0).'"></label><label>Product image URL<input type="url" name="image_url" placeholder="https://..." value="'.esc_attr($editing?wp_get_attachment_url($editing->get_image_id()):'').'"></label><label class="is-wide">Short description<textarea name="short_description" rows="2">'.esc_textarea($editing?$editing->get_short_description():'').'</textarea></label><label class="is-wide">Full description<textarea name="description" rows="4">'.esc_textarea($editing?$editing->get_description():'').'</textarea></label><label>Categories<select name="categories[]" multiple>';
+        echo '<input type="hidden" name="product_id" value="'.($editing?$editing->get_id():0).'"><div class="ppa-ca-form-grid"><label>Book title<input required name="product_name" value="'.esc_attr($editing?$editing->get_name():'').'"></label><label>SKU<input name="sku" value="'.esc_attr($editing?$editing->get_sku():'').'"></label><label>Regular price (৳)<input required type="number" min="0" step="0.01" name="regular_price" value="'.esc_attr($editing?$editing->get_regular_price():'').'"></label><label>Sale price (৳)<input type="number" min="0" step="0.01" name="sale_price" value="'.esc_attr($editing?$editing->get_sale_price():'').'"></label><label>Stock quantity<input type="number" min="0" name="stock" value="'.esc_attr($editing?$editing->get_stock_quantity():0).'"></label><label>Product image URL<input type="url" name="image_url" placeholder="https://..." value="'.esc_attr($editing?(get_post_meta($editing->get_id(),'_ppa_external_image_url',true)?:wp_get_attachment_url($editing->get_image_id())):'').'"></label><label class="is-wide">Short description<textarea name="short_description" rows="2">'.esc_textarea($editing?$editing->get_short_description():'').'</textarea></label><label class="is-wide">Full description<textarea name="description" rows="4">'.esc_textarea($editing?$editing->get_description():'').'</textarea></label><label>Categories<select name="categories[]" multiple>';
         foreach($cats as $cat) echo '<option value="'.$cat->term_id.'" '.selected($editing?has_term($cat->term_id,'product_cat',$editing->get_id()):false,true,false).'>'.esc_html($cat->name).'</option>';
         echo '</select></label><label class="ppa-store-check"><input type="checkbox" name="published" '.checked($editing?$editing->get_status()==='publish':true,true,false).'> Published</label><label class="ppa-store-check"><input type="checkbox" name="visible" '.checked($editing?$editing->get_catalog_visibility()==='visible':true,true,false).'> Visible in catalogue</label></div><button class="ppa-ca-primary" type="submit">Save Book</button></form></div></section>';
     } elseif($view==='orders') {
