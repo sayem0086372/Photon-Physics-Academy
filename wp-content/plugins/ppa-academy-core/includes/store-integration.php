@@ -90,9 +90,15 @@ function ppa_store_handle_admin_post() {
         $allowed=array('pending','on-hold','processing','completed','cancelled','refunded','failed');
         if (in_array($status,$allowed,true)) $order->update_status($status,'Updated from Photon Physics Academy admin.');
         if (isset($_POST['payment_received'])) {
+            if (!in_array($order->get_payment_method(),array('ppa_bkash','ppa_nagad'),true)) {
+                ppa_store_redirect('orders','invalid_payment_action');
+            }
+            if (!$order->get_meta('_ppa_wallet_transaction_id')) {
+                ppa_store_redirect('orders','transaction_id_missing');
+            }
             $order->update_meta_data('_ppa_payment_verified','yes');
-            $order->add_order_note('Manual payment marked received by academy administrator.');
-            if ($order->has_status(array('pending','on-hold'))) $order->payment_complete();
+            $order->add_order_note('bKash/Nagad transaction ID checked and payment marked received by academy administrator.');
+            if (!$order->is_paid()) $order->payment_complete();
         }
         if (isset($_POST['payment_not_received'])) {
             $order->update_meta_data('_ppa_payment_verified','no');
