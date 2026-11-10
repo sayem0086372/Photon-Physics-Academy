@@ -34,3 +34,5 @@ jobs:
           retention-days: 14
 
 # Rebuild packages after the dedicated Academy admin route fix.
+
+# Rebuild after PHP syntax correction in the admin route.
