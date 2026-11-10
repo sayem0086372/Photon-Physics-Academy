@@ -33,7 +33,7 @@
       <div>© <?php echo esc_html(wp_date('Y')); ?> Photon Physics Academy. সর্বস্বত্ব সংরক্ষিত (All rights reserved).
         <p class="ppa-credit">designed and developed by <a href="https://github.com/oathwi1d" target="_blank" rel="noopener noreferrer">oathwild</a> (sayeem)</p>
       </div>
-      <div class="ppa-footer-actions"><a class="ppa-admin-login" href="<?php echo esc_url(home_url('/admin/')); ?>">Admin Login</a><a href="#top" class="ppa-button" style="padding:8px 13px">উপরে যান ↑</a></div>
+      <div class="ppa-footer-actions"><a class="ppa-admin-login" href="<?php echo esc_url(home_url('/academyadmin/')); ?>">Admin Login</a><a href="#top" class="ppa-button" style="padding:8px 13px">উপরে যান ↑</a></div>
     </div>
   </div>
 </footer>
