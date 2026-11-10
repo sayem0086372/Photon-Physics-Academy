@@ -213,7 +213,32 @@ add_action('template_redirect','ppa_ca_handle_post',1);
  * manually-created WordPress page with the slug "admin".
  */
 function ppa_ca_register_admin_route() {
-    add_rewrite_rule('^admin/?
+    add_rewrite_rule("^admin/?$", "index.php?ppa_ca_admin=1", "top");
+}
+add_action("init", "ppa_ca_register_admin_route", 1);
+
+function ppa_ca_admin_query_vars($vars) {
+    $vars[] = "ppa_ca_admin";
+    return $vars;
+}
+add_filter("query_vars", "ppa_ca_admin_query_vars");
+
+function ppa_ca_flush_admin_route_once() {
+    if (get_option("ppa_ca_admin_route_version") !== "1.0.1") {
+        flush_rewrite_rules(false);
+        update_option("ppa_ca_admin_route_version", "1.0.1", false);
+    }
+}
+add_action("init", "ppa_ca_flush_admin_route_once", 99);
+
+function ppa_ca_render_admin_route() {
+    if ((string) get_query_var("ppa_ca_admin") !== "1") {
+        return;
+    }
+    ppa_ca_render_page();
+    exit;
+}
+add_action("template_redirect", "ppa_ca_render_admin_route", 2);
 
 function ppa_ca_login_screen() {
     $error=isset($_GET['ppa_notice']) && $_GET['ppa_notice']==='login_error';
