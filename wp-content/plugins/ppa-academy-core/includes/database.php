@@ -157,6 +157,8 @@ function ppa_db_migrate_legacy_records() {
     foreach ($students as $post) {
         $code = (string) ppa_db_meta($post->ID,'student_id');
         if ($code === '') { continue; }
+        $duplicate_id = $wpdb->get_var($wpdb->prepare("SELECT id FROM {$students_table} WHERE student_code = %s AND (legacy_post_id IS NULL OR legacy_post_id <> %d) LIMIT 1", $code, $post->ID));
+        if ($duplicate_id) { $migration_errors[] = 'Duplicate student ID ' . $code . ' on legacy post #' . $post->ID . '; existing post data was not overwritten.'; continue; }
         $row = array(
             'legacy_post_id'=>$post->ID,'student_code'=>$code,'full_name'=>$post->post_title,
             'bangla_name'=>ppa_db_meta($post->ID,'bangla_name'),'class_level'=>ppa_db_meta($post->ID,'class_level'),
@@ -353,13 +355,16 @@ function ppa_db_delete_record($post_id) {
         $student = $student_code !== '' ? ppa_db_find_student($student_code) : null;
         $student_id = $student ? (int)$student->id : 0;
         if ($student_id) {
-            $fee_ids = $wpdb->get_col($wpdb->prepare("SELECT id FROM {$fees} WHERE student_id = %d", $student_id));
+            $fee_ids = $wpdb->get_col($wpdb->prepare("SELECT id FROM {$fees} WHERE student_id = %d OR student_code = %s", $student_id, $student_code));
             if ($fee_ids) {
                 foreach ($fee_ids as $fee_id) { $wpdb->delete($transactions, array('fee_record_id'=>(int)$fee_id), array('%d')); }
             }
             $wpdb->delete($fees, array('student_id'=>$student_id), array('%d'));
+            $wpdb->delete($fees, array('student_code'=>$student_code), array('%s'));
             $wpdb->delete($transactions, array('student_id'=>$student_id), array('%d'));
+            $wpdb->delete($transactions, array('student_code'=>$student_code), array('%s'));
             $wpdb->delete($results, array('student_id'=>$student_id), array('%d'));
+            $wpdb->delete($results, array('student_code'=>$student_code), array('%s'));
             $wpdb->delete($students, array('id'=>$student_id), array('%d'));
         }
     } elseif ($post->post_type === 'ppa_fee_payment') {
