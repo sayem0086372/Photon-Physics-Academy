@@ -223,6 +223,19 @@ function ppa_ca_login_screen() {
       <a class="ppa-ca-back" href="<?php echo esc_url(home_url('/')); ?>">← Back to Website</a>
     </form></div><?php return ob_get_clean();
 }
+/** Route all WordPress login links through the academy's own front-end login page. */
+function ppa_ca_custom_login_url($login_url, $redirect, $force_reauth) {
+    $url = home_url('/admin/');
+    if (!empty($redirect)) {
+        $url = add_query_arg('redirect_to', rawurlencode($redirect), $url);
+    }
+    if ($force_reauth) {
+        $url = add_query_arg('reauth', '1', $url);
+    }
+    return $url;
+}
+add_filter('login_url', 'ppa_ca_custom_login_url', 10, 3);
+
 function ppa_ca_records($type,$limit=100) {
     $statuses = $type === 'ppa_notice' ? array('publish','draft') : array('publish');
     return get_posts(array('post_type'=>$type,'post_status'=>$statuses,'numberposts'=>$limit,'orderby'=>'date','order'=>'DESC'));
