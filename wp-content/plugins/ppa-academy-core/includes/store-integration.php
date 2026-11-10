@@ -172,7 +172,7 @@ function ppa_store_register_gateways($gateways) {
                 $this->init_settings();
                 $this->title=$this->get_option('title',ucfirst($method));
                 $this->enabled=get_option('ppa_store_'.$method.'_enabled','yes')==='yes'?'yes':'no';
-                $this->instructions=get_option('ppa_store_'.$method.'_instructions','');
+                $this->instructions=get_option('ppa_store_'.$method.'_instructions',get_option('ppa_store_'.$method.'_instructions',''));
                 $this->receiver=get_option('ppa_store_receiver','01312364499');
                 add_action('woocommerce_update_options_payment_gateways_'.$this->id,array($this,'process_admin_options'));
             }
