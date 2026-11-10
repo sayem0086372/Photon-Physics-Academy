@@ -455,6 +455,6 @@ function ppa_db_admin_record_count($post_type) {
         'ppa_exam_result'=>$wpdb->prefix . 'ppa_exam_results'
     );
     if (!isset($tables[$post_type])) { return null; }
-    $count = $wpdb->get_var("SELECT COUNT(*) FROM {$tables[$post_type]}");
+    $count = $wpdb->get_var("SELECT COUNT(*) FROM {$tables[$post_type]} WHERE legacy_post_id IS NOT NULL");
     return is_numeric($count) ? (int)$count : null;
 }
