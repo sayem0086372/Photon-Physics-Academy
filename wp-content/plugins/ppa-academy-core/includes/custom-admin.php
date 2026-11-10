@@ -937,3 +937,40 @@ function ppa_ca_render_page() {
                     wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
                     echo '<input type="hidden" name="ppa_ca_action" value="delete_notice"><input type="hidden" name="notice_id" value="'.(int)$notice->ID.'"><button class="ppa-ca-delete" type="submit">Delete</button></form></div></article>';
                 }
+            }
+            echo '</div>';
+            } else {
+                echo '<div class="ppa-ca-empty">No notices have been published yet.</div>';
+            }
+            echo '</section>';
+        } elseif ($tab === 'results') {
+            $result_posts = ppa_ca_records('ppa_exam_result', 100);
+            ppa_ca_section_intro('Results & Exams','Record and review student examination results.',number_format_i18n(count($result_posts)).' records');
+            ppa_ca_add_form('result','Add Exam Result',array('record_title'=>'Student Name / ID','student_id'=>'Student ID','exam_name'=>'Exam Name','chapter'=>'Chapter / Subject','marks'=>'Obtained Marks','total_marks'=>'Total Marks','highest_marks'=>'Highest Marks','grade'=>'Grade','exam_date'=>'Exam Date','record_details'=>'Result notes'),$tab);
+            ppa_ca_table($result_posts,'ppa_exam_result',$tab);
+        } elseif ($tab === 'sms') {
+            $balance = ppa_ca_sms_balance();
+            echo '<div class="ppa-ca-section-head"><div><h2>SMS Management</h2><p>Check gateway balance and send academy updates to selected contacts.</p></div></div>';
+            if (is_wp_error($balance)) {
+                echo '<section class="ppa-ca-panel"><p>'.esc_html($balance->get_error_message()).'</p><p>Configure the API key in wp-config.php to enable gateway access.</p></section>';
+            } else {
+                echo '<section class="ppa-ca-panel"><h2>SMS Gateway Balance</h2><p class="ppa-ca-metric-value">'.esc_html($balance['balance']).'</p><small>Balance lookup only — no SMS has been sent.</small></section>';
+            }
+            echo '<section class="ppa-ca-panel"><p>Gateway portal: <a href="https://portal.sms.net.bd/login/" target="_blank" rel="noopener">sms.net.bd login</a></p></section>';
+        } elseif ($tab === 'settings') {
+            echo '<div class="ppa-ca-section-head"><div><h2>Academy Settings</h2><p>Manage homepage slideshow images and SMS sender details.</p></div></div>';
+            echo '<section class="ppa-ca-panel"><form method="post">';
+            wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
+            echo '<input type="hidden" name="ppa_ca_action" value="save_settings"><input type="hidden" name="return_tab" value="settings">';
+            echo '<label>SMS Sender ID<input name="sms_sender_id" value="'.esc_attr(get_option('ppa_ca_sms_sender_id','')).'"></label>';
+            echo '<label>Homepage slideshow image URLs<textarea name="slideshow_urls" rows="5">'.esc_textarea(get_option('ppa_ca_slideshow_urls','')).'</textarea></label>';
+            echo '<button class="ppa-ca-primary" type="submit">Save Settings</button></form></section>';
+        } elseif ($tab === 'store') {
+            $store_view = isset($_GET['ppa_store_view']) ? sanitize_key(wp_unslash($_GET['ppa_store_view'])) : 'books';
+            ppa_store_render_admin($store_view);
+        }
+        echo '</main></div></div>';
+    }
+    wp_footer();
+    echo '</div></body></html>';
+}
