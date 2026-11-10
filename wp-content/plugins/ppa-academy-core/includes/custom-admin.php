@@ -232,9 +232,20 @@ function ppa_ca_flush_admin_route_once() {
 add_action("init", "ppa_ca_flush_admin_route_once", 99);
 
 function ppa_ca_render_admin_route() {
-    if ((string) get_query_var("ppa_ca_admin") !== "1") {
+    // Do not rely exclusively on WordPress rewrite rules: some hosts keep
+    // stale rules or redirect an unknown /admin/ path to the homepage.
+    $request_path = isset($_SERVER['REQUEST_URI'])
+        ? (string) parse_url(wp_unslash($_SERVER['REQUEST_URI']), PHP_URL_PATH)
+        : '';
+    $home_path = (string) parse_url(home_url('/'), PHP_URL_PATH);
+    $admin_path = untrailingslashit($home_path . '/admin');
+    $is_admin_path = $request_path !== '' && untrailingslashit($request_path) === $admin_path;
+    $is_query_route = (string) get_query_var('ppa_ca_admin') === '1';
+
+    if (!$is_query_route && !$is_admin_path) {
         return;
     }
+
     ppa_ca_render_page();
     exit;
 }
