@@ -87,7 +87,7 @@ function ppa_db_tables() {
             created_at datetime NOT NULL,
             PRIMARY KEY  (id),
             UNIQUE KEY legacy_post_id (legacy_post_id),
-            KEY receipt_number (receipt_number),
+            KEY receipt_lookup (receipt_number),
             KEY fee_record_id (fee_record_id),
             KEY student_id (student_id),
             KEY payment_date (payment_date)
@@ -116,9 +116,22 @@ function ppa_db_tables() {
 }
 
 function ppa_db_install_schema() {
+    global $wpdb;
     require_once ABSPATH . 'wp-admin/includes/upgrade.php';
     foreach (ppa_db_tables() as $sql) { dbDelta($sql); }
-    update_option('ppa_db_schema_version', '1.0.0', false);
+    // Earlier development builds used a UNIQUE receipt index. Drop only that
+    // index so legacy duplicate receipt labels cannot overwrite each other.
+    $transaction_table = $wpdb->prefix . 'ppa_payment_transactions';
+    $indexes = $wpdb->get_results("SHOW INDEX FROM {$transaction_table}");
+    if (is_array($indexes)) {
+        foreach ($indexes as $index) {
+            if (isset($index->Key_name, $index->Non_unique) && $index->Key_name === 'receipt_number' && (int)$index->Non_unique === 0) {
+                $wpdb->query("ALTER TABLE {$transaction_table} DROP INDEX receipt_number");
+                break;
+            }
+        }
+    }
+    update_option('ppa_db_schema_version', '1.0.1', false);
 }
 function ppa_db_meta($post_id, $key, $default = '') {
     $value = get_post_meta($post_id, '_ppa_' . $key, true);
@@ -129,8 +142,9 @@ function ppa_db_datetime($post) {
     return $date === '0000-00-00 00:00:00' ? current_time('mysql') : $date;
 }
 function ppa_db_migrate_legacy_records() {
-    if (get_option('ppa_db_legacy_migration_v1_complete')) { return; }
+    if (get_option('ppa_db_legacy_migration_v1_complete')) { return true; }
     global $wpdb;
+    $migration_errors = array();
     $tables = ppa_db_tables();
     $students_table = $wpdb->prefix . 'ppa_students';
     $batches_table = $wpdb->prefix . 'ppa_batches';
@@ -152,20 +166,21 @@ function ppa_db_migrate_legacy_records() {
             'monthly_fee'=>(float)ppa_db_meta($post->ID,'monthly_fee',0),'details'=>$post->post_content,
             'status'=>'active','created_at'=>ppa_db_datetime($post),'updated_at'=>current_time('mysql')
         );
-        $wpdb->replace($students_table,$row);
+        if ($wpdb->replace($students_table,$row) === false) { $migration_errors[] = 'Student post #' . $post->ID . ': ' . $wpdb->last_error; continue; }
         $new_id=(int)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$students_table} WHERE student_code=%s",$code));
         if ($new_id) { $map[$code]=$new_id; }
     }
 
     $batches = get_posts(array('post_type'=>'ppa_batch','post_status'=>array('publish','draft','private'),'numberposts'=>-1));
     foreach ($batches as $post) {
-        $wpdb->replace($batches_table,array(
+        $batch_write = $wpdb->replace($batches_table,array(
             'legacy_post_id'=>$post->ID,'batch_name'=>$post->post_title,
             'class_level'=>ppa_db_meta($post->ID,'class_level'),'max_capacity'=>(int)ppa_db_meta($post->ID,'max_capacity',0),
             'schedule_days'=>ppa_db_meta($post->ID,'schedule_days'),'time_slot'=>ppa_db_meta($post->ID,'time_slot'),
             'instructor'=>ppa_db_meta($post->ID,'instructor'),'details'=>$post->post_content,
             'status'=>'active','created_at'=>ppa_db_datetime($post),'updated_at'=>current_time('mysql')
         ));
+        if ($batch_write === false) { $migration_errors[] = 'Batch post #' . $post->ID . ': ' . $wpdb->last_error; }
     }
 
     $payments = get_posts(array('post_type'=>'ppa_fee_payment','post_status'=>array('publish','draft','private'),'numberposts'=>-1));
@@ -176,31 +191,33 @@ function ppa_db_migrate_legacy_records() {
         $payable=(float)ppa_db_meta($post->ID,'payable_amount',0);
         $due=(float)ppa_db_meta($post->ID,'due_amount',max(0,$payable-$paid));
         $status=$paid>0?($due<=0?'paid':'partial'):'due';
-        $wpdb->replace($fees_table,array(
+        $fee_write = $wpdb->replace($fees_table,array(
             'legacy_post_id'=>$post->ID,'student_id'=>$student_id,'student_code'=>$code,'student_name'=>$post->post_title,
             'billing_month'=>ppa_db_meta($post->ID,'billing_month','Unknown'),
             'billing_year'=>(int)ppa_db_meta($post->ID,'billing_year',0),'payable_amount'=>$payable,
             'paid_amount'=>$paid,'due_amount'=>$due,'payment_status'=>$status,'details'=>$post->post_content,
             'created_at'=>ppa_db_datetime($post),'updated_at'=>current_time('mysql')
         ));
+        if ($fee_write === false) { $migration_errors[] = 'Fee post #' . $post->ID . ': ' . $wpdb->last_error; continue; }
         $fee_id=(int)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$fees_table} WHERE legacy_post_id=%d",$post->ID));
         $receipt=(string)ppa_db_meta($post->ID,'receipt_number');
         if ($receipt === '') { $receipt = 'LEGACY-' . (int)$post->ID; }
         if ($fee_id && $paid>0) {
-            $wpdb->replace($tx_table,array(
+            $tx_write = $wpdb->replace($tx_table,array(
                 'fee_record_id'=>$fee_id,'student_id'=>$student_id,'student_code'=>$code,'amount'=>$paid,
                 'payment_method'=>ppa_db_meta($post->ID,'payment_method','Cash'),
                 'transaction_reference'=>ppa_db_meta($post->ID,'transaction_reference'),
                 'receipt_number'=>$receipt,'payment_date'=>ppa_db_meta($post->ID,'payment_date') ?: null,
                 'legacy_post_id'=>$post->ID,'created_at'=>ppa_db_datetime($post)
             ));
+            if ($tx_write === false) { $migration_errors[] = 'Payment transaction post #' . $post->ID . ': ' . $wpdb->last_error; }
         }
     }
 
     $results = get_posts(array('post_type'=>'ppa_exam_result','post_status'=>array('publish','draft','private'),'numberposts'=>-1));
     foreach ($results as $post) {
         $code=(string)ppa_db_meta($post->ID,'student_id');
-        $wpdb->replace($results_table,array(
+        $result_write = $wpdb->replace($results_table,array(
             'legacy_post_id'=>$post->ID,'student_id'=>isset($map[$code])?$map[$code]:0,'student_code'=>$code,
             'student_name'=>$post->post_title,'exam_name'=>ppa_db_meta($post->ID,'exam_name'),
             'chapter'=>ppa_db_meta($post->ID,'chapter'),'marks'=>(float)ppa_db_meta($post->ID,'marks',0),
@@ -208,16 +225,23 @@ function ppa_db_migrate_legacy_records() {
             'grade'=>ppa_db_meta($post->ID,'grade'),'exam_date'=>ppa_db_meta($post->ID,'exam_date') ?: null,
             'details'=>$post->post_content,'created_at'=>ppa_db_datetime($post)
         ));
+        if ($result_write === false) { $migration_errors[] = 'Exam result post #' . $post->ID . ': ' . $wpdb->last_error; }
     }
 
+    if ($migration_errors) {
+        update_option('ppa_db_legacy_migration_v1_report',array('errors'=>$migration_errors,'failed_at'=>current_time('mysql')),false);
+        error_log('Photon Physics Academy legacy MySQL migration incomplete: ' . implode(' | ', $migration_errors));
+        return false;
+    }
     update_option('ppa_db_legacy_migration_v1_complete',1,false);
     update_option('ppa_db_legacy_migration_v1_report',array(
         'students'=>count($students),'batches'=>count($batches),'fee_records'=>count($payments),'exam_results'=>count($results),
         'migrated_at'=>current_time('mysql')
     ),false);
+    return true;
 }
 function ppa_db_maybe_upgrade() {
-    if (get_option('ppa_db_schema_version') !== '1.0.0') { ppa_db_install_schema(); }
+    if (get_option('ppa_db_schema_version') !== '1.0.1') { ppa_db_install_schema(); }
     if (!get_option('ppa_db_legacy_migration_v1_complete')) { ppa_db_migrate_legacy_records(); }
 }
 
