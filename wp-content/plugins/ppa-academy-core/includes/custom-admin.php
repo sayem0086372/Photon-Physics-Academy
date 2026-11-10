@@ -918,7 +918,7 @@ function ppa_ca_render_page() {
         echo '<div class="ppa-ca-main"><header class="ppa-ca-header"><button type="button" class="ppa-ca-mobile-toggle" aria-label="Open admin navigation" aria-expanded="false">☰</button><h1>'.esc_html($tabs[$tab][0]).'</h1><div class="ppa-ca-user"><div class="ppa-ca-avatar">'.esc_html('JS').'</div><span class="ppa-ca-user-label">'.esc_html('Jewel Sir').' · Administrator</span><form method="post">';
         wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
         echo '<input type="hidden" name="ppa_ca_action" value="logout"><button class="ppa-ca-logout" type="submit"><span aria-hidden="true">↪</span> <span>Log out</span></button></form><a class="ppa-ca-public-site" href="'.esc_url(home_url('/')).'" target="_blank" rel="noopener"><span aria-hidden="true">↗</span><span>Public Site</span></a></div></header><main class="ppa-ca-content">';
-        if(function_exists('ppa_db_legacy_migration_v1_complete') && !get_option('ppa_db_legacy_migration_v1_complete')) {
+        if(function_exists('ppa_db_maybe_upgrade') && !get_option('ppa_db_legacy_migration_v1_complete')) {
             echo '<div class="ppa-ca-alert is-error">The Academy database migration is not complete yet. Existing records have been retained; please do not remove the old data.</div>';
         }
         if(isset($_GET['ppa_notice']) && $_GET['ppa_notice']!=='login_error') {
