@@ -268,6 +268,7 @@ function ppa_store_render_admin($view) {
             foreach(array('pending','on-hold','processing','completed','cancelled','refunded','failed') as $s) echo '<option value="'.$s.'" '.selected($o->get_status(),$s,false).'>'.esc_html(wc_get_order_status_name($s)).'</option>';
             echo '</select><button class="ppa-ca-outline-link" type="submit">Update</button>';
             if(!$o->is_paid() && strpos($o->get_payment_method(),'ppa_')===0) echo '<button class="ppa-ca-primary" name="payment_received" value="1">Payment received</button>';
+            if(!$o->is_paid() && $o->get_payment_method()==='cod') echo '<button class="ppa-ca-primary" name="cod_collected" value="1">COD collected</button>';
             echo '</form></td></tr>';
         }
         echo '</tbody></table></div></div></section>';
