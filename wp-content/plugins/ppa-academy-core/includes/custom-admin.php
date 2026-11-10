@@ -242,9 +242,9 @@ function ppa_ca_force_admin_query($wp) {
 add_action('parse_request', 'ppa_ca_force_admin_query', 0);
 
 function ppa_ca_flush_admin_route_once() {
-    if (get_option("ppa_ca_admin_route_version") !== "1.0.1") {
+    if (get_option("ppa_ca_admin_route_version") !== "1.0.2") {
         flush_rewrite_rules(false);
-        update_option("ppa_ca_admin_route_version", "1.0.1", false);
+        update_option("ppa_ca_admin_route_version", "1.0.2", false);
     }
 }
 add_action("init", "ppa_ca_flush_admin_route_once", 99);
