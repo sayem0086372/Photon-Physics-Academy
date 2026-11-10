@@ -25,6 +25,7 @@ function ppa_store_handle_admin_post() {
         update_option('ppa_store_bkash_instructions',sanitize_textarea_field(wp_unslash($_POST['bkash_instructions'] ?? '')));
         update_option('ppa_store_nagad_instructions',sanitize_textarea_field(wp_unslash($_POST['nagad_instructions'] ?? '')));
         update_option('ppa_store_cod_enabled',isset($_POST['cod_enabled'])?'yes':'no');
+        $cod_settings=get_option('woocommerce_cod_settings',array()); if(!is_array($cod_settings)) $cod_settings=array(); $cod_settings['enabled']=isset($_POST['cod_enabled'])?'yes':'no'; update_option('woocommerce_cod_settings',$cod_settings);
         update_option('ppa_store_bkash_enabled',isset($_POST['bkash_enabled'])?'yes':'no');
         update_option('ppa_store_nagad_enabled',isset($_POST['nagad_enabled'])?'yes':'no');
         ppa_store_redirect('delivery','settings_saved');
