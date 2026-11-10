@@ -124,15 +124,7 @@ get_header();
     </div>
   </section>
 
-  <section id="results" class="ppa-section ppa-results-section"><div class="ppa-container ppa-results-panel">
-    <div><p class="ppa-eyebrow">RESULTS &amp; ACHIEVEMENTS — ফলাফল</p><h2 class="ppa-bangla">শেখার অগ্রগতি ও অর্জন</h2><p class="ppa-bangla">শিক্ষার্থীদের পরীক্ষার ফলাফল ও একাডেমিক অর্জনের তথ্য যাচাই করে এখানে প্রকাশ করা হবে।</p></div>
-    <a class="ppa-button ppa-button-outline" href="#contact">ফলাফল সম্পর্কে জানতে যোগাযোগ করুন</a>
-  </div></section>
 
-  <section id="resources" class="ppa-section ppa-gray"><div class="ppa-container ppa-resources-panel">
-    <div><p class="ppa-eyebrow">LEARNING RESOURCES — শিক্ষাসামগ্রী</p><h2 class="ppa-bangla">কনসেপ্ট বুঝুন, অনুশীলনে দক্ষ হোন</h2><p class="ppa-bangla">পদার্থবিজ্ঞানের কনসেপ্ট বুক ও অন্যান্য শিক্ষাসামগ্রী একাডেমির অনলাইন বুকস্টোরে দেখুন।</p></div>
-    <a class="ppa-button" href="<?php echo esc_url(home_url('/shop/')); ?>">শিক্ষাসামগ্রী দেখুন ↗</a>
-  </div></section>
 
   <section id="gallery" class="ppa-section"><div class="ppa-container">
     <p class="ppa-eyebrow">CLASSROOM GALLERY — ক্লাসরুম</p><h2 class="ppa-bangla">শেখার পরিবেশ ও একাডেমির মুহূর্ত</h2><p class="ppa-lead ppa-bangla">আমাদের শ্রেণিকক্ষের পাঠদান ও শিক্ষামূলক কার্যক্রমের কিছু মুহূর্ত।</p>
