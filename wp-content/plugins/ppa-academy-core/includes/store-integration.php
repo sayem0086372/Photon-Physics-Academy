@@ -300,3 +300,41 @@ function ppa_store_render_admin($view) {
     echo '<section class="ppa-ca-info-panel"><div class="ppa-ca-info-icon">i</div><div><strong>Connected to WooCommerce</strong><p>Products, stock, orders and coupons are read from WooCommerce. Updates made here are saved to the same WooCommerce records used by the public shop.</p></div></section>';
 }
 add_action('init',function(){ if(ppa_store_ready()) { update_option('woocommerce_enable_guest_checkout','yes'); update_option('woocommerce_enable_signup_and_login_from_checkout','no'); } },120);
+
+
+/** Send transactional store messages through sms.net.bd without retaining an SMS history. */
+function ppa_store_send_order_sms($order_id, $event) {
+    if (!defined('PPA_SMS_NET_BD_API_KEY') || !PPA_SMS_NET_BD_API_KEY) { return; }
+    $order = wc_get_order($order_id);
+    if (!$order) { return; }
+    $method = $order->get_payment_method();
+    if ($event === 'submitted' && !in_array($method, array('cod','ppa_bkash','ppa_nagad'), true)) { return; }
+    if ($event === 'paid' && !in_array($method, array('ppa_bkash','ppa_nagad'), true)) { return; }
+    $phone = preg_replace('/\\D+/', '', (string) $order->get_billing_phone());
+    if (strlen($phone) === 11 && substr($phone, 0, 2) === '01') { $phone = '88' . $phone; }
+    if (strlen($phone) !== 13 || substr($phone, 0, 3) !== '880') { return; }
+    $dedupe = 'ppa_store_sms_' . md5((int)$order_id . '|' . $event);
+    if (get_transient($dedupe)) { return; }
+    if ($event === 'paid') {
+        $message = 'Your Photon Physics Academy book order payment has been verified. Your order is confirmed.';
+    } elseif ($method === 'cod') {
+        $message = 'Your Cash on Delivery book order has been received by Photon Physics Academy.';
+    } else {
+        $message = 'Your Photon Physics Academy book order has been submitted. Payment verification is pending.';
+    }
+    $response = wp_remote_post('https://api.sms.net.bd/sendsms', array(
+        'timeout' => 12,
+        'body' => array('api_key' => PPA_SMS_NET_BD_API_KEY, 'msg' => $message, 'to' => $phone),
+    ));
+    if (is_wp_error($response)) { return; }
+    $payload = json_decode(wp_remote_retrieve_body($response), true);
+    if (is_array($payload) && isset($payload['error']) && (int)$payload['error'] === 0) {
+        set_transient($dedupe, 'sent', 2 * DAY_IN_SECONDS);
+    }
+}
+add_action('woocommerce_order_status_on-hold', function($order_id) { ppa_store_send_order_sms($order_id, 'submitted'); }, 20);
+add_action('woocommerce_order_status_processing', function($order_id) {
+    $order = wc_get_order($order_id);
+    if ($order && $order->get_payment_method() === 'cod') { ppa_store_send_order_sms($order_id, 'submitted'); }
+}, 20);
+add_action('woocommerce_payment_complete', function($order_id) { ppa_store_send_order_sms($order_id, 'paid'); }, 20);
