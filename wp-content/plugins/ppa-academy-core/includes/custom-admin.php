@@ -646,31 +646,10 @@ function ppa_ca_visual_parity_styles() { ?><style>
 </style><?php }
 
 function ppa_ca_store_preview($store_view) {
-    $views=array('books'=>'Books & Inventory','orders'=>'Orders & Payments','coupons'=>'Coupons & Promotions','analytics'=>'Reports & Export','delivery'=>'Delivery Settings');
-    if(!isset($views[$store_view])) $store_view='books';
-    echo '<div class="ppa-ca-store-heading"><div><p class="ppa-ca-store-kicker">COMMERCE OPERATIONS</p><h2>Store Management</h2><p>Manage books, orders, stock, delivery and manual payment verification.</p></div><span class="ppa-ca-store-refresh">↻ Refresh</span></div>';
-    echo '<div class="ppa-ca-store-metrics">';
-    foreach(array(array('Catalog books','—','▣'),array('Low-stock alerts','—','▤'),array('Pending payments / COD','—','৳'),array('Active coupons','—','％'),array('Orders loaded','—','▥')) as $metric) {
-        echo '<article><div><span>'.esc_html($metric[0]).'</span><i>'.esc_html($metric[2]).'</i></div><strong>'.esc_html($metric[1]).'</strong></article>';
-    }
-    echo '</div><nav class="ppa-ca-store-tabs" aria-label="Store management sections">';
-    foreach($views as $key=>$label) echo '<a class="'.($store_view===$key?'is-active':'').'" href="'.esc_url(add_query_arg(array('ppa_tab'=>'store','ppa_store_view'=>$key),home_url('/admin/'))).'">'.esc_html($label).'</a>';
-    echo '</nav>';
-    if($store_view==='books') {
-        echo '<section class="ppa-ca-store-section"><div class="ppa-ca-store-toolbar"><label class="ppa-ca-store-search"><span>⌕</span><input type="search" placeholder="Search title, author or category" disabled></label><button class="ppa-ca-primary" type="button" disabled>＋ Add new book</button></div><div class="ppa-ca-panel ppa-ca-store-table"><div class="ppa-ca-table-wrap"><table class="ppa-ca-table"><thead><tr><th>Book</th><th>Price</th><th>Stock</th><th>Visibility</th><th class="is-right">Actions</th></tr></thead><tbody><tr><td colspan="5"><div class="ppa-ca-empty"><strong>No books loaded yet</strong><br>The book catalogue will appear here after the store database is connected.</div></td></tr></tbody></table></div></div></section>';
-    } elseif($store_view==='orders') {
-        echo '<section class="ppa-ca-store-section"><div class="ppa-ca-store-toolbar"><div><h3>Orders & payment review</h3><p>Guest orders, Cash on Delivery collection, and bKash/Nagad payment verification.</p></div><select disabled><option>All orders</option><option>Pending payments / COD collection</option><option>Placed</option><option>Confirmed</option><option>Processing</option><option>Shipped</option><option>Delivered</option></select></div><div class="ppa-ca-panel"><div class="ppa-ca-empty"><strong>No orders yet</strong><br>Customer orders will appear here after checkout and the store database are connected.</div></div></section>';
-    } elseif($store_view==='coupons') {
-        echo '<section class="ppa-ca-store-section"><div class="ppa-ca-store-toolbar"><div><h3>Coupon codes & promotions</h3><p>Create percentage or fixed discounts, set limits, and schedule campaigns.</p></div><button class="ppa-ca-primary" type="button" disabled>＋ Create coupon</button></div><div class="ppa-ca-panel"><div class="ppa-ca-empty"><strong>No coupons created yet</strong><br>Coupon creation and validation will be enabled during store database integration.</div></div></section>';
-    } elseif($store_view==='analytics') {
-        echo '<section class="ppa-ca-store-section"><div class="ppa-ca-store-toolbar"><div><h3>Store reports & export</h3><p>Sales and fulfilment summaries from bookstore orders.</p></div><button class="ppa-ca-primary ppa-ca-dark-button" type="button" disabled>↓ Export orders CSV</button></div><div class="ppa-ca-report-grid">';
-        foreach(array('Orders loaded','Delivered orders','Active orders','Gross order value') as $label) echo '<article><span>'.esc_html($label).'</span><strong>—</strong></article>';
-        echo '</div><div class="ppa-ca-panel"><p class="ppa-ca-store-help">Reports will include order numbers, customer contact, delivery address, payment method/status, discounts, delivery fees and totals. Customer data will remain restricted to authorized administrators.</p></div></section>';
-    } else {
-        echo '<section class="ppa-ca-store-section"><form class="ppa-ca-panel ppa-ca-store-settings"><div><h3>Delivery and wallet instructions</h3><p>These settings will be used for checkout guidance. Never enter secret API keys here.</p></div><div class="ppa-ca-store-form-grid"><label>Default delivery fee (৳)<input type="number" min="0" placeholder="0" disabled></label><label>Free delivery threshold (৳, optional)<input type="number" min="0" placeholder="Optional" disabled></label><label class="is-wide">bKash payment instructions<textarea rows="3" placeholder="Business account payment instructions" disabled></textarea></label><label class="is-wide">Nagad payment instructions<textarea rows="3" placeholder="Business account payment instructions" disabled></textarea></label></div><button class="ppa-ca-primary" type="button" disabled>Save settings</button></form></section>';
-    }
-    echo '<section class="ppa-ca-info-panel"><div class="ppa-ca-info-icon">i</div><div><strong>Store database connection pending</strong><p>This is the visual review build. Book catalogue, guest orders, coupon rules, payment verification and delivery settings will be connected after the admin interface is approved. No store records are being changed in this stage.</p></div></section>';
+    if (function_exists('ppa_store_render_admin')) { ppa_store_render_admin($store_view); return; }
+    echo '<div class="ppa-ca-info-panel"><strong>Store integration is loading.</strong></div>';
 }
+
 function ppa_ca_render_page() {
     status_header(200); nocache_headers();
     $user=wp_get_current_user();
