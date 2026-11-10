@@ -6,6 +6,18 @@ if (!defined('ABSPATH')) { exit; }
 
 function ppa_store_ready() { return class_exists('WooCommerce') && function_exists('wc_get_products'); }
 function ppa_store_money($value) { return function_exists('wc_price') ? wc_price((float)$value) : '৳'.number_format_i18n((float)$value,2); }
+
+/** Render externally hosted product images entered in the academy admin. */
+function ppa_store_external_product_image($html, $product, $size, $attr, $placeholder) {
+    if (!$product instanceof WC_Product) { return $html; }
+    $url = get_post_meta($product->get_id(), '_ppa_external_image_url', true);
+    if (!$url || !wp_http_validate_url($url)) { return $html; }
+    $alt = $product->get_name();
+    $classes = 'wp-post-image';
+    if (is_array($attr) && !empty($attr['class'])) { $classes .= ' ' . sanitize_html_class($attr['class']); }
+    return '<img src="' . esc_url($url) . '" alt="' . esc_attr($alt) . '" class="' . esc_attr($classes) . '" loading="lazy" decoding="async">';
+}
+add_filter('woocommerce_product_get_image', 'ppa_store_external_product_image', 10, 5);
 function ppa_store_redirect($view='books',$notice='saved') {
     $url=add_query_arg(array('ppa_tab'=>'store','ppa_store_view'=>$view,'ppa_store_notice'=>$notice),home_url('/admin/'));
     wp_safe_redirect($url); exit;
