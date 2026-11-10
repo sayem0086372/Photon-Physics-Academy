@@ -937,7 +937,6 @@ function ppa_ca_render_page() {
                     wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
                     echo '<input type="hidden" name="ppa_ca_action" value="delete_notice"><input type="hidden" name="notice_id" value="'.(int)$notice->ID.'"><button class="ppa-ca-delete" type="submit">Delete</button></form></div></article>';
                 }
-            }
             echo '</div>';
             } else {
                 echo '<div class="ppa-ca-empty">No notices have been published yet.</div>';
