@@ -242,7 +242,8 @@ function ppa_store_render_admin($view) {
     $view=in_array($view,array('books','orders','coupons','analytics','delivery'),true)?$view:'books';
     $products=wc_get_products(array('limit'=>-1,'status'=>array('publish','draft','private'),'orderby'=>'date','order'=>'DESC'));
     $orders=wc_get_orders(array('limit'=>100,'orderby'=>'date','order'=>'DESC'));
-    $coupons=wc_get_coupons(array('limit'=>100,'orderby'=>'date','order'=>'DESC'));
+    $coupon_query = class_exists('WC_Coupon_Query') ? new WC_Coupon_Query(array('limit'=>100,'orderby'=>'date','order'=>'DESC','return'=>'objects')) : null;
+    $coupons = $coupon_query ? $coupon_query->get_coupons() : array();
     $low_stock=0; foreach($products as $p) if($p->managing_stock() && (int)$p->get_stock_quantity()<=5) $low_stock++;
     $pending=0; $gross=0; $delivered=0; foreach($orders as $o) { if(!$o->is_paid()) $pending++; $gross+=(float)$o->get_total(); if($o->has_status('completed')) $delivered++; }
     echo '<div class="ppa-ca-store-heading"><div><p class="ppa-ca-store-kicker">COMMERCE OPERATIONS</p><h2>Store Management</h2><p>Live WooCommerce catalogue, orders, coupons and checkout settings.</p></div><a class="ppa-ca-outline-link" href="'.esc_url(get_permalink(wc_get_page_id('shop'))).'" target="_blank" rel="noopener">View Store ↗</a></div>';
