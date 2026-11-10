@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Photon Physics Academy Core
  * Description: Persistent academy content types and core site features for Photon Physics Academy.
- * Version: 2.0.0
+ * Version: 2.1.0
  * Author: OATHWILD (Sayeem)
  * Text Domain: photon-physics-academy
  */
@@ -252,11 +252,19 @@ add_action('save_post_ppa_course', 'ppa_core_save_course_meta');
 /** Keep permalinks ready when the plugin is first activated. */
 function ppa_core_activate() {
     ppa_core_register_content_types();
+    if (function_exists('ppa_ca_register_types')) { ppa_ca_register_types(); }
+    if (function_exists('ppa_db_install_schema')) { ppa_db_install_schema(); }
     flush_rewrite_rules();
 }
 register_activation_hook(__FILE__, 'ppa_core_activate');
 function ppa_core_deactivate() { flush_rewrite_rules(); }
 register_deactivation_hook(__FILE__, 'ppa_core_deactivate');
+
+// Load dedicated Academy MySQL storage before the custom admin application.
+require_once __DIR__ . '/includes/database.php';
+add_action('init', function () {
+    if (is_user_logged_in() && current_user_can('manage_options')) { ppa_db_maybe_upgrade(); }
+}, 120);
 
 // Load the standalone, front-end academy administration application.
 require_once __DIR__ . '/includes/store-integration.php';
