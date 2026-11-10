@@ -97,6 +97,11 @@ function ppa_store_handle_admin_post() {
             $order->update_meta_data('_ppa_payment_verified','no');
             $order->add_order_note('Payment not verified by academy administrator.');
         }
+        if (isset($_POST['cod_collected']) && $order->get_payment_method()==='cod') {
+            $order->update_meta_data('_ppa_cod_collected','yes');
+            $order->add_order_note('Cash on delivery collected and confirmed by academy administrator.');
+            if (!$order->is_paid()) $order->payment_complete();
+        }
         $order->save();
         ppa_store_redirect('orders','order_updated');
     }
