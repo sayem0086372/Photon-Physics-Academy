@@ -65,13 +65,23 @@ function ppa_store_handle_admin_post() {
         $saved=$product->save();
         if (!$id) $id=$saved;
         update_post_meta($id, '_ppa_book_author', sanitize_text_field(wp_unslash($_POST['book_author'] ?? '')));
-        $image_url=esc_url_raw(wp_unslash($_POST['image_url'] ?? ''));
-        if ($image_url && wp_http_validate_url($image_url)) {
-            update_post_meta($id,'_ppa_external_image_url',$image_url);
-            $attachment_id=attachment_url_to_postid($image_url);
-            if ($attachment_id) set_post_thumbnail($id,$attachment_id);
-        } else {
-            delete_post_meta($id,'_ppa_external_image_url');
+        // Upload a product image directly from the admin device into the WordPress Media Library.
+        if (!empty($_FILES['product_image']['name'])) {
+            if (!current_user_can('upload_files')) ppa_store_redirect('books','image_upload_denied');
+            require_once ABSPATH . 'wp-admin/includes/file.php';
+            require_once ABSPATH . 'wp-admin/includes/media.php';
+            require_once ABSPATH . 'wp-admin/includes/image.php';
+            $upload_type = wp_check_filetype_and_ext($_FILES['product_image']['tmp_name'], $_FILES['product_image']['name']);
+            if (empty($upload_type['type']) || strpos($upload_type['type'], 'image/') !== 0) {
+                ppa_store_redirect('books','image_invalid');
+            }
+            $attachment_id = media_handle_upload('product_image', $id);
+            if (is_wp_error($attachment_id)) {
+                ppa_store_redirect('books','image_upload_failed');
+            }
+            $product->set_image_id($attachment_id);
+            $product->save();
+            delete_post_meta($id, '_ppa_external_image_url');
         }
         ppa_store_redirect('books','product_saved');
     }
@@ -236,7 +246,7 @@ function ppa_store_register_gateways($gateways) {
 add_filter('woocommerce_payment_gateways','ppa_store_register_gateways');
 
 function ppa_store_admin_form($action,$view) {
-    echo '<form method="post" class="ppa-ca-form ppa-store-admin-form">';
+    echo '<form method="post" enctype="multipart/form-data" class="ppa-ca-form ppa-store-admin-form">';
     wp_nonce_field('ppa_store_admin','ppa_store_nonce');
     echo '<input type="hidden" name="ppa_store_action" value="'.esc_attr($action).'"><input type="hidden" name="store_view" value="'.esc_attr($view).'">';
 }
@@ -257,6 +267,15 @@ function ppa_store_render_admin($view) {
     foreach($views as $key=>$label) echo '<a class="'.($view===$key?'is-active':'').'" href="'.esc_url(add_query_arg(array('ppa_tab'=>'store','ppa_store_view'=>$key),home_url('/admin/'))).'">'.esc_html($label).'</a>';
     echo '</nav>';
 
+    if (!empty($_GET['ppa_store_notice'])) {
+        $notice = sanitize_key(wp_unslash($_GET['ppa_store_notice']));
+        $messages = array(
+            'image_upload_denied'=>'Your account cannot upload media files.',
+            'image_invalid'=>'Please choose a valid image file.',
+            'image_upload_failed'=>'The image could not be uploaded. Check the file size and WordPress upload permissions.',
+        );
+        if (isset($messages[$notice])) echo '<div class="ppa-ca-alert is-error">'.esc_html($messages[$notice]).'</div>';
+    }
     if($view==='books') {
         $edit_id=absint($_GET['edit_product'] ?? 0); $editing=$edit_id?wc_get_product($edit_id):false;
         echo '<section class="ppa-ca-store-section"><div class="ppa-ca-store-toolbar"><form method="get" class="ppa-ca-store-search"><input type="hidden" name="ppa_tab" value="store"><input type="hidden" name="ppa_store_view" value="books"><input type="search" name="store_search" placeholder="Search title, author or SKU" value="'.esc_attr(sanitize_text_field(wp_unslash($_GET['store_search'] ?? ''))).'"><button class="ppa-ca-outline-link">Search</button></form><a class="ppa-ca-primary" href="'.esc_url(add_query_arg(array('ppa_tab'=>'store','ppa_store_view'=>'books','edit_product'=>0),home_url('/admin/'))).'">＋ Add new book</a></div>';
@@ -273,7 +292,7 @@ function ppa_store_render_admin($view) {
         $cats=get_terms(array('taxonomy'=>'product_cat','hide_empty'=>false));
         echo '<div class="ppa-ca-panel" style="padding:22px;margin-top:18px"><h3>'.($editing?'Edit Book':'Add a Book').'</h3>';
         ppa_store_admin_form('save_product','books');
-        echo '<input type="hidden" name="product_id" value="'.($editing?$editing->get_id():0).'"><div class="ppa-ca-form-grid"><label>Book title<input required name="product_name" value="'.esc_attr($editing?$editing->get_name():'').'"></label><label>Author<input name="book_author" value="'.esc_attr($editing?get_post_meta($editing->get_id(),'_ppa_book_author',true):'').'"></label><label>SKU<input name="sku" value="'.esc_attr($editing?$editing->get_sku():'').'"></label><label>Regular price (৳)<input required type="number" min="0" step="0.01" name="regular_price" value="'.esc_attr($editing?$editing->get_regular_price():'').'"></label><label>Sale price (৳)<input type="number" min="0" step="0.01" name="sale_price" value="'.esc_attr($editing?$editing->get_sale_price():'').'"></label><label>Stock quantity<input type="number" min="0" name="stock" value="'.esc_attr($editing?$editing->get_stock_quantity():0).'"></label><label>Product image URL<input type="url" name="image_url" placeholder="https://..." value="'.esc_attr($editing?(get_post_meta($editing->get_id(),'_ppa_external_image_url',true)?:wp_get_attachment_url($editing->get_image_id())):'').'"></label><label class="is-wide">Short description<textarea name="short_description" rows="2">'.esc_textarea($editing?$editing->get_short_description():'').'</textarea></label><label class="is-wide">Full description<textarea name="description" rows="4">'.esc_textarea($editing?$editing->get_description():'').'</textarea></label><label>Categories<select name="categories[]" multiple>';
+        echo '<input type="hidden" name="product_id" value="'.($editing?$editing->get_id():0).'"><div class="ppa-ca-form-grid"><label>Book title<input required name="product_name" value="'.esc_attr($editing?$editing->get_name():'').'"></label><label>Author<input name="book_author" value="'.esc_attr($editing?get_post_meta($editing->get_id(),'_ppa_book_author',true):'').'"></label><label>SKU<input name="sku" value="'.esc_attr($editing?$editing->get_sku():'').'"></label><label>Regular price (৳)<input required type="number" min="0" step="0.01" name="regular_price" value="'.esc_attr($editing?$editing->get_regular_price():'').'"></label><label>Sale price (৳)<input type="number" min="0" step="0.01" name="sale_price" value="'.esc_attr($editing?$editing->get_sale_price():'').'"></label><label>Stock quantity<input type="number" min="0" name="stock" value="'.esc_attr($editing?$editing->get_stock_quantity():0).'"></label><label>Book cover image<input type="file" name="product_image" accept="image/jpeg,image/png,image/webp,image/gif"><small>Choose an image from your phone or computer. JPG, PNG, WEBP or GIF.</small></label><label class="is-wide">Short description<textarea name="short_description" rows="2">'.esc_textarea($editing?$editing->get_short_description():'').'</textarea></label><label class="is-wide">Full description<textarea name="description" rows="4">'.esc_textarea($editing?$editing->get_description():'').'</textarea></label><label>Categories<select name="categories[]" multiple>';
         foreach($cats as $cat) echo '<option value="'.$cat->term_id.'" '.selected($editing?has_term($cat->term_id,'product_cat',$editing->get_id()):false,true,false).'>'.esc_html($cat->name).'</option>';
         echo '</select></label><label class="ppa-store-check"><input type="checkbox" name="published" '.checked($editing?$editing->get_status()==='publish':true,true,false).'> Published</label><label class="ppa-store-check"><input type="checkbox" name="visible" '.checked($editing?$editing->get_catalog_visibility()==='visible':true,true,false).'> Visible in catalogue</label></div><button class="ppa-ca-primary" type="submit">Save Book</button></form></div></section>';
     } elseif($view==='orders') {
