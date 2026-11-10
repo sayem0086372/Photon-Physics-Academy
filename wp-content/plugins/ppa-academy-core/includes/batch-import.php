@@ -58,8 +58,11 @@ function ppa_batch_import_run() {
         return new WP_Error('ppa_batch_import_db_unavailable', 'Academy database integration is not loaded.');
     }
 
-    ppa_db_install_schema();
     $table = $wpdb->prefix . 'ppa_batches';
+    $table_exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like($table)));
+    if ($table_exists !== $table) {
+        return new WP_Error('ppa_batch_import_table_missing', 'The Academy batches table is not available. Reload Academy Admin and try again.');
+    }
     $summary = array('total'=>0, 'created'=>0, 'linked'=>0, 'already'=>0, 'failed'=>array());
 
     foreach (ppa_batch_import_source_rows() as $index => $row) {
