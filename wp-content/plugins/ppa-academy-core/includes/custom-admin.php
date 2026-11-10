@@ -58,6 +58,37 @@ function ppa_ca_redirect($tab,$notice='') {
     if ($notice) $url=add_query_arg('ppa_notice',$notice,$url);
     wp_safe_redirect($url); exit;
 }
+
+/** sms.net.bd API helpers. Credentials remain server-side in wp-config.php. */
+function ppa_ca_sms_api_key() {
+    return defined('PPA_SMS_NET_BD_API_KEY') ? trim((string) PPA_SMS_NET_BD_API_KEY) : '';
+}
+function ppa_ca_sms_balance($force = false) {
+    $key = ppa_ca_sms_api_key();
+    if (!$key) return new WP_Error('ppa_sms_no_key', 'SMS API key is not configured in wp-config.php.');
+    if (!$force) { $cached = get_transient('ppa_ca_sms_gateway_balance'); if (is_array($cached)) return $cached; }
+    $response = wp_remote_get(add_query_arg('api_key', $key, 'https://api.sms.net.bd/user/balance/'), array('timeout'=>12,'redirection'=>2));
+    if (is_wp_error($response)) return $response;
+    $data = json_decode(wp_remote_retrieve_body($response), true);
+    if (!is_array($data) || !isset($data['error']) || (int)$data['error'] !== 0 || !isset($data['data']['balance'])) return new WP_Error('ppa_sms_balance_failed', is_array($data) ? sanitize_text_field($data['msg'] ?? 'Invalid gateway balance response.') : 'Invalid gateway response.');
+    $result = array('balance'=>(string)$data['data']['balance'],'checked_at'=>time());
+    set_transient('ppa_ca_sms_gateway_balance',$result,2*MINUTE_IN_SECONDS);
+    return $result;
+}
+function ppa_ca_sms_send_one($phone, $message) {
+    $key=ppa_ca_sms_api_key(); if(!$key) return new WP_Error('ppa_sms_no_key','SMS API key is not configured.');
+    $phone=preg_replace('/\D+/','',(string)$phone);
+    if(strlen($phone)===11 && substr($phone,0,2)==='01') $phone='88'.$phone;
+    if(strlen($phone)!==13 || substr($phone,0,3)!=='880') return new WP_Error('ppa_sms_phone','Invalid Bangladesh mobile number.');
+    $body=array('api_key'=>$key,'msg'=>$message,'to'=>$phone);
+    $sender=get_option('ppa_ca_sms_sender_id',''); if($sender!=='') $body['sender_id']=sanitize_text_field($sender);
+    $response=wp_remote_post('https://api.sms.net.bd/sendsms',array('timeout'=>15,'body'=>$body));
+    if(is_wp_error($response)) return $response;
+    $data=json_decode(wp_remote_retrieve_body($response),true);
+    if(!is_array($data)||!isset($data['error'])||(int)$data['error']!==0) return new WP_Error('ppa_sms_send_failed',is_array($data)?sanitize_text_field($data['msg']??('Gateway error '.(int)($data['error']??-1))):'Invalid gateway response.');
+    return true;
+}
+
 function ppa_ca_handle_post() {
     if (!isset($_POST['ppa_ca_action'])) return;
     $action=sanitize_key(wp_unslash($_POST['ppa_ca_action']));
@@ -104,6 +135,29 @@ function ppa_ca_handle_post() {
         if ($notice && $notice->post_type==='ppa_notice') wp_delete_post($notice_id,true);
         ppa_ca_redirect('notices','deleted');
     }
+
+    if ($action === 'send_academy_sms') {
+        $message=sanitize_textarea_field(wp_unslash($_POST['sms_message']??''));
+        $guardians=isset($_POST['sms_guardians']); $students_selected=isset($_POST['sms_students']);
+        $class_filter=sanitize_text_field(wp_unslash($_POST['sms_class']??'')); $batch_filter=sanitize_text_field(wp_unslash($_POST['sms_batch']??''));
+        if($message===''||(!$guardians&&!$students_selected)) ppa_ca_redirect('sms','sms_invalid');
+        if((function_exists('mb_strlen')?mb_strlen($message,'UTF-8'):strlen($message))>1000) ppa_ca_redirect('sms','sms_too_long');
+        $recipients=array();
+        foreach(ppa_ca_records('ppa_student',2000) as $student) {
+            if($class_filter!==''&&(string)get_post_meta($student->ID,'_ppa_class_level',true)!==$class_filter) continue;
+            if($batch_filter!==''&&(string)get_post_meta($student->ID,'_ppa_batch_name',true)!==$batch_filter) continue;
+            if($guardians){$phone=get_post_meta($student->ID,'_ppa_guardian_phone',true);if($phone)$recipients[$phone]=$phone;}
+            if($students_selected){$phone=get_post_meta($student->ID,'_ppa_phone',true);if($phone)$recipients[$phone]=$phone;}
+        }
+        if(!$recipients) ppa_ca_redirect('sms','sms_no_recipients');
+        if(count($recipients)>100) ppa_ca_redirect('sms','sms_too_many');
+        $sent=0;$failed=0;$first_error='';
+        foreach($recipients as $phone){$result=ppa_ca_sms_send_one($phone,$message);if(is_wp_error($result)){$failed++;if($first_error==='')$first_error=$result->get_error_message();}else{$sent++;}}
+        set_transient('ppa_ca_sms_last_result_'.get_current_user_id(),array('sent'=>$sent,'failed'=>$failed),5*MINUTE_IN_SECONDS);
+        if($first_error)set_transient('ppa_ca_sms_last_error_'.get_current_user_id(),$first_error,5*MINUTE_IN_SECONDS);
+        delete_transient('ppa_ca_sms_gateway_balance'); ppa_ca_redirect('sms','sms_result');
+    }
+
     if ($action==='save_settings') {
         update_option('ppa_ca_sms_gateway_url',esc_url_raw(wp_unslash($_POST['sms_gateway_url'] ?? '')));
         update_option('ppa_ca_sms_sender_id',sanitize_text_field(wp_unslash($_POST['sms_sender_id'] ?? '')));
@@ -825,10 +879,25 @@ function ppa_ca_render_page() {
             ppa_ca_add_form('result','Add Exam Result',array('record_title'=>'Student Name / ID','student_id'=>'Find Student by ID','exam_name'=>'Exam Name','chapter'=>'Chapter / Topic','total_marks'=>'Total Marks','marks'=>'Obtained Marks','highest_marks'=>'Highest Marks','grade'=>'Grade','exam_date'=>'Exam Date','record_details'=>'Result details'),$tab);
             ppa_ca_table($result_posts,'ppa_exam_result',$tab); echo '</section>';
         } elseif($tab==='sms') {
-            echo '<div class="ppa-ca-section-head"><div><h2>SMS Management</h2><p>Send academy updates to students and guardians through the SMS gateway.</p></div><a class="ppa-ca-outline-link" href="https://portal.sms.net.bd/login/" target="_blank" rel="noopener">Gateway Login ↗</a></div>';
-            ppa_ca_metric_cards(array(array('SMS Balance','Available after connection','Live gateway balance'),array('SMS Provider','sms.net.bd','Connected account'),array('Message History','Not stored','Privacy-first messaging')));
-            echo '<div class="ppa-ca-sms-grid"><section class="ppa-ca-panel"><div class="ppa-ca-panel-head"><div><h2>SMS Balance</h2><p>Check the current provider balance from the connected gateway.</p></div><span class="ppa-ca-soft-badge">sms.net.bd</span></div><div class="ppa-ca-balance-card"><span class="ppa-ca-balance-icon">৳</span><div><small>Available SMS balance</small><strong>Not checked yet</strong><em>Live balance appears after gateway integration.</em></div></div><a class="ppa-ca-outline-link" href="https://portal.sms.net.bd/login/" target="_blank" rel="noopener">Open official SMS gateway portal ↗</a></section>';
-            echo '<section class="ppa-ca-panel"><div class="ppa-ca-panel-head"><div><h2>Message Centre</h2><p>Prepare an announcement for selected student groups.</p></div><span class="ppa-ca-soft-badge">Bulk SMS</span></div><div class="ppa-ca-form-grid"><label>Class<select disabled><option>All classes</option><option>Class 8</option><option>Class 9</option><option>Class 10</option></select></label><label>Batch<select disabled><option>All batches</option></select></label></div><label class="ppa-ca-check"><input type="checkbox" checked disabled> Only active students</label><div class="ppa-ca-recipient-options"><label class="ppa-ca-check"><input type="checkbox" disabled> Student mobile numbers <small>Optional</small></label><label class="ppa-ca-check"><input type="checkbox" checked disabled> Guardian mobile numbers <small>Default recipient</small></label></div><div class="ppa-ca-recipient-count"><strong>'.number_format_i18n(ppa_ca_count('ppa_student')).'</strong><span>student records available · unique recipient count will be calculated when connected</span></div><label class="ppa-ca-field-label">Message<textarea rows="4" disabled maxlength="1000" placeholder="Write your academy announcement in Bangla or English…"></textarea></label><div class="ppa-ca-message-footer"><span>0 / 1000 characters · No message history retained</span><button class="ppa-ca-primary" type="button" disabled>Send SMS · Integration pending</button></div></section></div><section class="ppa-ca-info-panel"><div class="ppa-ca-info-icon">✓</div><div><strong>Privacy rule</strong><p>Sent SMS history will not be stored. Guardian numbers are the default recipients; student mobile numbers remain optional. WhatsApp numbers are contact information only and are not SMS recipients.</p></div></section>';
+            $balance=ppa_ca_sms_balance(!empty($_GET['ppa_refresh_balance']));
+            $balance_text=is_wp_error($balance)?'Unavailable':'৳ '.esc_html($balance['balance']);
+            $balance_note=is_wp_error($balance)?esc_html($balance->get_error_message()):'Updated '.esc_html(wp_date('d M Y, h:i A',(int)$balance['checked_at']));
+            $sms_notice=isset($_GET['ppa_notice'])?sanitize_text_field(wp_unslash($_GET['ppa_notice'])):'';
+            echo '<div class="ppa-ca-section-head"><div><h2>SMS Management</h2><p>Send academy updates to students and guardians through sms.net.bd.</p></div><a class="ppa-ca-outline-link" href="https://portal.sms.net.bd/login/" target="_blank" rel="noopener">Gateway Login ↗</a></div>';
+            ppa_ca_metric_cards(array(array('SMS Balance',$balance_text,'Live gateway balance'),array('SMS Provider','sms.net.bd','Connected account'),array('Message History','Not stored','Privacy-first messaging')));
+            echo '<div class="ppa-ca-sms-grid"><section class="ppa-ca-panel"><div class="ppa-ca-panel-head"><div><h2>SMS Balance</h2><p>Read-only balance check. This does not send a message.</p></div><span class="ppa-ca-soft-badge">sms.net.bd</span></div><div class="ppa-ca-balance-card"><span class="ppa-ca-balance-icon">৳</span><div><small>Available SMS balance</small><strong>'.$balance_text.'</strong><em>'.$balance_note.'</em></div></div><a class="ppa-ca-outline-link" href="'.esc_url(add_query_arg(array('ppa_tab'=>'sms','ppa_refresh_balance'=>'1'),home_url('/admin/'))).'">↻ Refresh balance</a> <a class="ppa-ca-outline-link" href="https://portal.sms.net.bd/login/" target="_blank" rel="noopener">Open gateway portal ↗</a></section>';
+            echo '<section class="ppa-ca-panel"><div class="ppa-ca-panel-head"><div><h2>Message Centre</h2><p>Select recipient groups. Each unique phone number is sent once.</p></div><span class="ppa-ca-soft-badge">Bulk SMS</span></div>';
+            if($sms_notice==='sms_result'){$result=get_transient('ppa_ca_sms_last_result_'.get_current_user_id());if(is_array($result))echo '<div class="ppa-ca-alert">Submitted: '.(int)$result['sent'].' · Failed: '.(int)$result['failed'].'</div>';}
+            if($sms_notice==='sms_invalid')echo '<div class="ppa-ca-alert is-error">Select at least one recipient type and enter a message.</div>';
+            if($sms_notice==='sms_too_long')echo '<div class="ppa-ca-alert is-error">Message exceeds the 1,000 character limit.</div>';
+            if($sms_notice==='sms_no_recipients')echo '<div class="ppa-ca-alert is-error">No recipient numbers matched your selection.</div>';
+            if($sms_notice==='sms_too_many')echo '<div class="ppa-ca-alert is-error">This send is limited to 100 recipients at a time. Narrow the class or batch selection.</div>';
+            $last_error=get_transient('ppa_ca_sms_last_error_'.get_current_user_id());if($last_error)echo '<div class="ppa-ca-alert is-error">Gateway response: '.esc_html($last_error).'</div>';
+            $batches=get_posts(array('post_type'=>'ppa_batch','post_status'=>'publish','numberposts'=>-1,'orderby'=>'title','order'=>'ASC'));
+            echo '<form method="post" class="ppa-ca-form ppa-ca-sms-send-form">';wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
+            echo '<input type="hidden" name="ppa_ca_action" value="send_academy_sms"><input type="hidden" name="return_tab" value="sms"><div class="ppa-ca-form-grid"><label>Class<select name="sms_class"><option value="">All classes</option><option value="8">Class 8</option><option value="9">Class 9</option><option value="10">Class 10</option></select></label><label>Batch<select name="sms_batch"><option value="">All batches</option>';
+            foreach($batches as $batch)echo '<option value="'.esc_attr($batch->post_title).'">'.esc_html($batch->post_title).'</option>';
+            echo '</select></label></div><div class="ppa-ca-recipient-options"><label class="ppa-ca-check"><input type="checkbox" name="sms_guardians" value="1" checked> Guardian mobile numbers <small>Default recipient</small></label><label class="ppa-ca-check"><input type="checkbox" name="sms_students" value="1"> Student mobile numbers <small>Optional</small></label></div><label class="ppa-ca-field-label">Message<textarea name="sms_message" rows="5" maxlength="1000" required placeholder="Write your academy announcement in Bangla or English…"></textarea></label><div class="ppa-ca-message-footer"><span>Maximum 1,000 characters · No SMS history stored</span><button class="ppa-ca-primary" type="submit" onclick="return confirm(\'Send this message to the selected recipients? SMS charges may apply.\')">Send SMS</button></div></form></section></div><section class="ppa-ca-info-panel"><div class="ppa-ca-info-icon">✓</div><div><strong>Privacy & billing</strong><p>Sent SMS history is not stored. Guardian numbers are default; student numbers are optional. WhatsApp numbers are contact information only. Each message may incur gateway charges.</p></div></section>';
         } elseif($tab==='settings') {
             ppa_ca_section_intro('Settings','Configure academy integrations and homepage presentation.');
             echo '<div class="ppa-ca-settings-grid"><section class="ppa-ca-panel"><div class="ppa-ca-panel-head"><div><h2>SMS Gateway</h2><p>Provider endpoint and sender identity.</p></div><span class="ppa-ca-soft-badge">Integration</span></div><form method="post" class="ppa-ca-form ppa-ca-settings-form">'; wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
