@@ -90,6 +90,7 @@ function ppa_store_handle_admin_post() {
         $allowed=array('pending','on-hold','processing','completed','cancelled','refunded','failed');
         $wallet_method=in_array($order->get_payment_method(),array('ppa_bkash','ppa_nagad'),true);
         if ($wallet_method && !$order->is_paid() && !isset($_POST['payment_received']) && in_array($status,array('processing','completed'),true)) ppa_store_redirect('orders','wallet_verification_required');
+        if ($order->get_payment_method()==='cod' && !$order->is_paid() && !isset($_POST['cod_collected']) && $status==='completed') ppa_store_redirect('orders','cod_collection_required');
         if (in_array($status,$allowed,true)) $order->update_status($status,'Updated from Photon Physics Academy admin.');
         if (isset($_POST['payment_received'])) {
             if (!in_array($order->get_payment_method(),array('ppa_bkash','ppa_nagad'),true)) {
@@ -325,9 +326,12 @@ function ppa_store_send_order_sms($order_id, $event) {
     } else {
         $message = 'Your Photon Physics Academy book order has been submitted. Payment verification is pending.';
     }
+    $sms_body = array('api_key' => PPA_SMS_NET_BD_API_KEY, 'msg' => $message, 'to' => $phone);
+    $sender_id = get_option('ppa_ca_sms_sender_id', '');
+    if ($sender_id !== '') { $sms_body['sender_id'] = sanitize_text_field($sender_id); }
     $response = wp_remote_post('https://api.sms.net.bd/sendsms', array(
         'timeout' => 12,
-        'body' => array('api_key' => PPA_SMS_NET_BD_API_KEY, 'msg' => $message, 'to' => $phone),
+        'body' => $sms_body,
     ));
     if (is_wp_error($response)) { return; }
     $payload = json_decode(wp_remote_retrieve_body($response), true);
