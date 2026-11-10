@@ -262,6 +262,7 @@ register_deactivation_hook(__FILE__, 'ppa_core_deactivate');
 
 // Load dedicated Academy MySQL storage before the custom admin application.
 require_once __DIR__ . '/includes/database.php';
+require_once __DIR__ . '/includes/batch-import.php';
 add_action('init', function () {
     if (is_user_logged_in() && current_user_can('manage_options')) { ppa_db_maybe_upgrade(); }
 }, 120);
