@@ -15,6 +15,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Validate PHP syntax
+        run: |
+          find wp-content/themes/photon-physics-academy wp-content/plugins/ppa-academy-core -name '*.php' -print0 | xargs -0 -n1 php -l
       - name: Package theme and companion plugin
         run: |
           cd wp-content/themes
