@@ -230,13 +230,50 @@ function ppa_ca_records($type,$limit=100) {
 function ppa_ca_next_student_id($reserve=false) {
     $prefix=wp_date('y');
     $highest=(int)get_option('ppa_ca_student_sequence_'.$prefix,0);
-    foreach(ppa_ca_records('ppa_student',1000) as $student) {
+    foreach(ppa_ca_records('ppa_student',2000) as $student) {
         $existing=(string)get_post_meta($student->ID,'_ppa_student_id',true);
-        if(preg_match('/^'.preg_quote($prefix,'/').'([0-9]{3})$/',$existing,$match)) $highest=max($highest,(int)$match[1]);
+        if(preg_match('/^'.preg_quote($prefix,'/').'([0-9]{3,4})$/',$existing,$match)) $highest=max($highest,(int)$match[1]);
     }
     $next=$highest+1;
+    if($next>9999) return '';
     if($reserve) update_option('ppa_ca_student_sequence_'.$prefix,$next,false);
-    return $prefix.sprintf('%03d',$next);
+    return $prefix.sprintf('%04d',$next);
+}
+/**
+ * One-time, idempotent conversion of legacy YYNNN student IDs to YYNNNN.
+ * Existing payment and exam-result references are updated to keep records connected.
+ */
+function ppa_ca_migrate_student_ids_to_six_digits() {
+    if(get_option('ppa_ca_student_ids_six_digit_migrated',false)) return;
+    $mapping=array();
+    $students=get_posts(array('post_type'=>'ppa_student','post_status'=>array('publish','draft','private'),'numberposts'=>-1,'orderby'=>'ID','order'=>'ASC'));
+    foreach($students as $student) {
+        $old=(string)get_post_meta($student->ID,'_ppa_student_id',true);
+        if(preg_match('/^(\\d{2})(\\d{3})$/',$old,$match)) {
+            $new=$match[1].sprintf('%04d',(int)$match[2]);
+            if($new!==$old) {
+                update_post_meta($student->ID,'_ppa_student_id',$new);
+                $mapping[$old]=$new;
+            }
+        }
+    }
+    if($mapping) {
+        foreach(array('ppa_fee_payment','ppa_exam_result') as $type) {
+            $records=get_posts(array('post_type'=>$type,'post_status'=>array('publish','draft','private'),'numberposts'=>-1));
+            foreach($records as $record) {
+                $old_ref=(string)get_post_meta($record->ID,'_ppa_student_id',true);
+                if(isset($mapping[$old_ref])) update_post_meta($record->ID,'_ppa_student_id',$mapping[$old_ref]);
+            }
+        }
+    }
+    $prefix=wp_date('y');
+    $highest=0;
+    foreach($students as $student) {
+        $id=(string)get_post_meta($student->ID,'_ppa_student_id',true);
+        if(preg_match('/^'.preg_quote($prefix,'/').'([0-9]{4})$/',$id,$match)) $highest=max($highest,(int)$match[1]);
+    }
+    if($highest>(int)get_option('ppa_ca_student_sequence_'.$prefix,0)) update_option('ppa_ca_student_sequence_'.$prefix,$highest,false);
+    update_option('ppa_ca_student_ids_six_digit_migrated',1,false);
 }
 function ppa_ca_table($posts,$type,$tab) {
     if (!$posts) { echo '<div class="ppa-ca-empty">No records yet. Add your first record using the form below.</div>'; return; }
@@ -719,6 +756,7 @@ function ppa_ca_render_page() {
     if(!is_user_logged_in() || !current_user_can('manage_options')) {
         echo ppa_ca_login_screen();
     } else {
+        ppa_ca_migrate_student_ids_to_six_digits();
         echo '<div class="ppa-ca-shell"><aside class="ppa-ca-sidebar"><div class="ppa-ca-brand"><div class="ppa-ca-brand-mark"><img src="https://cdn.phototourl.com/member/2026-10-26-00b8c0d9-38d9-4d60-a377-dfd8928013de.png" alt="Photon Physics Academy"></div><div><strong>PHOTON</strong><small>Admin Panel</small></div></div><nav class="ppa-ca-nav">';
         foreach($tabs as $key=>$item) echo '<a class="'.($tab===$key?'is-active':'').'" href="'.esc_url(add_query_arg('ppa_tab',$key,home_url('/admin/'))).'"><i>'.ppa_ca_icon_svg($key).'</i><span>'.esc_html($item[0]).'</span></a>';
         echo '</nav><div class="ppa-ca-side-bottom"><a href="'.esc_url(home_url('/')).'">← Back to Website</a></div></aside>';
@@ -793,10 +831,10 @@ function ppa_ca_render_page() {
             $student_query=isset($_GET['ppa_search'])?sanitize_text_field(wp_unslash($_GET['ppa_search'])):'';
             $student_posts=ppa_ca_filter_records($student_posts,$student_query);
             ppa_ca_section_intro('Student Management','View, search and maintain academy student records.',number_format_i18n(count($student_posts)).' students');
-            ppa_ca_metric_cards(array(array('Total Students',(string)count($student_posts),'All registered students'),array('Active Classes','8 · 9 · 10','Academy class levels'),array('Student ID Format','YYNNN','Five-digit student codes')));
+            ppa_ca_metric_cards(array(array('Total Students',(string)count($student_posts),'All registered students'),array('Active Classes','8 · 9 · 10','Academy class levels'),array('Student ID Format','YYNNNN','Six-digit student codes')));
             echo '<section class="ppa-ca-panel ppa-ca-data-panel"><div class="ppa-ca-panel-head"><div><h2>All Students</h2><p>Student profiles, guardian contacts and monthly fee information.</p></div><span class="ppa-ca-soft-badge">Student directory</span></div>';
             ppa_ca_search_toolbar('Search by student name, ID or phone number...');
-            ppa_ca_add_form('student','Add New Student',array('record_title'=>'Student Name','student_id'=>'Student ID (5 digits, YYNNN)','class_level'=>'Class (8 / 9 / 10)','batch_name'=>'Batch (Optional)','bangla_name'=>'Student Name (Bangla, Optional)','institution'=>'Institution (Optional)','phone'=>'Student Mobile (Optional)','guardian_name'=>'Guardian Name (Optional)','guardian_phone'=>'Guardian Mobile','whatsapp_phone'=>'WhatsApp Number (Optional)','monthly_fee'=>'Monthly Fee (৳)','record_details'=>'Additional Details'),$tab);
+            ppa_ca_add_form('student','Add New Student',array('record_title'=>'Student Name','student_id'=>'Student ID (6 digits, YYNNNN)','class_level'=>'Class (8 / 9 / 10)','batch_name'=>'Batch (Optional)','bangla_name'=>'Student Name (Bangla, Optional)','institution'=>'Institution (Optional)','phone'=>'Student Mobile (Optional)','guardian_name'=>'Guardian Name (Optional)','guardian_phone'=>'Guardian Mobile','whatsapp_phone'=>'WhatsApp Number (Optional)','monthly_fee'=>'Monthly Fee (৳)','record_details'=>'Additional Details'),$tab);
             ppa_ca_table($student_posts,'ppa_student',$tab); echo '</section>';
         } elseif($tab==='programs') {
             $batch_posts=ppa_ca_records('ppa_batch');
