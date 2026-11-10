@@ -380,3 +380,76 @@ button,input,textarea,select{font:inherit}
 .ppa-store-catalogue{scroll-margin-top:100px}
 @media(max-width:760px){.ppa-bookstore-hero{grid-template-columns:1fr;padding:26px 22px;gap:8px}.ppa-floating-books{min-height:240px}.ppa-floating-books img{height:225px}.ppa-gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ppa-lightbox-inner{grid-template-columns:34px minmax(0,1fr) 34px;padding:55px 8px 12px}.ppa-lightbox-prev,.ppa-lightbox-next{width:32px;height:42px}.ppa-modal-inner{padding:28px 22px}}
 @media(max-width:520px){.ppa-footer-actions{flex-wrap:wrap}.ppa-bookstore-hero{margin-bottom:35px}.ppa-floating-books{min-height:205px}.ppa-floating-books img{height:195px}}
+
+
+/* Readability refinement — larger supporting text without changing the visual identity. */
+body{font-size:17px;line-height:1.78}
+.ppa-brand-sub{font-size:12px}
+.ppa-brand-bn{font-size:13px;line-height:1.45}
+.ppa-nav a,.ppa-mobile-nav a{font-size:14px}
+.ppa-eyebrow{font-size:13px;line-height:1.55}
+.ppa-kicker{font-size:14px;line-height:1.7}
+.ppa-store-box p{font-size:16px!important;line-height:1.75}
+.ppa-store-button,.ppa-button{font-size:15px}
+.ppa-hero p,.ppa-lead{font-size:17px;line-height:1.9}
+.ppa-phone-row{font-size:15px;line-height:1.7}
+.ppa-hero-photo figcaption{font-size:14px}
+.ppa-notice-filters button{font-size:15px}
+.ppa-notice-card time{font-size:14px}
+.ppa-notice-card p,.ppa-card p,.ppa-feature p,.ppa-contact-card p{font-size:16px;line-height:1.85}
+.ppa-stat b{font-size:16px;line-height:1.65}
+.ppa-footer p{font-size:15px;line-height:1.9}
+.ppa-footer h4{font-size:18px}
+.ppa-footer-bottom{font-size:14px;line-height:1.7}
+.ppa-credit{font-size:14px!important}
+.ppa-program-level-text{font-size:12px}
+.ppa-program-subtitle{font-size:16px;line-height:1.8}
+.ppa-program-audience span{font-size:13px}
+.ppa-program-audience strong{font-size:15px}
+.ppa-program-highlights li{font-size:15px;line-height:1.8}
+.ppa-program-link{font-size:15px}
+.ppa-course-reference-badge{font-size:13px}
+.ppa-course-reference-subtitle{font-size:16px;line-height:1.8}
+.ppa-course-reference-audience{font-size:15px;line-height:1.8}
+.ppa-course-reference-footer p{font-size:14px;line-height:1.75}
+.ppa-course-reference-button{font-size:15px}
+.ppa-course-sidebar li{font-size:15px;line-height:1.8}
+.ppa-sidebar-contact span{font-size:11px}
+.ppa-sidebar-contact a{font-size:15px}
+.ppa-inquiry-form label{font-size:15px}
+.ppa-modal-inner time,#ppa-gallery-caption{font-size:15px}
+.ppa-lightbox-inner p{font-size:15px}
+.woocommerce .woocommerce-breadcrumb{font-size:14px}
+.woocommerce ul.products li.product .woocommerce-loop-product__title{font-size:19px}
+@media(max-width:1050px){
+ .ppa-nav a,.ppa-mobile-nav a{font-size:14px}
+}
+@media(max-width:560px){
+ body{font-size:16px;line-height:1.8}
+ .ppa-brand-sub{font-size:11px}
+ .ppa-brand-bn{font-size:12px}
+ .ppa-nav a,.ppa-mobile-nav a{font-size:15px}
+ .ppa-eyebrow{font-size:12px}
+ .ppa-kicker{font-size:13px;line-height:1.7}
+ .ppa-store-title{font-size:23px}
+ .ppa-store-box p{font-size:16px!important}
+ .ppa-store-button,.ppa-button{font-size:15px}
+ .ppa-hero p,.ppa-lead{font-size:16px;line-height:1.85}
+ .ppa-phone-row{font-size:14px}
+ .ppa-hero-photo figcaption{font-size:13px}
+ .ppa-section h2{font-size:28px;line-height:1.4}
+ .ppa-notice-filters button{font-size:14px}
+ .ppa-notice-card time{font-size:13px}
+ .ppa-notice-card p,.ppa-card p,.ppa-feature p,.ppa-contact-card p{font-size:15px;line-height:1.85}
+ .ppa-stat b{font-size:15px}
+ .ppa-footer p{font-size:15px}
+ .ppa-footer-bottom{font-size:13px}
+ .ppa-program-subtitle,.ppa-course-reference-subtitle{font-size:15px}
+ .ppa-program-audience span{font-size:13px}
+ .ppa-program-audience strong{font-size:14px}
+ .ppa-program-highlights li{font-size:15px}
+ .ppa-course-reference-audience{font-size:14px}
+ .ppa-course-reference-footer p{font-size:13px}
+ .ppa-course-reference-button{font-size:14px}
+ .ppa-inquiry-form label{font-size:14px}
+}
