@@ -144,6 +144,15 @@ function ppa_db_datetime($post) {
     $date = $post && !empty($post->post_date) ? $post->post_date : current_time('mysql');
     return $date === '0000-00-00 00:00:00' ? current_time('mysql') : $date;
 }
+function ppa_db_safe_date($value) {
+    $value = trim((string)$value);
+    if ($value === '' || $value === '0000-00-00') { return null; }
+    if (preg_match('/^(\\d{4})-(\\d{2})-(\\d{2})$/', $value, $match) && checkdate((int)$match[2], (int)$match[3], (int)$match[1])) {
+        return $value;
+    }
+    $timestamp = strtotime($value);
+    return $timestamp ? gmdate('Y-m-d', $timestamp) : null;
+}
 function ppa_db_migrate_legacy_records() {
     if (get_option('ppa_db_legacy_migration_v1_complete')) { return true; }
     global $wpdb;
@@ -159,7 +168,7 @@ function ppa_db_migrate_legacy_records() {
     $students = get_posts(array('post_type'=>'ppa_student','post_status'=>array('publish','draft','private'),'numberposts'=>-1,'orderby'=>'ID','order'=>'ASC'));
     foreach ($students as $post) {
         $code = (string) ppa_db_meta($post->ID,'student_id');
-        if ($code === '') { continue; }
+        if ($code === '') { $migration_errors[] = 'Student post #' . $post->ID . ' is missing its student ID; record was not skipped silently.'; continue; }
         $duplicate_id = $wpdb->get_var($wpdb->prepare("SELECT id FROM {$students_table} WHERE student_code = %s AND (legacy_post_id IS NULL OR legacy_post_id <> %d) LIMIT 1", $code, $post->ID));
         if ($duplicate_id) { $migration_errors[] = 'Duplicate student ID ' . $code . ' on legacy post #' . $post->ID . '; existing post data was not overwritten.'; continue; }
         $row = array(
@@ -212,7 +221,7 @@ function ppa_db_migrate_legacy_records() {
                 'fee_record_id'=>$fee_id,'student_id'=>$student_id,'student_code'=>$code,'amount'=>$paid,
                 'payment_method'=>ppa_db_meta($post->ID,'payment_method','Cash'),
                 'transaction_reference'=>ppa_db_meta($post->ID,'transaction_reference'),
-                'receipt_number'=>$receipt,'payment_date'=>ppa_db_meta($post->ID,'payment_date') ?: null,
+                'receipt_number'=>$receipt,'payment_date'=>ppa_db_safe_date(ppa_db_meta($post->ID,'payment_date')),
                 'legacy_post_id'=>$post->ID,'created_at'=>ppa_db_datetime($post)
             ));
             if ($tx_write === false) { $migration_errors[] = 'Payment transaction post #' . $post->ID . ': ' . $wpdb->last_error; }
@@ -227,7 +236,7 @@ function ppa_db_migrate_legacy_records() {
             'student_name'=>$post->post_title,'exam_name'=>ppa_db_meta($post->ID,'exam_name'),
             'chapter'=>ppa_db_meta($post->ID,'chapter'),'marks'=>(float)ppa_db_meta($post->ID,'marks',0),
             'total_marks'=>(float)ppa_db_meta($post->ID,'total_marks',0),'highest_marks'=>(float)ppa_db_meta($post->ID,'highest_marks',0),
-            'grade'=>ppa_db_meta($post->ID,'grade'),'exam_date'=>ppa_db_meta($post->ID,'exam_date') ?: null,
+            'grade'=>ppa_db_meta($post->ID,'grade'),'exam_date'=>ppa_db_safe_date(ppa_db_meta($post->ID,'exam_date')),
             'details'=>$post->post_content,'created_at'=>ppa_db_datetime($post)
         ));
         if ($result_write === false) { $migration_errors[] = 'Exam result post #' . $post->ID . ': ' . $wpdb->last_error; }
@@ -318,7 +327,7 @@ function ppa_db_sync_record($post_id) {
                 'fee_record_id'=>$fee_id,'student_id'=>$student_id,'student_code'=>$code,
                 'amount'=>$paid,'payment_method'=>ppa_db_meta($post->ID,'payment_method','Cash'),
                 'transaction_reference'=>ppa_db_meta($post->ID,'transaction_reference'),
-                'receipt_number'=>$receipt,'payment_date'=>ppa_db_meta($post->ID,'payment_date') ?: null,
+                'receipt_number'=>$receipt,'payment_date'=>ppa_db_safe_date(ppa_db_meta($post->ID,'payment_date')),
                 'legacy_post_id'=>$post->ID,'created_at'=>$created
             ));
         } else {
@@ -333,7 +342,7 @@ function ppa_db_sync_record($post_id) {
             'chapter'=>ppa_db_meta($post->ID,'chapter'),'marks'=>(float)ppa_db_meta($post->ID,'marks',0),
             'total_marks'=>(float)ppa_db_meta($post->ID,'total_marks',0),
             'highest_marks'=>(float)ppa_db_meta($post->ID,'highest_marks',0),'grade'=>ppa_db_meta($post->ID,'grade'),
-            'exam_date'=>ppa_db_meta($post->ID,'exam_date') ?: null,'details'=>$post->post_content,'created_at'=>$created
+            'exam_date'=>ppa_db_safe_date(ppa_db_meta($post->ID,'exam_date')),'details'=>$post->post_content,'created_at'=>$created
         ));
     } else {
         return new WP_Error('ppa_db_unsupported_type', 'This record type is not managed by Academy MySQL storage.');
