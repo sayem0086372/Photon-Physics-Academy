@@ -60,6 +60,9 @@ function ppa_ca_count($type) {
 function ppa_ca_redirect($tab,$notice='') {
     $url=add_query_arg(array('ppa_tab'=>$tab),home_url('/academyadmin/'));
     if ($notice) $url=add_query_arg('ppa_notice',$notice,$url);
+    // Explicitly clear the modal fragment from the submitted URL. Browsers may
+    // otherwise carry the original #modal fragment through a POST redirect.
+    $url .= '#ppa-ca-modal-close';
     wp_safe_redirect($url); exit;
 }
 
