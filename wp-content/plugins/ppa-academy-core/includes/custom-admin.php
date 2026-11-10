@@ -1177,9 +1177,9 @@ function ppa_ca_render_page() {
             ppa_ca_add_form('student','Add New Student',array('record_title'=>'Student Name','student_id'=>'Student ID (6 digits, YYNNNN)','class_level'=>'Class (8 / 9 / 10)','batch_name'=>'Batch (Optional)','bangla_name'=>'Student Name (Bangla, Optional)','institution'=>'Institution (Optional)','phone'=>'Student Mobile (Optional)','guardian_name'=>'Guardian Name (Optional)','guardian_phone'=>'Guardian Mobile','whatsapp_phone'=>'WhatsApp Number (Optional)','monthly_fee'=>'Monthly Fee (৳)','record_details'=>'Additional Details'),$tab);
             ppa_ca_table($student_posts,'ppa_student',$tab); echo '</section>';
         } elseif($tab==='programs') {
-            if(function_exists('ppa_ca_render_batch_import_panel')) ppa_ca_render_batch_import_panel();
             $batch_posts=ppa_ca_records('ppa_batch');
             ppa_ca_section_intro('Programs & Batches','Organize class groups, schedules and teaching information.',number_format_i18n(count($batch_posts)).' batches');
+            if(function_exists('ppa_ca_render_batch_import_panel')) ppa_ca_render_batch_import_panel();
             ppa_ca_add_form('batch','Create New Batch',array('record_title'=>'Batch Name','class_level'=>'Class Level','max_capacity'=>'Maximum Capacity','schedule_days'=>'Schedule Days','time_slot'=>'Class Time','instructor'=>'Instructor','record_details'=>'Batch details / class schedule'),$tab);
             echo '<div class="ppa-ca-program-grid">';
             if($batch_posts){
