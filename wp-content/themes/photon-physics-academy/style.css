@@ -501,3 +501,13 @@ a{transition:color .18s ease,background-color .18s ease,border-color .18s ease,b
  .ppa-hero h1{letter-spacing:-.03em}
 }
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition:none!important;animation:none!important}}
+
+
+/* Accessible contrast for homepage reputation and student-count cards. */
+.ppa-stats{background:#f1f5f9!important;color:#0f172a!important}
+.ppa-stat{min-height:112px;padding:22px 26px;background:#fff;border:1px solid #dbe4ee!important;border-radius:14px;box-shadow:0 5px 18px rgba(15,35,60,.06)}
+.ppa-stat:last-child{border:1px solid #dbe4ee!important}
+.ppa-stat strong,.ppa-stat b{color:#102b4e!important}
+.ppa-stat strong{font-size:clamp(26px,3vw,34px);line-height:1.2}
+.ppa-stat b{font-size:14px;line-height:1.65;font-weight:650}
+@media(max-width:700px){.ppa-stat-grid{grid-template-columns:1fr;gap:12px}.ppa-stat{padding:18px;gap:14px}}
