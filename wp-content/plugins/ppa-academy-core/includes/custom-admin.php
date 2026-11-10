@@ -54,7 +54,7 @@ function ppa_ca_count($type) {
     return $counts ? (int)$counts->publish : 0;
 }
 function ppa_ca_redirect($tab,$notice='') {
-    $url=add_query_arg(array('ppa_tab'=>$tab),home_url('/admin/'));
+    $url=add_query_arg(array('ppa_tab'=>$tab),home_url('/academyadmin/'));
     if ($notice) $url=add_query_arg('ppa_notice',$notice,$url);
     wp_safe_redirect($url); exit;
 }
@@ -101,11 +101,11 @@ function ppa_ca_handle_post() {
         );
         $user=wp_signon($creds,is_ssl());
         if (is_wp_error($user)) ppa_ca_redirect('overview','login_error');
-        wp_safe_redirect(add_query_arg('ppa_tab','overview',home_url('/admin/'))); exit;
+        wp_safe_redirect(add_query_arg('ppa_tab','overview',home_url('/academyadmin/'))); exit;
     }
     if (!is_user_logged_in() || !current_user_can('manage_options')) wp_die('You are not allowed to do this.');
     check_admin_referer('ppa_ca_admin_action','ppa_ca_nonce');
-    if ($action==='logout') { wp_logout(); wp_safe_redirect(home_url('/admin/')); exit; }
+    if ($action==='logout') { wp_logout(); wp_safe_redirect(home_url('/academyadmin/')); exit; }
     $tab=sanitize_key(wp_unslash($_POST['return_tab'] ?? 'overview'));
     if ($action==='add_notice') {
         $title=sanitize_text_field(wp_unslash($_POST['notice_title'] ?? ''));
@@ -213,7 +213,7 @@ add_action('template_redirect','ppa_ca_handle_post',1);
  * manually-created WordPress page with the slug "admin".
  */
 function ppa_ca_register_admin_route() {
-    add_rewrite_rule("^admin/?$", "index.php?ppa_ca_admin=1", "top");
+    add_rewrite_rule("^academyadmin/?$", "index.php?ppa_ca_admin=1", "top");
 }
 add_action("init", "ppa_ca_register_admin_route", 1);
 
@@ -233,7 +233,7 @@ function ppa_ca_force_admin_query($wp) {
         ? (string) parse_url(wp_unslash($_SERVER['REQUEST_URI']), PHP_URL_PATH)
         : '';
     $home_path = (string) parse_url(home_url('/'), PHP_URL_PATH);
-    $admin_path = untrailingslashit($home_path . '/admin');
+    $admin_path = untrailingslashit($home_path . '/academyadmin');
 
     if ($request_path !== '' && untrailingslashit($request_path) === $admin_path) {
         $wp->query_vars['ppa_ca_admin'] = '1';
@@ -251,12 +251,12 @@ add_action("init", "ppa_ca_flush_admin_route_once", 99);
 
 function ppa_ca_render_admin_route() {
     // Do not rely exclusively on WordPress rewrite rules: some hosts keep
-    // stale rules or redirect an unknown /admin/ path to the homepage.
+    // stale rules or redirect an unknown /academyadmin/ path to the homepage.
     $request_path = isset($_SERVER['REQUEST_URI'])
         ? (string) parse_url(wp_unslash($_SERVER['REQUEST_URI']), PHP_URL_PATH)
         : '';
     $home_path = (string) parse_url(home_url('/'), PHP_URL_PATH);
-    $admin_path = untrailingslashit($home_path . '/admin');
+    $admin_path = untrailingslashit($home_path . '/academyadmin');
     $is_admin_path = $request_path !== '' && untrailingslashit($request_path) === $admin_path;
     $is_query_route = (string) get_query_var('ppa_ca_admin') === '1';
 
@@ -272,7 +272,7 @@ add_action("template_redirect", "ppa_ca_render_admin_route", 0);
 function ppa_ca_login_screen() {
     $error=isset($_GET['ppa_notice']) && $_GET['ppa_notice']==='login_error';
     ob_start(); ?>
-    <div class="ppa-ca-login"><form method="post" action="<?php echo esc_url(home_url('/admin/')); ?>" class="ppa-ca-login-card">
+    <div class="ppa-ca-login"><form method="post" action="<?php echo esc_url(home_url('/academyadmin/')); ?>" class="ppa-ca-login-card">
       <div class="ppa-ca-brand-mark"><img src="https://cdn.phototourl.com/member/2026-10-26-00b8c0d9-38d9-4d60-a377-dfd8928013de.png" alt="Photon Physics Academy"></div><div class="ppa-ca-kicker">PHOTON PHYSICS ACADEMY</div>
       <h1>Admin Login</h1><p>Sign in to manage your academy website.</p>
       <?php if($error): ?><div class="ppa-ca-alert is-error">Incorrect username or password. Please try again.</div><?php endif; ?>
@@ -287,7 +287,7 @@ function ppa_ca_login_screen() {
 }
 /** Route all WordPress login links through the academy's own front-end login page. */
 function ppa_ca_custom_login_url($login_url, $redirect, $force_reauth) {
-    $url = home_url('/admin/');
+    $url = home_url('/academyadmin/');
     if (!empty($redirect)) {
         $url = add_query_arg('redirect_to', rawurlencode($redirect), $url);
     }
@@ -399,7 +399,7 @@ function ppa_ca_filter_records($posts,$query) {
 function ppa_ca_search_toolbar($placeholder) {
     $query=isset($_GET['ppa_search'])?sanitize_text_field(wp_unslash($_GET['ppa_search'])):'';
     echo '<form method="get" class="ppa-ca-search-toolbar"><input type="hidden" name="ppa_tab" value="'.esc_attr(isset($_GET['ppa_tab'])?sanitize_key(wp_unslash($_GET['ppa_tab'])):'overview').'"><label class="ppa-ca-search-box"><span>⌕</span><input type="search" name="ppa_search" value="'.esc_attr($query).'" placeholder="'.esc_attr($placeholder).'"></label><button class="ppa-ca-outline-link" type="submit">Search</button>';
-    if($query!=='') echo '<a class="ppa-ca-clear-search" href="'.esc_url(add_query_arg('ppa_tab',sanitize_key(wp_unslash($_GET['ppa_tab']??'overview')),home_url('/admin/'))).'">Clear</a>';
+    if($query!=='') echo '<a class="ppa-ca-clear-search" href="'.esc_url(add_query_arg('ppa_tab',sanitize_key(wp_unslash($_GET['ppa_tab']??'overview')),home_url('/academyadmin/'))).'">Clear</a>';
     echo '</form>';
 }
 function ppa_ca_section_intro($title,$description,$count_label='') {
@@ -873,7 +873,7 @@ function ppa_ca_render_page() {
     } else {
         ppa_ca_migrate_student_ids_to_six_digits();
         echo '<div class="ppa-ca-shell"><aside class="ppa-ca-sidebar"><div class="ppa-ca-brand"><div class="ppa-ca-brand-mark"><img src="https://cdn.phototourl.com/member/2026-10-26-00b8c0d9-38d9-4d60-a377-dfd8928013de.png" alt="Photon Physics Academy"></div><div><strong>PHOTON</strong><small>Admin Panel</small></div></div><nav class="ppa-ca-nav">';
-        foreach($tabs as $key=>$item) echo '<a class="'.($tab===$key?'is-active':'').'" href="'.esc_url(add_query_arg('ppa_tab',$key,home_url('/admin/'))).'"><i>'.ppa_ca_icon_svg($key).'</i><span>'.esc_html($item[0]).'</span></a>';
+        foreach($tabs as $key=>$item) echo '<a class="'.($tab===$key?'is-active':'').'" href="'.esc_url(add_query_arg('ppa_tab',$key,home_url('/academyadmin/'))).'"><i>'.ppa_ca_icon_svg($key).'</i><span>'.esc_html($item[0]).'</span></a>';
         echo '</nav><div class="ppa-ca-side-bottom"><a href="'.esc_url(home_url('/')).'">← Back to Website</a></div></aside>';
         echo '<div class="ppa-ca-main"><header class="ppa-ca-header"><button type="button" class="ppa-ca-mobile-toggle" aria-label="Open admin navigation" aria-expanded="false">☰</button><h1>'.esc_html($tabs[$tab][0]).'</h1><div class="ppa-ca-user"><div class="ppa-ca-avatar">'.esc_html('JS').'</div><span class="ppa-ca-user-label">'.esc_html('Jewel Sir').' · Administrator</span><form method="post">';
         wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
@@ -906,11 +906,11 @@ function ppa_ca_render_page() {
             }
             echo '</div><section class="ppa-ca-panel ppa-ca-quick-panel"><h2>Quick Actions</h2><div class="ppa-ca-shortcuts">';
             foreach(array('students'=>'＋ Add Student','payments'=>'▤ Record Payment','notices'=>'♧ Publish Notice','results'=>'★ Add Exam Marks') as $key=>$label) {
-                echo '<a href="'.esc_url(add_query_arg('ppa_tab',$key,home_url('/admin/'))).'">'.esc_html($label).'</a>';
+                echo '<a href="'.esc_url(add_query_arg('ppa_tab',$key,home_url('/academyadmin/'))).'">'.esc_html($label).'</a>';
             }
             echo '</div></section><div class="ppa-ca-overview-columns">';
             $recent_students=ppa_ca_records('ppa_student',4);
-            echo '<section class="ppa-ca-panel ppa-ca-recent-panel"><div class="ppa-ca-panel-head"><div><h2>Recent Students</h2><p>Recently enrolled students</p></div><a class="ppa-ca-view-all" href="'.esc_url(add_query_arg('ppa_tab','students',home_url('/admin/'))).'">View all ↗</a></div>';
+            echo '<section class="ppa-ca-panel ppa-ca-recent-panel"><div class="ppa-ca-panel-head"><div><h2>Recent Students</h2><p>Recently enrolled students</p></div><a class="ppa-ca-view-all" href="'.esc_url(add_query_arg('ppa_tab','students',home_url('/academyadmin/'))).'">View all ↗</a></div>';
             if($recent_students) {
                 echo '<div class="ppa-ca-table-wrap"><table class="ppa-ca-table"><thead><tr><th>ID</th><th>Name</th><th>Class</th><th>Fee</th></tr></thead><tbody>';
                 foreach($recent_students as $student) {
@@ -925,7 +925,7 @@ function ppa_ca_render_page() {
             }
             echo '</section>';
             $recent_payments=array_slice($dashboard_payments,0,4);
-            echo '<section class="ppa-ca-panel ppa-ca-recent-panel"><div class="ppa-ca-panel-head"><div><h2>Recent Payments</h2><p>Latest fee transactions</p></div><a class="ppa-ca-view-all" href="'.esc_url(add_query_arg('ppa_tab','payments',home_url('/admin/'))).'">View all ↗</a></div>';
+            echo '<section class="ppa-ca-panel ppa-ca-recent-panel"><div class="ppa-ca-panel-head"><div><h2>Recent Payments</h2><p>Latest fee transactions</p></div><a class="ppa-ca-view-all" href="'.esc_url(add_query_arg('ppa_tab','payments',home_url('/academyadmin/'))).'">View all ↗</a></div>';
             if($recent_payments) {
                 echo '<div class="ppa-ca-table-wrap"><table class="ppa-ca-table"><thead><tr><th>Receipt</th><th>Student</th><th>Method</th><th class="is-right">Paid</th></tr></thead><tbody>';
                 foreach($recent_payments as $payment) {
