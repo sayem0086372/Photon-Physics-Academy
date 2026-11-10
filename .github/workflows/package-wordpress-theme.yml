@@ -32,3 +32,5 @@ jobs:
             photon-physics-academy-theme.zip
             ppa-academy-core-plugin.zip
           retention-days: 14
+
+# Rebuild packages after the dedicated Academy admin route fix.
