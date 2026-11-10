@@ -36,3 +36,5 @@ jobs:
 # Rebuild packages after the dedicated Academy admin route fix.
 
 # Rebuild after PHP syntax correction in the admin route.
+
+# Package after removal of duplicate route fragment.
