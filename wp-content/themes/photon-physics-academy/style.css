@@ -453,3 +453,51 @@ body{font-size:17px;line-height:1.78}
  .ppa-course-reference-button{font-size:14px}
  .ppa-inquiry-form label{font-size:14px}
 }
+
+
+/* Refined visual system: editorial, calm and professional; layout and imagery remain unchanged. */
+:root{--ppa-ink:#14243a;--ppa-muted:#617187;--ppa-line:#e4eaf1;--ppa-paper:#fff;--ppa-soft:#f5f8fc;--ppa-blue:#1d4ed8;--ppa-navy:#102b4e}
+html{scroll-behavior:smooth}
+body{color:var(--ppa-ink);background:#fff;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+a{transition:color .18s ease,background-color .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease}
+.ppa-container{width:min(100% - 48px,1200px)}
+.ppa-header{background:rgba(255,255,255,.96);border-bottom:1px solid rgba(219,228,239,.9);box-shadow:0 5px 24px rgba(15,35,60,.035);backdrop-filter:blur(14px)}
+.ppa-header-inner{min-height:82px}
+.ppa-logo-img{filter:drop-shadow(0 2px 4px rgba(16,43,78,.08))}
+.ppa-brand-main{letter-spacing:.045em}
+.ppa-nav a{font-weight:600;letter-spacing:.005em;border-radius:8px}
+.ppa-nav a:hover,.ppa-mobile-nav a:hover{color:var(--ppa-blue)}
+.ppa-menu-toggle{border:1px solid var(--ppa-line);border-radius:10px;background:#fff}
+.ppa-section{padding-top:76px;padding-bottom:76px}
+.ppa-section h2{letter-spacing:-.035em;color:var(--ppa-ink)}
+.ppa-eyebrow,.ppa-kicker{letter-spacing:.09em;font-weight:700;color:#527092}
+.ppa-hero{isolation:isolate}
+.ppa-hero h1{letter-spacing:-.045em;line-height:1.12}
+.ppa-hero p,.ppa-lead{color:#53657b}
+.ppa-button,.ppa-store-button,.ppa-course-reference-button,.ppa-program-link{border-radius:10px;font-weight:700;box-shadow:0 5px 14px rgba(29,78,216,.12)}
+.ppa-button:hover,.ppa-store-button:hover,.ppa-course-reference-button:hover{transform:translateY(-1px);box-shadow:0 9px 20px rgba(29,78,216,.18)}
+.ppa-store-box{border:1px solid #dce6f1;border-radius:16px;box-shadow:0 12px 34px rgba(16,43,78,.07)}
+.ppa-notice-card,.ppa-card,.ppa-feature,.ppa-contact-card,.ppa-program-card,.ppa-course-reference-card{border:1px solid var(--ppa-line);border-radius:16px;box-shadow:0 5px 20px rgba(16,43,78,.045);transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
+.ppa-notice-card:hover,.ppa-card:hover,.ppa-feature:hover,.ppa-contact-card:hover,.ppa-program-card:hover,.ppa-course-reference-card:hover{transform:translateY(-3px);border-color:#cbd9e9;box-shadow:0 14px 30px rgba(16,43,78,.085)}
+.ppa-notice-filters button{border-radius:999px;font-weight:650}
+.ppa-notice-card time{letter-spacing:.015em}
+.ppa-stat{border:1px solid var(--ppa-line);border-radius:14px;background:#fff}
+.ppa-program-highlights li{color:#43566d}
+.ppa-inquiry-form input,.ppa-inquiry-form textarea,.ppa-inquiry-form select{border:1px solid #d7e0eb;border-radius:9px;background:#fff;transition:border-color .18s ease,box-shadow .18s ease}
+.ppa-inquiry-form input:focus,.ppa-inquiry-form textarea:focus,.ppa-inquiry-form select:focus{outline:0;border-color:#7da6e8;box-shadow:0 0 0 3px rgba(37,99,235,.11)}
+.ppa-footer{background:#0d2038}
+.ppa-footer a{color:#d5e1ef}
+.ppa-footer a:hover{color:#fff}
+.ppa-footer-bottom{border-top:1px solid rgba(255,255,255,.12)}
+.ppa-bookstore-hero{border-radius:20px;border-color:#dfe7f0;box-shadow:0 12px 36px rgba(16,43,78,.055)}
+.woocommerce ul.products li.product,.woocommerce div.product div.images,.woocommerce div.product div.summary{border-radius:14px}
+.woocommerce ul.products li.product{padding:14px;border:1px solid var(--ppa-line);background:#fff;transition:transform .2s ease,box-shadow .2s ease}
+.woocommerce ul.products li.product:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(16,43,78,.08)}
+.woocommerce ul.products li.product a.button,.woocommerce button.button,.woocommerce a.button,.woocommerce #respond input#submit{border-radius:9px;font-weight:700}
+@media(max-width:760px){
+ .ppa-container{width:min(100% - 32px,1200px)}
+ .ppa-section{padding-top:54px;padding-bottom:54px}
+ .ppa-header-inner{min-height:72px}
+ .ppa-hero h1{letter-spacing:-.03em}
+}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition:none!important;animation:none!important}}
