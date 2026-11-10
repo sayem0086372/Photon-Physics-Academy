@@ -370,6 +370,17 @@ function ppa_db_delete_record($post_id) {
             $wpdb->delete($results, array('student_code'=>$student_code), array('%s'));
             $wpdb->delete($students, array('id'=>$student_id), array('%d'));
         }
+        // Remove legacy mirror posts too, so deleted students do not leave
+        // orphan fee/result entries in wp_posts and wp_postmeta.
+        if ($student_code !== '') {
+            foreach (array('ppa_fee_payment','ppa_exam_result') as $related_type) {
+                $related_posts = get_posts(array(
+                    'post_type'=>$related_type,'post_status'=>array('publish','draft','private'),
+                    'numberposts'=>-1,'meta_key'=>'_ppa_student_id','meta_value'=>$student_code
+                ));
+                foreach ($related_posts as $related_post) { wp_delete_post($related_post->ID, true); }
+            }
+        }
     } elseif ($post->post_type === 'ppa_fee_payment') {
         $wpdb->delete($transactions, array('legacy_post_id'=>$post->ID), array('%d'));
         $wpdb->delete($fees, array('legacy_post_id'=>$post->ID), array('%d'));
