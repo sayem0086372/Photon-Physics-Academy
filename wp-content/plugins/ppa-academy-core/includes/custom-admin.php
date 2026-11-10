@@ -369,17 +369,18 @@ function ppa_ca_add_form($kind,$title,$fields,$tab) {
             foreach(array('January','February','March','April','May','June','July','August','September','October','November','December') as $month) echo '<option value="'.esc_attr($month).'">'.esc_html($month).'</option>';
             echo '</select>';
         } elseif($field==='payment_method') {
-            echo '<select name="payment_method" required><option value="">Select method</option><option value="Cash">Cash</option><option value="bKash">bKash</option><option value="Nagad">Nagad</option></select>';
+            echo '<select name="payment_method" required><option value="Cash" selected>Cash</option><option value="bKash">bKash</option><option value="Nagad">Nagad</option></select>';
         } elseif($field==='grade') {
             echo '<select name="grade"><option value="">Select grade</option><option>A+</option><option>A</option><option>A-</option><option>B</option><option>C</option><option>F</option></select>';
         } elseif($field==='billing_year') {
-            $current_year=(int)date('Y'); echo '<select name="billing_year"><option value="">Select year</option>';
-            for($year=$current_year;$year>=$current_year-3;$year--) echo '<option value="'.(int)$year.'">'.(int)$year.'</option>';
+            $current_year=(int)wp_date('Y'); echo '<select name="billing_year"><option value="">Select year</option>';
+            for($year=$current_year;$year>=$current_year-3;$year--) echo '<option value="'.(int)$year.'" '.selected((string)$current_year,(string)$year,false).'>'.(int)$year.'</option>';
             echo '</select>';
         } elseif(in_array($field,array('monthly_fee','amount','marks','max_capacity','payable_amount','paid_amount','due_amount','total_marks','highest_marks'),true)) {
             echo '<input name="'.esc_attr($field).'" type="number" min="0" step="0.01" '.($field==='amount'?'required':'').' inputmode="decimal">';
         } elseif(in_array($field,array('payment_date','exam_date'),true)) {
-            echo '<input name="'.esc_attr($field).'" type="date">';
+            $default_date=$field==='payment_date'?wp_date('Y-m-d'):'';
+            echo '<input name="'.esc_attr($field).'" type="date"'.($default_date!==''?' value="'.esc_attr($default_date).'"':'').'>';
         } elseif(in_array($field,array('phone','guardian_phone','whatsapp_phone'),true)) {
             echo '<input name="'.esc_attr($field).'" type="tel" inputmode="tel" placeholder="01XXXXXXXXX" '.($field==='guardian_phone'?'required':'').'>';
         } elseif($field==='record_title') {
@@ -897,75 +898,3 @@ function ppa_ca_render_page() {
                     wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
                     echo '<input type="hidden" name="ppa_ca_action" value="delete_notice"><input type="hidden" name="notice_id" value="'.(int)$notice->ID.'"><button class="ppa-ca-delete" type="submit">Delete</button></form></div></article>';
                 }
-                echo '</div>';
-            } else {
-                echo '<div class="ppa-ca-empty"><strong>No notices created yet</strong><br>Create your first announcement below.</div>';
-            }
-            echo '</section><div class="ppa-ca-modal-launch"><a href="#ppa-ca-modal-notice">＋ Create a Notice</a></div><div class="ppa-ca-modal" id="ppa-ca-modal-notice" role="dialog" aria-modal="true" aria-label="Create a Notice"><a class="ppa-ca-modal-backdrop" href="#ppa-ca-modal-close" aria-label="Close dialog"></a><div class="ppa-ca-modal-card"><a class="ppa-ca-modal-close" href="#ppa-ca-modal-close" aria-label="Close dialog">×</a><form method="post" class="ppa-ca-form">';
-            wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
-            echo '<input type="hidden" name="ppa_ca_action" value="add_notice"><h3>Create a Notice</h3><div class="ppa-ca-form-grid"><label>Notice Title<input name="notice_title" type="text" required maxlength="180"></label><label>Notice Category<select name="notice_category"><option value="">Select category</option>';
-            foreach($notice_terms as $term) echo '<option value="'.esc_attr($term->slug).'">'.esc_html($term->name).'</option>';
-            echo '</select></label><label class="is-wide">Notice Details<textarea name="notice_content" rows="5" required></textarea></label><label class="ppa-ca-check"><input type="checkbox" name="notice_published" value="1" checked> Publish immediately on the website</label></div><div class="ppa-ca-modal-actions"><a href="#ppa-ca-modal-close">Cancel</a><button class="ppa-ca-primary" type="submit">Save Notice</button></div></form></div></div>';
-        } elseif($tab==='results') {
-            $result_posts=ppa_ca_records('ppa_exam_result');
-            $result_query=isset($_GET['ppa_search'])?sanitize_text_field(wp_unslash($_GET['ppa_search'])):'';
-            $result_posts=ppa_ca_filter_records($result_posts,$result_query);
-            ppa_ca_section_intro('Results & Exams','Publish and maintain student examination results.',number_format_i18n(count($result_posts)).' results');
-            ppa_ca_metric_cards(array(array('Published Results',(string)count($result_posts),'Saved exam records'),array('Assessment Records','Exams','Student performance'),array('Result Format','Marks / Grade','Flexible result entry')));
-            echo '<section class="ppa-ca-panel ppa-ca-data-panel"><div class="ppa-ca-panel-head"><div><h2>Exam Results</h2><p>Student-wise examination and assessment records.</p></div><span class="ppa-ca-soft-badge">Academic results</span></div>';
-            ppa_ca_search_toolbar('Search student, exam or marks...');
-            ppa_ca_add_form('result','Add Exam Result',array('record_title'=>'Student Name / ID','student_id'=>'Find Student by ID','exam_name'=>'Exam Name','chapter'=>'Chapter / Topic','total_marks'=>'Total Marks','marks'=>'Obtained Marks','highest_marks'=>'Highest Marks','grade'=>'Grade','exam_date'=>'Exam Date','record_details'=>'Result details'),$tab);
-            ppa_ca_table($result_posts,'ppa_exam_result',$tab); echo '</section>';
-        } elseif($tab==='sms') {
-            $balance=ppa_ca_sms_balance(!empty($_GET['ppa_refresh_balance']));
-            $balance_text=is_wp_error($balance)?'Unavailable':'৳ '.esc_html($balance['balance']);
-            $balance_note=is_wp_error($balance)?esc_html($balance->get_error_message()):'Updated '.esc_html(wp_date('d M Y, h:i A',(int)$balance['checked_at']));
-            $sms_notice=isset($_GET['ppa_notice'])?sanitize_text_field(wp_unslash($_GET['ppa_notice'])):'';
-            echo '<div class="ppa-ca-section-head"><div><h2>SMS Management</h2><p>Send academy updates to students and guardians through sms.net.bd.</p></div><a class="ppa-ca-outline-link" href="https://portal.sms.net.bd/login/" target="_blank" rel="noopener">Gateway Login ↗</a></div>';
-            ppa_ca_metric_cards(array(array('SMS Balance',$balance_text,'Live gateway balance'),array('SMS Provider','sms.net.bd','Connected account'),array('Message History','Not stored','Privacy-first messaging')));
-            echo '<div class="ppa-ca-sms-grid"><section class="ppa-ca-panel"><div class="ppa-ca-panel-head"><div><h2>SMS Balance</h2><p>Read-only balance check. This does not send a message.</p></div><span class="ppa-ca-soft-badge">sms.net.bd</span></div><div class="ppa-ca-balance-card"><span class="ppa-ca-balance-icon">৳</span><div><small>Available SMS balance</small><strong>'.$balance_text.'</strong><em>'.$balance_note.'</em></div></div><a class="ppa-ca-outline-link" href="'.esc_url(add_query_arg(array('ppa_tab'=>'sms','ppa_refresh_balance'=>'1'),home_url('/admin/'))).'">↻ Refresh balance</a> <a class="ppa-ca-outline-link" href="https://portal.sms.net.bd/login/" target="_blank" rel="noopener">Open gateway portal ↗</a></section>';
-            echo '<section class="ppa-ca-panel"><div class="ppa-ca-panel-head"><div><h2>Message Centre</h2><p>Select recipient groups. Each unique phone number is sent once.</p></div><span class="ppa-ca-soft-badge">Bulk SMS</span></div>';
-            if($sms_notice==='sms_result'){$result=get_transient('ppa_ca_sms_last_result_'.get_current_user_id());if(is_array($result))echo '<div class="ppa-ca-alert">Submitted: '.(int)$result['sent'].' · Failed: '.(int)$result['failed'].'</div>';}
-            if($sms_notice==='sms_invalid')echo '<div class="ppa-ca-alert is-error">Select at least one recipient type and enter a message.</div>';
-            if($sms_notice==='sms_too_long')echo '<div class="ppa-ca-alert is-error">Message exceeds the 1,000 character limit.</div>';
-            if($sms_notice==='sms_no_recipients')echo '<div class="ppa-ca-alert is-error">No recipient numbers matched your selection.</div>';
-            if($sms_notice==='sms_too_many')echo '<div class="ppa-ca-alert is-error">This send is limited to 100 recipients at a time. Narrow the class or batch selection.</div>';
-            $last_error=get_transient('ppa_ca_sms_last_error_'.get_current_user_id());if($last_error)echo '<div class="ppa-ca-alert is-error">Gateway response: '.esc_html($last_error).'</div>';
-            $batches=get_posts(array('post_type'=>'ppa_batch','post_status'=>'publish','numberposts'=>-1,'orderby'=>'title','order'=>'ASC'));
-            echo '<form method="post" class="ppa-ca-form ppa-ca-sms-send-form">';wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
-            echo '<input type="hidden" name="ppa_ca_action" value="send_academy_sms"><input type="hidden" name="return_tab" value="sms"><div class="ppa-ca-form-grid"><label>Class<select name="sms_class"><option value="">All classes</option><option value="8">Class 8</option><option value="9">Class 9</option><option value="10">Class 10</option></select></label><label>Batch<select name="sms_batch"><option value="">All batches</option>';
-            foreach($batches as $batch)echo '<option value="'.esc_attr($batch->post_title).'">'.esc_html($batch->post_title).'</option>';
-            echo '</select></label></div><div class="ppa-ca-recipient-options"><label class="ppa-ca-check"><input type="checkbox" name="sms_guardians" value="1" checked> Guardian mobile numbers <small>Default recipient</small></label><label class="ppa-ca-check"><input type="checkbox" name="sms_students" value="1"> Student mobile numbers <small>Optional</small></label></div><label class="ppa-ca-field-label">Message<textarea name="sms_message" rows="5" maxlength="1000" required placeholder="Write your academy announcement in Bangla or English…"></textarea></label><div class="ppa-ca-message-footer"><span>Maximum 1,000 characters · No SMS history stored</span><button class="ppa-ca-primary" type="submit" onclick="return confirm(\'Send this message to the selected recipients? SMS charges may apply.\')">Send SMS</button></div></form></section></div><section class="ppa-ca-info-panel"><div class="ppa-ca-info-icon">✓</div><div><strong>Privacy & billing</strong><p>Sent SMS history is not stored. Guardian numbers are default; student numbers are optional. WhatsApp numbers are contact information only. Each message may incur gateway charges.</p></div></section>';
-        } elseif($tab==='settings') {
-            ppa_ca_section_intro('Settings','Configure academy integrations and homepage presentation.');
-            echo '<div class="ppa-ca-settings-grid"><section class="ppa-ca-panel"><div class="ppa-ca-panel-head"><div><h2>SMS Gateway</h2><p>Provider endpoint and sender identity.</p></div><span class="ppa-ca-soft-badge">Integration</span></div><form method="post" class="ppa-ca-form ppa-ca-settings-form">'; wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
-            echo '<input type="hidden" name="ppa_ca_action" value="save_settings"><input type="hidden" name="return_tab" value="settings"><div class="ppa-ca-form-grid">';
-            foreach(array('sms_gateway_url'=>'SMS Gateway URL','sms_sender_id'=>'Sender ID','slideshow_urls'=>'Slideshow Image URLs (one per line)') as $key=>$label) {
-                $value=get_option('ppa_ca_'.$key,'');
-                echo '<label class="'.($key==='slideshow_urls'?'is-wide':'').'">'.esc_html($label);
-                if($key==='slideshow_urls') echo '<textarea rows="5" name="slideshow_urls">'.esc_textarea($value).'</textarea>';
-                else echo '<input type="text" name="'.esc_attr($key).'" value="'.esc_attr($value).'">';
-                echo '</label>';
-            }
-            echo '</div><button class="ppa-ca-primary" type="submit">Save Settings</button></form></section><section class="ppa-ca-panel ppa-ca-settings-preview"><div class="ppa-ca-panel-head"><div><h2>Homepage Slideshow</h2><p>Use one image URL per line. Images remain externally hosted.</p></div><span class="ppa-ca-soft-badge">Homepage</span></div><div class="ppa-ca-settings-note">The slideshow image list is saved as URLs only. No image files are uploaded to the WordPress database.</div></section></div>';
-        } elseif($tab==='store') {
-            $store_view=isset($_GET['ppa_store_view'])?sanitize_key(wp_unslash($_GET['ppa_store_view'])):'books';
-            ppa_ca_store_preview($store_view);
-        }
-        echo '</main></div></div>';
-    }
-    echo '</div>';
-    ppa_ca_admin_script();
-    wp_footer();
-    echo '</body></html>';
-}
-function ppa_ca_register_route() {
-    add_rewrite_rule('^admin/?$','index.php?ppa_custom_admin=1','top');
-    add_rewrite_tag('%ppa_custom_admin%','1');
-}
-add_action('init','ppa_ca_register_route',99);
-add_action('init',function(){ if(get_option('ppa_ca_rewrite_version')!=='1') { flush_rewrite_rules(false); update_option('ppa_ca_rewrite_version','1'); } },100);
-add_filter('query_vars',function($vars){$vars[]='ppa_custom_admin';return $vars;});
-add_action('template_redirect',function(){if(get_query_var('ppa_custom_admin')) { ppa_ca_render_page(); exit; }},20);
-add_filter('body_class',function($classes){if(get_query_var('ppa_custom_admin')) $classes[]='ppa-ca-body';return $classes;});
-add_filter('login_url',function($url,$redirect,$force_reauth){return home_url('/admin/');},10,3);
