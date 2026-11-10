@@ -173,14 +173,33 @@ function ppa_ca_handle_post() {
         if (!$title) ppa_ca_redirect($tab,'required');
         $id=wp_insert_post(array('post_type'=>$allowed[$kind],'post_status'=>'publish','post_title'=>$title,'post_content'=>$body),true);
         if (!is_wp_error($id)) {
-            foreach (array('student_id','bangla_name','institution','guardian_name','phone','guardian_phone','whatsapp_phone','monthly_fee','batch_name','class_level','schedule_days','time_slot','instructor','billing_month','amount','payment_method','payment_date','exam_name','chapter','marks','total_marks','highest_marks','grade','exam_date','billing_year','payable_amount','paid_amount','due_amount','max_capacity') as $key) {
+            foreach (array('student_id','bangla_name','institution','guardian_name','phone','guardian_phone','whatsapp_phone','monthly_fee','batch_name','class_level','schedule_days','time_slot','instructor','billing_month','amount','payment_method','transaction_reference','payment_date','exam_name','chapter','marks','total_marks','highest_marks','grade','exam_date','billing_year','payable_amount','paid_amount','due_amount','max_capacity') as $key) {
                 if (isset($_POST[$key]) && !($kind==='student' && $key==='student_id')) update_post_meta($id,'_ppa_'.$key,sanitize_text_field(wp_unslash($_POST[$key])));
             }
-            if($kind==='student') update_post_meta($id,'_ppa_student_id',ppa_ca_next_student_id(true));
+            if($kind==='student') {
+                $student_code=ppa_ca_next_student_id(true);
+                if($student_code==='') { wp_delete_post($id,true); ppa_ca_redirect($tab,'student_id_limit'); }
+                update_post_meta($id,'_ppa_student_id',$student_code);
+            }
+            if($kind==='payment' || $kind==='result') {
+                $student_code=isset($_POST['student_id'])?sanitize_text_field(wp_unslash($_POST['student_id'])):'';
+                $student_record=$student_code!=='' && function_exists('ppa_db_find_student')?ppa_db_find_student($student_code):null;
+                if(!$student_record) { wp_delete_post($id,true); ppa_ca_redirect($tab,'student_not_found'); }
+                update_post_meta($id,'_ppa_student_id',$student_code);
+            }
             if($kind==='payment') {
                 $paid_value=isset($_POST['paid_amount'])?(float)sanitize_text_field(wp_unslash($_POST['paid_amount'])):0;
+                $payable_value=isset($_POST['payable_amount'])?(float)sanitize_text_field(wp_unslash($_POST['payable_amount'])):0;
+                if($paid_value<0 || $payable_value<0 || $paid_value>$payable_value) { wp_delete_post($id,true); ppa_ca_redirect($tab,'invalid_amount'); }
+                $due_value=isset($_POST['due_amount']) && $_POST['due_amount']!==''?(float)sanitize_text_field(wp_unslash($_POST['due_amount'])):max(0,$payable_value-$paid_value);
                 update_post_meta($id,'_ppa_amount',$paid_value);
+                update_post_meta($id,'_ppa_due_amount',$due_value);
                 update_post_meta($id,'_ppa_receipt_number','PPA-'.wp_date('ym').'-'.str_pad((string)$id,6,'0',STR_PAD_LEFT));
+            }
+            $db_result=function_exists('ppa_db_sync_record')?ppa_db_sync_record($id):new WP_Error('ppa_db_unavailable','Database integration is not loaded.');
+            if(is_wp_error($db_result)) {
+                error_log('Photon Physics Academy database write failed: '.$db_result->get_error_message());
+                ppa_ca_redirect($tab,'database_error');
             }
             ppa_ca_redirect($tab,'created');
         }
@@ -196,12 +215,20 @@ function ppa_ca_handle_post() {
         wp_update_post(array('ID'=>$id,'post_title'=>$title,'post_content'=>$body));
         $keys=$post->post_type==='ppa_student'?array('bangla_name','institution','guardian_name','phone','guardian_phone','whatsapp_phone','monthly_fee','batch_name','class_level'):array('class_level','max_capacity','schedule_days','time_slot','instructor');
         foreach($keys as $key) if(isset($_POST[$key])) update_post_meta($id,'_ppa_'.$key,sanitize_text_field(wp_unslash($_POST[$key])));
+        $db_result=function_exists('ppa_db_sync_record')?ppa_db_sync_record($id):new WP_Error('ppa_db_unavailable','Database integration is not loaded.');
+        if(is_wp_error($db_result)) {
+            error_log('Photon Physics Academy database update failed: '.$db_result->get_error_message());
+            ppa_ca_redirect($tab,'database_error');
+        }
         ppa_ca_redirect($tab,'updated');
     }
     if ($action==='delete_record') {
         $id=absint($_POST['record_id'] ?? 0);
         $post=get_post($id);
-        if ($post && current_user_can('manage_options') && in_array($post->post_type,array('ppa_student','ppa_batch','ppa_fee_payment','ppa_exam_result'),true)) wp_delete_post($id,true);
+        if ($post && current_user_can('manage_options') && in_array($post->post_type,array('ppa_student','ppa_batch','ppa_fee_payment','ppa_exam_result'),true)) {
+            if(function_exists('ppa_db_delete_record')) ppa_db_delete_record($id);
+            wp_delete_post($id,true);
+        }
         ppa_ca_redirect($tab,'deleted');
     }
 }
@@ -427,7 +454,7 @@ function ppa_ca_add_form($kind,$title,$fields,$tab) {
         } elseif($field==='student_id') {
             $student_list=ppa_ca_records('ppa_student',500);
             $list_id='ppa-student-options-'.esc_attr($kind);
-            echo '<input name="student_id" type="search" list="'.$list_id.'" placeholder="Search by student ID..." autocomplete="off"><datalist id="'.$list_id.'">';
+            echo '<input name="student_id" type="search" list="'.$list_id.'" placeholder="Search by student ID..." autocomplete="off" '.(in_array($kind,array('payment','result'),true)?'required':'').'><datalist id="'.$list_id.'">';
             foreach($student_list as $student_option) {
                 $code=get_post_meta($student_option->ID,'_ppa_student_id',true);
                 if($code!=='') echo '<option value="'.esc_attr($code).'">'.esc_html($student_option->post_title).'</option>';
@@ -878,7 +905,11 @@ function ppa_ca_render_page() {
         echo '<div class="ppa-ca-main"><header class="ppa-ca-header"><button type="button" class="ppa-ca-mobile-toggle" aria-label="Open admin navigation" aria-expanded="false">☰</button><h1>'.esc_html($tabs[$tab][0]).'</h1><div class="ppa-ca-user"><div class="ppa-ca-avatar">'.esc_html('JS').'</div><span class="ppa-ca-user-label">'.esc_html('Jewel Sir').' · Administrator</span><form method="post">';
         wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
         echo '<input type="hidden" name="ppa_ca_action" value="logout"><button class="ppa-ca-logout" type="submit"><span aria-hidden="true">↪</span> <span>Log out</span></button></form><a class="ppa-ca-public-site" href="'.esc_url(home_url('/')).'" target="_blank" rel="noopener"><span aria-hidden="true">↗</span><span>Public Site</span></a></div></header><main class="ppa-ca-content">';
-        if(isset($_GET['ppa_notice']) && $_GET['ppa_notice']!=='login_error') echo '<div class="ppa-ca-alert">'.esc_html(sanitize_text_field(wp_unslash($_GET['ppa_notice']))==='saved'?'Settings saved.':'Action completed.').'</div>';
+        if(isset($_GET['ppa_notice']) && $_GET['ppa_notice']!=='login_error') {
+            $notice=sanitize_key(wp_unslash($_GET['ppa_notice']));
+            $messages=array('saved'=>'Settings saved.','database_error'=>'The record was kept in WordPress, but the Academy MySQL table could not be updated. Please contact the site administrator.','student_not_found'=>'Select a valid student ID before saving this record.','invalid_amount'=>'Payment amounts are invalid. Paid amount cannot exceed payable amount.','student_id_limit'=>'Student ID sequence is full for this year.','created'=>'Record saved successfully.','updated'=>'Record updated successfully.','deleted'=>'Record deleted successfully.');
+            echo '<div class="ppa-ca-alert'.($notice==='database_error'?' is-error':'').'">'.esc_html(isset($messages[$notice])?$messages[$notice]:'Action completed.').'</div>';
+        }
         if($tab==='overview') {
             $student_total=ppa_ca_count('ppa_student');
             $active_batch_total=ppa_ca_count('ppa_batch');
@@ -992,7 +1023,7 @@ function ppa_ca_render_page() {
             ppa_ca_metric_cards(array(array('Total Payable',$has_payable_data?'৳'.number_format_i18n($total_payable):'—','From saved monthly fee entries'),array('Total Collected','৳'.number_format_i18n($total_collected),'From recorded payments'),array('Total Due',$has_due_data?'৳'.number_format_i18n($total_due):'—','Outstanding amount')));
             echo '<section class="ppa-ca-panel ppa-ca-data-panel"><div class="ppa-ca-panel-head"><div><h2>Payment Records</h2><p>Review recent payments and their billing details.</p></div><span class="ppa-ca-soft-badge">Fee ledger</span></div>';
             ppa_ca_search_toolbar('Search student, ID, billing month or amount...');
-            ppa_ca_add_form('payment','Record a Fee Payment',array('record_title'=>'Student Name / ID','student_id'=>'Find Student by ID','billing_month'=>'Billing Month','billing_year'=>'Billing Year','payment_method'=>'Payment Method','payable_amount'=>'Payable Amount (৳)','paid_amount'=>'Paid Amount (৳)','due_amount'=>'Due Amount (৳)','payment_date'=>'Payment Date','record_details'=>'Payment note'),$tab);
+            ppa_ca_add_form('payment','Record a Fee Payment',array('record_title'=>'Student Name / ID','student_id'=>'Find Student by ID','billing_month'=>'Billing Month','billing_year'=>'Billing Year','payment_method'=>'Payment Method','transaction_reference'=>'Transaction Reference (Optional)','payable_amount'=>'Payable Amount (৳)','paid_amount'=>'Paid Amount (৳)','due_amount'=>'Due Amount (৳)','payment_date'=>'Payment Date','record_details'=>'Payment note'),$tab);
             ppa_ca_table($payment_posts,'ppa_fee_payment',$tab); echo '</section>';
         } elseif($tab==='notices') {
             $notice_posts=ppa_ca_records('ppa_notice',50);
