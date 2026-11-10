@@ -54,7 +54,7 @@ function ppa_batch_import_find_existing_post($fingerprint, $row) {
 
 function ppa_batch_import_run() {
     global $wpdb;
-    if (!function_exists('ppa_db_sync_record') || !function_exists('ppa_db_install_schema')) {
+    if (!function_exists('ppa_db_sync_record')) {
         return new WP_Error('ppa_batch_import_db_unavailable', 'Academy database integration is not loaded.');
     }
 
@@ -145,7 +145,7 @@ function ppa_ca_render_batch_import_panel() {
     echo '<p style="color:#64748b;font-size:13px;line-height:1.65">This action is repeat-safe: it matches each batch by its class, name, days and time, so running it again will not intentionally create duplicates. It does not alter student, fee, payment or result records.</p>';
     echo '<form method="post" onsubmit="return confirm(\'Import or verify all 13 academy batches in MySQL now?\')">';
     wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
-    echo '<input type="hidden" name="ppa_ca_action" value="import_source_batches"><button type="submit" class="ppa-ca-primary-button" style="border:0;cursor:pointer">Import / Verify 13 Batches</button></form>';
+    echo '<input type="hidden" name="ppa_ca_action" value="import_source_batches"><button type="submit" style="border:0;cursor:pointer;background:#145a91;color:#fff;padding:11px 16px;border-radius:8px;font-weight:700">Import / Verify 13 Batches</button></form>';
     if (!empty($summary['failed'])) {
         echo '<ul style="color:#b42318">';
         foreach ($summary['failed'] as $error) { echo '<li>'.esc_html($error).'</li>'; }
