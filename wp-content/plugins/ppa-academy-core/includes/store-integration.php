@@ -88,6 +88,8 @@ function ppa_store_handle_admin_post() {
         if (!$order) ppa_store_redirect('orders','order_missing');
         $status=sanitize_key(wp_unslash($_POST['order_status'] ?? ''));
         $allowed=array('pending','on-hold','processing','completed','cancelled','refunded','failed');
+        $wallet_method=in_array($order->get_payment_method(),array('ppa_bkash','ppa_nagad'),true);
+        if ($wallet_method && !$order->is_paid() && !isset($_POST['payment_received']) && in_array($status,array('processing','completed'),true)) ppa_store_redirect('orders','wallet_verification_required');
         if (in_array($status,$allowed,true)) $order->update_status($status,'Updated from Photon Physics Academy admin.');
         if (isset($_POST['payment_received'])) {
             if (!in_array($order->get_payment_method(),array('ppa_bkash','ppa_nagad'),true)) {
@@ -242,8 +244,8 @@ function ppa_store_render_admin($view) {
     $view=in_array($view,array('books','orders','coupons','analytics','delivery'),true)?$view:'books';
     $products=wc_get_products(array('limit'=>-1,'status'=>array('publish','draft','private'),'orderby'=>'date','order'=>'DESC'));
     $orders=wc_get_orders(array('limit'=>100,'orderby'=>'date','order'=>'DESC'));
-    $coupon_query = class_exists('WC_Coupon_Query') ? new WC_Coupon_Query(array('limit'=>100,'orderby'=>'date','order'=>'DESC','return'=>'objects')) : null;
-    $coupons = $coupon_query ? $coupon_query->get_coupons() : array();
+    $coupon_posts = get_posts(array('post_type'=>'shop_coupon','post_status'=>array('publish','draft','private'),'numberposts'=>100,'orderby'=>'date','order'=>'DESC'));
+    $coupons = array_map(function($coupon_post) { return new WC_Coupon($coupon_post->ID); }, $coupon_posts);
     $low_stock=0; foreach($products as $p) if($p->managing_stock() && (int)$p->get_stock_quantity()<=5) $low_stock++;
     $pending=0; $gross=0; $delivered=0; foreach($orders as $o) { if(!$o->is_paid()) $pending++; $gross+=(float)$o->get_total(); if($o->has_status('completed')) $delivered++; }
     echo '<div class="ppa-ca-store-heading"><div><p class="ppa-ca-store-kicker">COMMERCE OPERATIONS</p><h2>Store Management</h2><p>Live WooCommerce catalogue, orders, coupons and checkout settings.</p></div><a class="ppa-ca-outline-link" href="'.esc_url(get_permalink(wc_get_page_id('shop'))).'" target="_blank" rel="noopener">View Store ↗</a></div>';
