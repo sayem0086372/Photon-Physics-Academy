@@ -185,6 +185,7 @@ function ppa_db_migrate_legacy_records() {
         ));
         $fee_id=(int)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$fees_table} WHERE legacy_post_id=%d",$post->ID));
         $receipt=(string)ppa_db_meta($post->ID,'receipt_number');
+        if ($receipt === '') { $receipt = 'LEGACY-' . (int)$post->ID; }
         if ($fee_id && $paid>0) {
             $wpdb->replace($tx_table,array(
                 'fee_record_id'=>$fee_id,'student_id'=>$student_id,'student_code'=>$code,'amount'=>$paid,
