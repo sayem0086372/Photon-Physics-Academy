@@ -186,12 +186,16 @@ function ppa_ca_handle_post() {
                 $student_record=$student_code!=='' && function_exists('ppa_db_find_student')?ppa_db_find_student($student_code):null;
                 if(!$student_record) { wp_delete_post($id,true); ppa_ca_redirect($tab,'student_not_found'); }
                 update_post_meta($id,'_ppa_student_id',$student_code);
+                wp_update_post(array('ID'=>$id,'post_title'=>$student_record->full_name));
             }
             if($kind==='payment') {
+                $month=isset($_POST['billing_month'])?sanitize_text_field(wp_unslash($_POST['billing_month'])):'';
+                $year=isset($_POST['billing_year'])?absint($_POST['billing_year']):0;
                 $paid_value=isset($_POST['paid_amount'])?(float)sanitize_text_field(wp_unslash($_POST['paid_amount'])):0;
                 $payable_value=isset($_POST['payable_amount'])?(float)sanitize_text_field(wp_unslash($_POST['payable_amount'])):0;
-                if($paid_value<0 || $payable_value<0 || $paid_value>$payable_value) { wp_delete_post($id,true); ppa_ca_redirect($tab,'invalid_amount'); }
+                if($month==='' || $year<2000 || $payable_value<=0 || $paid_value<0 || $paid_value>$payable_value) { wp_delete_post($id,true); ppa_ca_redirect($tab,'invalid_amount'); }
                 $due_value=isset($_POST['due_amount']) && $_POST['due_amount']!==''?(float)sanitize_text_field(wp_unslash($_POST['due_amount'])):max(0,$payable_value-$paid_value);
+                if($due_value<0 || $due_value>$payable_value || abs(($paid_value+$due_value)-$payable_value)>0.01) { wp_delete_post($id,true); ppa_ca_redirect($tab,'invalid_amount'); }
                 update_post_meta($id,'_ppa_amount',$paid_value);
                 update_post_meta($id,'_ppa_due_amount',$due_value);
                 update_post_meta($id,'_ppa_receipt_number','PPA-'.wp_date('ym').'-'.str_pad((string)$id,6,'0',STR_PAD_LEFT));
@@ -475,11 +479,12 @@ function ppa_ca_add_form($kind,$title,$fields,$tab) {
         } elseif($field==='grade') {
             echo '<select name="grade"><option value="">Select grade</option><option>A+</option><option>A</option><option>A-</option><option>B</option><option>C</option><option>F</option></select>';
         } elseif($field==='billing_year') {
-            $current_year=(int)wp_date('Y'); echo '<select name="billing_year"><option value="">Select year</option>';
+            $current_year=(int)wp_date('Y'); echo '<select name="billing_year" required><option value="">Select year</option>';
             for($year=$current_year;$year>=$current_year-3;$year--) echo '<option value="'.(int)$year.'" '.selected((string)$current_year,(string)$year,false).'>'.(int)$year.'</option>';
             echo '</select>';
         } elseif(in_array($field,array('monthly_fee','amount','marks','max_capacity','payable_amount','paid_amount','due_amount','total_marks','highest_marks'),true)) {
-            echo '<input name="'.esc_attr($field).'" type="number" min="0" step="0.01" '.($field==='amount'?'required':'').' inputmode="decimal">';
+            $number_required=in_array($field,array('amount','payable_amount','paid_amount'),true);
+            echo '<input name="'.esc_attr($field).'" type="number" min="0" step="0.01" '.($number_required?'required':'').' inputmode="decimal">';
         } elseif(in_array($field,array('payment_date','exam_date'),true)) {
             $default_date=$field==='payment_date'?wp_date('Y-m-d'):'';
             echo '<input name="'.esc_attr($field).'" type="date"'.($default_date!==''?' value="'.esc_attr($default_date).'"':'').'>';
