@@ -157,7 +157,6 @@ function ppa_ca_handle_post() {
             if($students_selected){$phone=get_post_meta($student->ID,'_ppa_phone',true);if($phone)$recipients[$phone]=$phone;}
         }
         if(!$recipients) ppa_ca_redirect('sms','sms_no_recipients');
-        if(count($recipients)>100) ppa_ca_redirect('sms','sms_too_many');
         delete_transient('ppa_ca_sms_last_result_'.get_current_user_id());
         delete_transient('ppa_ca_sms_last_error_'.get_current_user_id());
         $sent=0;$failed=0;$first_error='';
@@ -167,6 +166,7 @@ function ppa_ca_handle_post() {
         delete_transient('ppa_ca_sms_gateway_balance'); ppa_ca_redirect('sms','sms_result');
     }
 
+    if ($action==='send_fee_payment_sms') { $message=sanitize_textarea_field(wp_unslash($_POST['fee_sms_message']??'')); $pending=get_transient('ppa_ca_pending_fee_sms_'.get_current_user_id()); if(!is_array($pending)||$message==='') ppa_ca_redirect('payments','fee_sms_unavailable'); $sent=ppa_ca_sms_send_one($pending['phone']??'',$message); delete_transient('ppa_ca_pending_fee_sms_'.get_current_user_id()); ppa_ca_redirect('payments',is_wp_error($sent)?'fee_sms_failed':'fee_sms_sent'); }
     if ($action==='save_settings') {
         $raw_slides=sanitize_textarea_field(wp_unslash($_POST['slideshow_urls'] ?? ''));
         $safe_slides=array();
@@ -220,6 +220,7 @@ function ppa_ca_handle_post() {
                 error_log('Photon Physics Academy database write failed: '.$db_result->get_error_message());
                 ppa_ca_redirect($tab,'database_error');
             }
+            if($kind==='payment') { $guardian_phone=(string)get_post_meta($student_record->ID,'_ppa_guardian_phone',true); $paid_sms=(float)get_post_meta($id,'_ppa_paid_amount',true); if($paid_sms<=0)$paid_sms=(float)get_post_meta($id,'_ppa_amount',true); $month_sms=(string)get_post_meta($id,'_ppa_billing_month',true).' '.(string)get_post_meta($id,'_ppa_billing_year',true); if($guardian_phone!=='')set_transient('ppa_ca_pending_fee_sms_'.get_current_user_id(),array('phone'=>$guardian_phone,'student'=>$student_record->post_title,'month'=>$month_sms,'amount'=>number_format($paid_sms,2,'.','')),10*MINUTE_IN_SECONDS); }
             ppa_ca_redirect($tab,'created');
         }
         ppa_ca_redirect($tab,'error');
@@ -411,7 +412,7 @@ function ppa_ca_table($posts,$type,$tab) {
     if (!$posts) { echo '<div class="ppa-ca-empty">No records yet. Add your first record using the form below.</div>'; return; }
     $columns = array('ppa_student'=>array('Student ID'=>'student_id','Class'=>'class_level','Batch'=>'batch_name','Student Mobile'=>'phone','Guardian Mobile'=>'guardian_phone','WhatsApp'=>'whatsapp_phone','Institution'=>'institution','Monthly Fee'=>'monthly_fee'),'ppa_batch'=>array('Class Level'=>'class_level','Capacity'=>'max_capacity','Schedule Days'=>'schedule_days','Class Time'=>'time_slot','Instructor'=>'instructor'),'ppa_fee_payment'=>array('Receipt No.'=>'receipt_number','Student ID'=>'student_id','Billing Month'=>'billing_month','Year'=>'billing_year','Payable'=>'payable_amount','Paid'=>'paid_amount','Due'=>'due_amount','Method'=>'payment_method','Transaction Ref'=>'transaction_reference','Status'=>'payment_status','Payment Date'=>'payment_date'),'ppa_exam_result'=>array('Student ID'=>'student_id','Exam'=>'exam_name','Chapter'=>'chapter','Total'=>'total_marks','Obtained'=>'marks','Highest'=>'highest_marks','Grade'=>'grade','Exam Date'=>'exam_date'));
     $meta_columns = isset($columns[$type]) ? $columns[$type] : array();
-    echo '<div class="ppa-ca-table-wrap"><table class="ppa-ca-table"><thead><tr><th>Name / Title</th>';
+    echo '<div class="ppa-ca-table-wrap '.($type==='ppa_student'?'ppa-ca-student-table-wrap':'').'">'.($type==='ppa_student'?'<div class="ppa-ca-table-scroll-hint">Swipe horizontally to view all student details</div>':'').'<table class="ppa-ca-table '.($type==='ppa_student'?'ppa-ca-student-table':'').'"><thead><tr><th>Name / Title</th>';
     foreach($meta_columns as $label=>$key) echo '<th>'.esc_html($label).'</th>';
     echo '<th>Details</th><th>Created</th><th>Action</th></tr></thead><tbody>';
     foreach($posts as $p) {
@@ -437,7 +438,7 @@ function ppa_ca_table($posts,$type,$tab) {
             }
         }
         echo '<td>'.esc_html(wp_trim_words(wp_strip_all_tags($p->post_content),16)).'</td><td>'.esc_html(get_the_date('d M Y',$p)).'</td><td>';
-        if($type==='ppa_fee_payment') echo '<button type="button" class="ppa-ca-message-button" disabled title="SMS actions will be enabled after gateway integration">Send Message</button> ';
+        if($type==='ppa_student') echo '<a class="ppa-ca-outline-link" href="'.esc_url(add_query_arg(array('ppa_tab'=>'students','edit_student'=>(int)$p->ID),home_url('/academyadmin/'))).'#ppa-ca-edit-record">Edit</a> ';
         echo '<form method="post" onsubmit="return confirm(\'Delete this record?\')" style="display:inline-block">';
         wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
         echo '<input type="hidden" name="ppa_ca_action" value="delete_record"><input type="hidden" name="record_id" value="'.(int)$p->ID.'"><input type="hidden" name="return_tab" value="'.esc_attr($tab).'"><button class="ppa-ca-delete" type="submit">Delete</button></form></td></tr>';
@@ -608,12 +609,10 @@ function ppa_ca_add_form($kind,$title,$fields,$tab) {
         } elseif($field==='student_id') {
             $student_list=ppa_ca_records('ppa_student',500);
             $list_id='ppa-student-options-'.esc_attr($kind);
-            echo '<input name="student_id" type="search" list="'.$list_id.'" placeholder="Search by student ID..." autocomplete="off" '.(in_array($kind,array('payment','result'),true)?'required':'').'><datalist id="'.$list_id.'">';
-            foreach($student_list as $student_option) {
-                $code=get_post_meta($student_option->ID,'_ppa_student_id',true);
-                if($code!=='') echo '<option value="'.esc_attr($code).'">'.esc_html($student_option->post_title).'</option>';
-            }
-            echo '</datalist>';
+            if($kind==='payment') {
+                $student_payload=array(); foreach($student_list as $student_option){$code=(string)get_post_meta($student_option->ID,'_ppa_student_id',true);if($code==='')continue;$student_payload[]=array('id'=>$code,'name'=>$student_option->post_title,'fee'=>(string)get_post_meta($student_option->ID,'_ppa_monthly_fee',true),'class'=>(string)get_post_meta($student_option->ID,'_ppa_class_level',true),'batch'=>(string)get_post_meta($student_option->ID,'_ppa_batch_name',true),'phone'=>(string)get_post_meta($student_option->ID,'_ppa_guardian_phone',true));}
+                echo '<input name="student_id" type="search" list="'.$list_id.'" placeholder="Search by student ID or select below…" autocomplete="off" data-ppa-payment-student-search required><datalist id="'.$list_id.'">'; foreach($student_payload as $x) echo '<option value="'.esc_attr($x['id']).'">'.esc_html($x['name'].' · '.$x['class'].' · '.$x['batch']).'</option>'; echo '</datalist><small data-ppa-student-match>Choose a student ID to auto-fill the form. Filled values remain editable.</small><script type="application/json" class="ppa-ca-payment-student-data">'.wp_json_encode($student_payload,JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_AMP|JSON_HEX_QUOT).'</script>';
+            } else { echo '<input name="student_id" type="search" list="'.$list_id.'" placeholder="Search by student ID..." autocomplete="off" required><datalist id="'.$list_id.'">'; foreach($student_list as $student_option){$code=get_post_meta($student_option->ID,'_ppa_student_id',true);if($code!=='')echo '<option value="'.esc_attr($code).'">'.esc_html($student_option->post_title).'</option>';} echo '</datalist>'; }
         } elseif($field==='class_level') {
             echo '<select name="class_level" required><option value="">Select class</option><option value="Class 8">Class 8</option><option value="Class 9">Class 9</option><option value="Class 10">Class 10</option></select>';
         } elseif($field==='batch_name') {
@@ -646,6 +645,7 @@ function ppa_ca_add_form($kind,$title,$fields,$tab) {
         echo '</label>';
     }
     echo '</div><div class="ppa-ca-modal-actions"><a href="#ppa-ca-modal-close">Cancel</a><button class="ppa-ca-primary" type="submit">Save Record</button></div></form></div></div>';
+    if($kind==='payment') echo '<script>(function(){var box=document.getElementById("'.esc_js($modal_id).'");if(!box)return;var node=box.querySelector(".ppa-ca-payment-student-data"),input=box.querySelector("[data-ppa-payment-student-search]"),hint=box.querySelector("[data-ppa-student-match]");if(!node||!input)return;var rows=[];try{rows=JSON.parse(node.textContent||"[]");}catch(e){}function fill(){var q=input.value.trim().toLowerCase(),hit=rows.find(function(x){return x.id.toLowerCase()===q;});if(!hit)return;var f=input.form;f.querySelector("[name=record_title]").value=hit.name;var p=f.querySelector("[name=payable_amount]"),a=f.querySelector("[name=paid_amount]"),d=f.querySelector("[name=due_amount]");if(p&&hit.fee)p.value=hit.fee;if(a&&!a.value&&p)a.value=p.value;if(d&&p&&a)d.value=Math.max(0,Number(p.value)-Number(a.value)).toFixed(2);hint.textContent="Loaded "+hit.name+" · "+hit.class+" · "+hit.batch+". Edit any field before saving.";}input.addEventListener("change",fill);input.addEventListener("input",fill);})();</script>';
 }
 function ppa_ca_edit_form($record_id,$tab) {
     $post=get_post(absint($record_id));
@@ -778,6 +778,7 @@ function ppa_ca_enhanced_styles() { ?>
 </style>
 <?php }
 function ppa_ca_section_styles() { ?><style>
+.ppa-ca-student-table{min-width:1120px;table-layout:auto}.ppa-ca-student-table th,.ppa-ca-student-table td{white-space:nowrap;vertical-align:middle}.ppa-ca-student-table th:nth-child(4),.ppa-ca-student-table td:nth-child(4){min-width:250px;max-width:320px;white-space:normal;line-height:1.55;overflow-wrap:anywhere}.ppa-ca-student-table-wrap{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}.ppa-ca-table-scroll-hint{padding:8px 12px;background:#f8fafc;color:#64748b;font-size:10px;border-bottom:1px solid #e2e8f0}.ppa-ca-fee-sms-prompt h3{margin:0 0 6px;color:#0f172a;font-size:16px}.ppa-ca-fee-sms-prompt p{color:#64748b;font-size:12px}.ppa-ca-fee-sms-prompt textarea{width:100%;box-sizing:border-box;min-height:110px;padding:12px;border:1px solid #cbd5e1;border-radius:9px;font:inherit}.ppa-ca-fee-sms-actions{display:flex;align-items:center;gap:10px;margin-top:12px}
 .ppa-ca-notice-row form{margin-left:auto;flex:0 0 auto}.ppa-ca-notice-row time{font-size:10px;color:#64748b;white-space:nowrap}.ppa-ca-check{display:flex!important;flex-direction:row!important;align-items:center!important;gap:9px!important}.ppa-ca-check input{width:auto!important;min-height:0!important}.ppa-ca-form select{box-sizing:border-box;min-height:40px;border:1px solid #cbd5e1;border-radius:9px;padding:10px 12px;background:#fff;font-size:13px}.ppa-ca-notice-copy{min-width:0;flex:1}.ppa-ca-notice-copy strong,.ppa-ca-notice-copy span{display:block}.ppa-ca-notice-copy span{font-size:11px;color:#64748b;margin-top:4px}.ppa-ca-section-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:2px 0 20px}
 .ppa-ca-section-head h2{font-size:21px;font-weight:800;letter-spacing:-.035em;color:#0f172a;margin:0}
 .ppa-ca-section-head p{font-size:12px;color:#64748b;margin:5px 0 0}
@@ -1192,6 +1193,7 @@ body.ppa-ca-body{font-family:Inter,'Plus Jakarta Sans','Hind Siliguri',Arial,san
 function ppa_ca_render_sms_tab() {
     $students=ppa_ca_records('ppa_student',2000);
     $recipient_data=array(); $classes=array(); $batches=array();
+    foreach(ppa_ca_records('ppa_batch',500) as $batch_record) { $batch_label=ppa_ca_batch_label($batch_record); if($batch_label!=='') $batches[$batch_label]=$batch_label; }
     foreach($students as $student) {
         $class=(string)get_post_meta($student->ID,'_ppa_class_level',true);
         $batch=(string)get_post_meta($student->ID,'_ppa_batch_name',true);
@@ -1237,7 +1239,7 @@ function ppa_ca_render_sms_tab() {
     foreach($batches as $batch) echo '<option value="'.esc_attr($batch).'">'.esc_html($batch).'</option>';
     echo '</select></label></div>';
     echo '<div><div style="margin-bottom:9px;color:#33465d;font-size:12px;font-weight:800">Recipient groups</div><div class="ppa-ca-sms-recipient-options"><label class="ppa-ca-sms-recipient-option"><input type="checkbox" name="sms_guardians" value="1" checked data-ppa-sms-target="guardian"><span><strong>Guardian mobile numbers</strong><small>Recommended for academy notices. Blank numbers are skipped.</small></span></label><label class="ppa-ca-sms-recipient-option"><input type="checkbox" name="sms_students" value="1" data-ppa-sms-target="student"><span><strong>Student mobile numbers</strong><small>Optional. Student contact numbers are included only when selected.</small></span></label></div></div>';
-    echo '<div class="ppa-ca-sms-recipient-summary"><div><strong data-ppa-sms-count>—</strong><br><span data-ppa-sms-count-label>Calculating eligible unique recipients…</span></div><span>Maximum 100 recipients per send</span></div>';
+    echo '<div class="ppa-ca-sms-recipient-summary"><div><strong data-ppa-sms-count>—</strong><br><span data-ppa-sms-count-label>Calculating eligible unique recipients…</span></div><span>No fixed 100-recipient app cap</span></div>';
     echo '<label class="ppa-ca-sms-field">Message<textarea name="sms_message" rows="5" maxlength="1000" required placeholder="Write your SMS in Bangla or English…"></textarea></label>';
     echo '<div class="ppa-ca-sms-form-footer"><small><span data-ppa-sms-length>0</span>/1000 characters · Gateway charges may apply.<br>Sent messages, message bodies and recipient lists are not stored as an SMS history.</small><button class="ppa-ca-primary" type="submit" disabled data-ppa-sms-send>➤ Send SMS</button></div>';
     echo '</form></section>';
@@ -1270,9 +1272,8 @@ function ppa_ca_render_sms_tab() {
         countNode.textContent=String(total);
         if(!enabled)labelNode.textContent='Gateway API key is not configured on the server.';
         else if(total===0)labelNode.textContent='No matching phone numbers. Adjust filters or recipient groups.';
-        else if(total>100)labelNode.textContent='Too many recipients. Narrow the filters to 100 or fewer.';
-        else labelNode.textContent='Unique recipients from '+rows.filter(function(row){return (!classValue||row.class===classValue)&&(!batchValue||row.batch===batchValue);}).length+' matching student records.';
-        sendButton.disabled=!enabled || total===0 || total>100;
+        else labelNode.textContent='Unique recipients from '+rows.filter(function(row){return (!classValue||row.class===classValue)&&(!batchValue||row.batch===batchValue);}).length+' matching student records. No fixed 100-recipient app cap.';
+        sendButton.disabled=!enabled || total===0;
         sendButton.setAttribute('data-recipient-count',String(total));
       }
       form.querySelectorAll('[data-ppa-sms-filter],[data-ppa-sms-target]').forEach(function(el){el.addEventListener('change',update);});
@@ -1335,7 +1336,7 @@ function ppa_ca_render_page() {
         }
         if(isset($_GET['ppa_notice']) && $_GET['ppa_notice']!=='login_error') {
             $notice=sanitize_key(wp_unslash($_GET['ppa_notice']));
-            $messages=array('saved'=>'Settings saved successfully.','database_error'=>'The record was kept in WordPress, but the Academy MySQL table could not be updated. Please contact the site administrator.','student_not_found'=>'Select a valid student ID before saving this record.','invalid_amount'=>'Payment amounts are invalid. Paid amount cannot exceed payable amount.','student_id_limit'=>'Student ID sequence is full for this year.','created'=>'Record saved successfully.','required'=>'Please fill in all required fields.','invalid'=>'That request was not valid.','error'=>'The record could not be saved. Please try again.','updated'=>'Record updated successfully.','deleted'=>'Record deleted successfully.','sms_result'=>'SMS sending finished. Review the delivery summary below.','sms_invalid'=>'Write a message and choose at least one recipient group.','sms_too_long'=>'The message is longer than the 1,000 character limit.','sms_no_recipients'=>'No eligible phone numbers were found for these filters.','sms_too_many'=>'This send is limited to 100 unique phone numbers. Narrow the class or batch selection.','batch_import_done'=>'All 13 source batches were imported or verified in the Academy MySQL database.','batch_import_partial'=>'The batch import finished with some errors. Review the details in Programs & Batches.','batch_import_error'=>'The batch importer could not run. Check that the Academy database integration is active.');
+            $messages=array('saved'=>'Settings saved successfully.','database_error'=>'The record was kept in WordPress, but the Academy MySQL table could not be updated. Please contact the site administrator.','student_not_found'=>'Select a valid student ID before saving this record.','invalid_amount'=>'Payment amounts are invalid. Paid amount cannot exceed payable amount.','student_id_limit'=>'Student ID sequence is full for this year.','created'=>'Record saved successfully.','required'=>'Please fill in all required fields.','invalid'=>'That request was not valid.','error'=>'The record could not be saved. Please try again.','updated'=>'Record updated successfully.','deleted'=>'Record deleted successfully.','sms_result'=>'SMS sending finished. Review the delivery summary below.','fee_sms_sent'=>'Payment saved and SMS accepted by the gateway.','fee_sms_failed'=>'Payment saved, but the SMS could not be sent. Check gateway balance and settings.','fee_sms_unavailable'=>'No pending payment message is available.','sms_invalid'=>'Write a message and choose at least one recipient group.','sms_too_long'=>'The message is longer than the 1,000 character limit.','sms_no_recipients'=>'No eligible phone numbers were found for these filters.','sms_too_many'=>'This send is limited to 100 unique phone numbers. Narrow the class or batch selection.','batch_import_done'=>'All 13 source batches were imported or verified in the Academy MySQL database.','batch_import_partial'=>'The batch import finished with some errors. Review the details in Programs & Batches.','batch_import_error'=>'The batch importer could not run. Check that the Academy database integration is active.');
             echo '<div class="ppa-ca-alert'.($notice==='database_error'?' is-error':'').'">'.esc_html(isset($messages[$notice])?$messages[$notice]:'Action completed.').'</div>';
         }
         if($tab==='overview') {
@@ -1409,7 +1410,9 @@ function ppa_ca_render_page() {
             echo '<section class="ppa-ca-panel ppa-ca-data-panel"><div class="ppa-ca-panel-head"><div><h2>All Students</h2><p>Student profiles, guardian contacts and monthly fee information.</p></div><span class="ppa-ca-soft-badge">Student directory</span></div>';
             ppa_ca_search_toolbar('Search by student name, ID or phone number...');
             ppa_ca_add_form('student','Add New Student',array('record_title'=>'Student Name','student_id'=>'Student ID (6 digits, YYNNNN)','class_level'=>'Class (8 / 9 / 10)','batch_name'=>'Batch (Optional)','bangla_name'=>'Student Name (Bangla, Optional)','institution'=>'Institution (Optional)','phone'=>'Student Mobile (Optional)','guardian_name'=>'Guardian Name (Optional)','guardian_phone'=>'Guardian Mobile','whatsapp_phone'=>'WhatsApp Number (Optional)','monthly_fee'=>'Monthly Fee (৳)','record_details'=>'Additional Details'),$tab);
-            ppa_ca_table($student_posts,'ppa_student',$tab); echo '</section>';
+            ppa_ca_table($student_posts,'ppa_student',$tab);
+            if(!empty($_GET['edit_student'])) ppa_ca_edit_form(absint($_GET['edit_student']),$tab);
+            echo '</section>';
         } elseif($tab==='programs') {
             $batch_posts=ppa_ca_records('ppa_batch');
             ppa_ca_section_intro('Programs & Batches','Organize class groups, schedules and teaching information.',number_format_i18n(count($batch_posts)).' batches');
@@ -1453,6 +1456,7 @@ function ppa_ca_render_page() {
             ppa_ca_metric_cards(array(array('Total Payable',$has_payable_data?'৳'.number_format_i18n($total_payable):'—','From saved monthly fee entries'),array('Total Collected','৳'.number_format_i18n($total_collected),'From recorded payments'),array('Total Due',$has_due_data?'৳'.number_format_i18n($total_due):'—','Outstanding amount')));
             echo '<section class="ppa-ca-panel ppa-ca-data-panel"><div class="ppa-ca-panel-head"><div><h2>Payment Records</h2><p>Review recent payments and their billing details.</p></div><span class="ppa-ca-soft-badge">Fee ledger</span></div>';
             ppa_ca_search_toolbar('Search student, ID, billing month or amount...');
+            $pending_fee_sms=get_transient('ppa_ca_pending_fee_sms_'.get_current_user_id()); if(is_array($pending_fee_sms)&&!empty($pending_fee_sms['phone'])) { $default_message='Dear '.$pending_fee_sms['student'].', your payment of Tk '.$pending_fee_sms['amount'].' for '.$pending_fee_sms['month'].' has been received by Photon Physics Academy. Thank you.'; echo '<section class="ppa-ca-panel ppa-ca-fee-sms-prompt"><h3>Payment recorded successfully</h3><p>Would you like to send a confirmation SMS to the guardian?</p><form method="post">'; wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce'); echo '<input type="hidden" name="ppa_ca_action" value="send_fee_payment_sms"><input type="hidden" name="return_tab" value="payments"><label class="ppa-ca-field-label">Default message (editable)<textarea name="fee_sms_message" rows="4" required>'.esc_textarea($default_message).'</textarea></label><div class="ppa-ca-fee-sms-actions"><button class="ppa-ca-primary" type="submit">Send SMS</button><a class="ppa-ca-outline-link" href="'.esc_url(add_query_arg('ppa_tab','payments',home_url('/academyadmin/'))).'">Skip</a></div></form></section>'; }
             ppa_ca_add_form('payment','Record a Fee Payment',array('record_title'=>'Student Name / ID','student_id'=>'Find Student by ID','billing_month'=>'Billing Month','billing_year'=>'Billing Year','payment_method'=>'Payment Method','transaction_reference'=>'Transaction Reference (Optional)','payable_amount'=>'Payable Amount (৳)','paid_amount'=>'Paid Amount (৳)','due_amount'=>'Due Amount (৳)','payment_date'=>'Payment Date','record_details'=>'Payment note'),$tab);
             ppa_ca_table($payment_posts,'ppa_fee_payment',$tab); echo '</section>';
         } elseif($tab==='notices') {
