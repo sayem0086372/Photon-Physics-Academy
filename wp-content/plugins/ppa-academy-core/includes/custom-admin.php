@@ -1166,6 +1166,20 @@ body.ppa-ca-body{font-family:Inter,'Plus Jakarta Sans','Hind Siliguri',Arial,san
 @media(max-width:980px){.ppa-ca-store-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.ppa-ca-settings-grid{grid-template-columns:1fr}.ppa-ca-settings-side{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:680px){.ppa-ca-store-heading{align-items:flex-start;flex-direction:column;padding:20px}.ppa-ca-store-heading h2{font-size:21px}.ppa-ca-store-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.ppa-ca-store-metrics article{padding:13px}.ppa-ca-store-metrics strong{font-size:21px}.ppa-ca-store-tabs{display:flex;flex-wrap:nowrap;overflow-x:auto}.ppa-ca-store-toolbar{align-items:stretch;flex-direction:column}.ppa-ca-store-search{max-width:none;width:100%}.ppa-ca-store-section .ppa-ca-report-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ppa-ca-settings-hero{padding:20px}.ppa-ca-settings-hero h2{font-size:21px}.ppa-ca-settings-summary{grid-template-columns:1fr}.ppa-ca-settings-main,.ppa-ca-settings-side .ppa-ca-settings-card{padding:17px!important}.ppa-ca-settings-side{grid-template-columns:1fr}.ppa-ca-settings-actions{align-items:flex-start;flex-direction:column}.ppa-ca-sms-form-footer{align-items:stretch}.ppa-ca-sms-form-footer button{width:100%}}
 @media(prefers-reduced-motion:reduce){.ppa-ca-store-metrics article,.ppa-ca-store-tabs a,.ppa-ca-store-section button,.ppa-ca-primary{transition:none!important}}
+
+.ppa-ca-store-cover{width:76px}
+.ppa-ca-store-cover img{display:block;width:48px;height:62px;object-fit:cover;border-radius:7px;border:1px solid #e2eaf3;background:#f8fafc}
+.ppa-ca-stock-pill,.ppa-ca-visibility-pill{display:inline-flex;align-items:center;justify-content:center;padding:5px 8px;border-radius:7px;background:#eef6ff;color:#1d4ed8;font-size:10px;font-weight:800;white-space:nowrap}
+.ppa-ca-stock-pill.is-low{background:#fff7ed;color:#b45309}
+.ppa-ca-visibility-pill.is-live{background:#ecfdf5;color:#047857}
+.ppa-ca-visibility-pill.is-draft{background:#f1f5f9;color:#64748b}
+.ppa-ca-sms-hero{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:24px 26px;margin:0 0 18px;border:1px solid #dce7f3;border-radius:16px;background:linear-gradient(112deg,#102b4e 0%,#17427a 68%,#1d4ed8 100%);color:#fff;box-shadow:0 10px 26px rgba(16,43,78,.10)}
+.ppa-ca-sms-hero h2{margin:5px 0;color:#fff;font-size:24px;font-weight:850;letter-spacing:-.04em}
+.ppa-ca-sms-hero p{margin:0;color:#d5e4f8;font-size:12px;line-height:1.65}
+.ppa-ca-sms-eyebrow{color:#b8d5fb;font-size:10px;font-weight:850;letter-spacing:.17em}
+.ppa-ca-sms-provider{display:flex;align-items:center;gap:8px;padding:10px 13px;border:1px solid rgba(255,255,255,.24);border-radius:10px;background:rgba(255,255,255,.10);color:#fff;font-size:12px;font-weight:800;white-space:nowrap}
+.ppa-ca-sms-provider i{padding:3px 6px;border-radius:5px;background:rgba(255,255,255,.16);color:#dbeafe;font-size:9px;font-style:normal}
+@media(max-width:680px){.ppa-ca-store-cover{width:62px}.ppa-ca-store-cover img{width:42px;height:56px}.ppa-ca-sms-hero{align-items:flex-start;flex-direction:column;padding:20px}.ppa-ca-sms-hero h2{font-size:21px}}
 </style>
 <?php }
 
@@ -1187,7 +1201,7 @@ function ppa_ca_render_sms_tab() {
     $api_ready=ppa_ca_sms_api_key()!=='';
     $refresh_url=add_query_arg(array('ppa_tab'=>'sms','ppa_sms_refresh'=>'1'),home_url('/academyadmin/'));
     $portal='https://portal.sms.net.bd/login/';
-    echo '<div class="ppa-ca-section-head"><div><h2>SMS Management</h2><p>Send academy updates to students and guardians, with recipient filters and a live gateway balance.</p></div><span class="ppa-ca-section-count">sms.net.bd gateway</span></div>';
+    echo '<div class="ppa-ca-sms-hero"><div><span class="ppa-ca-sms-eyebrow">MESSAGING CENTRE</span><h2>SMS Management</h2><p>Send important academy updates to guardians and students, with clear recipient controls and live gateway balance.</p></div><span class="ppa-ca-sms-provider">sms.net.bd <i>Gateway</i></span></div>';
     if(isset($_GET['ppa_notice']) && sanitize_key(wp_unslash($_GET['ppa_notice']))==='sms_result') {
         $result=get_transient('ppa_ca_sms_last_result_'.get_current_user_id());
         $error=get_transient('ppa_ca_sms_last_error_'.get_current_user_id());
@@ -1275,7 +1289,7 @@ function ppa_ca_render_settings_tab() {
     $api_ready=ppa_ca_sms_api_key()!=='';
     $slide_lines=array_values(array_filter(array_map('trim',preg_split('/\\r\\n|\\r|\\n/',$slideshow_urls))));
     echo '<div class="ppa-ca-settings-hero"><div><span class="ppa-ca-settings-eyebrow">CONTROL CENTRE</span><h2>Academy Settings</h2><p>Manage the public homepage visuals and secure messaging preferences from one place.</p></div><span class="ppa-ca-settings-hero-icon" aria-hidden="true">⚙</span></div>';
-    echo '<div class="ppa-ca-settings-summary"><article><span>Homepage slides</span><strong>'.number_format_i18n(count($slide_lines)).'</strong><small>Image links configured</small></article><article><span>SMS gateway</span><strong>'.($api_ready?'Connected':'Not configured').'</strong><small>'.($api_ready?'Server key detected':'Server key required').'</small></article><article><span>Sender ID</span><strong>'.($sender_id!==''?'Custom':'Default').'</strong><small>'.($sender_id!==''?esc_html($sender_id):'Provider account default').'</small></article></div>';
+    echo '<div class="ppa-ca-settings-summary"><article><span>Homepage slides</span><strong>'.number_format_i18n(count($slide_lines)).'</strong><small>Image links configured</small></article><article><span>SMS gateway</span><strong>'.($api_ready?'Configured':'Not configured').'</strong><small>'.($api_ready?'Server key detected':'Server key required').'</small></article><article><span>Sender ID</span><strong>'.($sender_id!==''?'Custom':'Default').'</strong><small>'.($sender_id!==''?esc_html($sender_id):'Provider account default').'</small></article></div>';
     echo '<div class="ppa-ca-settings-grid"><section class="ppa-ca-panel ppa-ca-settings-card ppa-ca-settings-main"><div class="ppa-ca-settings-section-title"><span class="ppa-ca-settings-section-icon">▧</span><div><h3>Homepage presentation</h3><p>Control the images shown in the homepage slideshow.</p></div></div><form method="post" class="ppa-ca-settings-form">';
     wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
     echo '<input type="hidden" name="ppa_ca_action" value="save_settings"><input type="hidden" name="return_tab" value="settings">';
