@@ -1084,6 +1084,88 @@ body.ppa-ca-body{font-family:Inter,'Plus Jakarta Sans','Hind Siliguri',Arial,san
 .ppa-ca-sms-portal a{color:#1d4ed8;font-size:11px;font-weight:750;text-decoration:none}
 @media(max-width:900px){.ppa-ca-settings-grid{grid-template-columns:1fr}}
 @media(max-width:680px){.ppa-ca-header{height:64px;padding:0 16px}.ppa-ca-content{padding:18px}.ppa-ca-panel{padding:17px}.ppa-ca-section-head{align-items:flex-start;flex-direction:column}.ppa-ca-section-head h2{font-size:21px}.ppa-ca-sms-filter-grid,.ppa-ca-sms-recipient-options{grid-template-columns:1fr}.ppa-ca-sms-form{padding:16px}.ppa-ca-sms-composer-head{padding:17px}.ppa-ca-sms-balance-layout{grid-template-columns:1fr}.ppa-ca-sms-form-footer,.ppa-ca-sms-portal{align-items:flex-start;flex-direction:column}.ppa-ca-settings-card{padding:17px!important}.ppa-ca-sms-recipient-summary{align-items:flex-start}}
+
+/* Refined Store, SMS and Settings workspaces */
+.ppa-ca-store-heading{align-items:center;padding:24px 26px;margin:0 0 18px;border:1px solid #dce7f3;border-radius:16px;background:linear-gradient(112deg,#102b4e 0%,#17427a 65%,#1d4ed8 100%);color:#fff;box-shadow:0 10px 26px rgba(16,43,78,.10)}
+.ppa-ca-store-heading h2{margin:5px 0 6px;color:#fff;font-size:25px;font-weight:850;letter-spacing:-.04em}
+.ppa-ca-store-heading p{color:#d8e7fb;font-size:12px;line-height:1.65}
+.ppa-ca-store-kicker{color:#b8d5fb!important;font-size:10px!important;letter-spacing:.17em;font-weight:850!important}
+.ppa-ca-store-heading .ppa-ca-outline-link{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:10px 15px;border:1px solid rgba(255,255,255,.28);border-radius:9px;background:rgba(255,255,255,.10);color:#fff;text-decoration:none;font-size:12px;font-weight:750}
+.ppa-ca-store-metrics{grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin:0 0 18px}
+.ppa-ca-store-metrics article{min-width:0;padding:16px;border:1px solid #e1e9f2;border-radius:13px;background:#fff;box-shadow:0 3px 12px rgba(20,45,75,.035)}
+.ppa-ca-store-metrics article>div{align-items:center}
+.ppa-ca-store-metrics span{font-size:11px;line-height:1.4}
+.ppa-ca-store-metrics i{width:34px;height:34px;border-radius:10px;background:#edf5ff;color:#1d4ed8}
+.ppa-ca-store-metrics strong{display:block;margin-top:9px;color:#132b49;font-size:25px;font-weight:850;letter-spacing:-.04em}
+.ppa-ca-store-tabs{gap:6px;padding:5px;margin:0 0 18px;border:1px solid #e2eaf3;border-radius:12px;background:#fff}
+.ppa-ca-store-tabs a{padding:10px 13px;border:0;border-radius:8px;font-size:11px;font-weight:750}
+.ppa-ca-store-tabs a.is-active{background:#eaf2ff;color:#174ea6;border:0}
+.ppa-ca-store-section{min-width:0}
+.ppa-ca-store-toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 0 14px}
+.ppa-ca-store-toolbar h3{margin:0;color:#14243a;font-size:16px;font-weight:800}
+.ppa-ca-store-toolbar p{margin:5px 0 0;color:#718198;font-size:11px;line-height:1.6}
+.ppa-ca-store-search{display:flex;align-items:center;gap:8px;flex:1;max-width:540px}
+.ppa-ca-store-search input{width:100%;min-width:0;min-height:42px;padding:10px 12px;border:1px solid #d9e3ef;border-radius:9px;background:#fff}
+.ppa-ca-store-search button{min-height:42px;padding:9px 14px;border:1px solid #d9e3ef;border-radius:9px;background:#fff;color:#33465d;font-weight:750}
+.ppa-ca-store-table{padding:8px!important;overflow:hidden}
+.ppa-ca-store-table .ppa-ca-table{min-width:720px}
+.ppa-ca-store-table .ppa-ca-table td:first-child strong{display:block;color:#14243a}
+.ppa-ca-store-table .ppa-ca-table td a{color:#1d4ed8;font-weight:750;text-decoration:none}
+.ppa-ca-store-table .ppa-ca-table td a:hover{text-decoration:underline}
+.ppa-ca-store-admin-form,.ppa-store-admin-form{margin:0}
+.ppa-ca-store-section>.ppa-ca-panel{border:1px solid #e2eaf3;border-radius:14px;background:#fff}
+.ppa-ca-store-section>.ppa-ca-panel h3{margin:0 0 7px;color:#14243a;font-size:16px;font-weight:800}
+.ppa-ca-store-section>.ppa-ca-panel>p{color:#718198;font-size:12px;line-height:1.65}
+.ppa-ca-store-section .ppa-ca-form-grid{gap:16px}
+.ppa-ca-store-section .ppa-ca-form-grid label{font-size:12px;color:#34475f}
+.ppa-ca-store-section .ppa-ca-form-grid small{color:#8493a6;font-size:10px;font-weight:400;line-height:1.5}
+.ppa-ca-store-section .ppa-store-check{display:flex!important;flex-direction:row!important;align-items:center;gap:9px;padding:12px;border:1px solid #e2eaf3;border-radius:9px;background:#f8fafc}
+.ppa-ca-store-section .ppa-store-check input{width:16px;height:16px;min-height:0;accent-color:#2563eb}
+.ppa-ca-store-section .ppa-ca-table td{vertical-align:top}
+.ppa-ca-store-section .ppa-ca-table td small{color:#8795a7;font-size:10px}
+.ppa-ca-store-section .ppa-ca-table select{max-width:160px;min-width:125px;min-height:36px;margin:0 0 7px;padding:7px 9px;border:1px solid #d9e3ef;border-radius:8px;background:#fff;font-size:11px}
+.ppa-ca-store-section .ppa-ca-table td form{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.ppa-ca-store-section .ppa-ca-table td form button{min-height:34px;padding:7px 10px;font-size:10px}
+.ppa-ca-store-section .ppa-ca-report-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.ppa-ca-store-section .ppa-ca-report-grid article{padding:18px;border:1px solid #e2eaf3;border-radius:13px;background:#fff}
+.ppa-ca-store-section .ppa-ca-report-grid strong{display:block;margin-top:9px;color:#14243a;font-size:22px;font-weight:850}
+.ppa-ca-settings-hero{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:24px 26px;margin:0 0 16px;border-radius:16px;background:linear-gradient(112deg,#102b4e,#17427a);color:#fff}
+.ppa-ca-settings-hero h2{margin:5px 0;color:#fff;font-size:24px;font-weight:850;letter-spacing:-.04em}
+.ppa-ca-settings-hero p{margin:0;color:#d5e4f8;font-size:12px;line-height:1.65}
+.ppa-ca-settings-eyebrow{color:#b8d5fb;font-size:10px;font-weight:850;letter-spacing:.17em}
+.ppa-ca-settings-hero-icon{display:grid;place-items:center;width:56px;height:56px;border:1px solid rgba(255,255,255,.25);border-radius:15px;background:rgba(255,255,255,.10);font-size:24px}
+.ppa-ca-settings-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:0 0 18px}
+.ppa-ca-settings-summary article{padding:15px 17px;border:1px solid #e2eaf3;border-radius:12px;background:#fff}
+.ppa-ca-settings-summary span,.ppa-ca-settings-summary small{display:block;color:#718198;font-size:10px;font-weight:650}
+.ppa-ca-settings-summary strong{display:block;margin:6px 0 3px;color:#14243a;font-size:17px;font-weight:850}
+.ppa-ca-settings-summary small{font-weight:400}
+.ppa-ca-settings-grid{grid-template-columns:minmax(0,1.35fr) minmax(270px,.65fr);gap:16px}
+.ppa-ca-settings-main{padding:23px!important}
+.ppa-ca-settings-section-title{display:flex;align-items:center;gap:11px;margin:0 0 16px}
+.ppa-ca-settings-section-title h3{margin:0!important;color:#14243a;font-size:15px;font-weight:850}
+.ppa-ca-settings-section-title p{margin:4px 0 0;color:#8190a3;font-size:11px;line-height:1.55}
+.ppa-ca-settings-section-icon{display:grid;place-items:center;flex:0 0 38px;width:38px;height:38px;border-radius:10px;background:#edf5ff;color:#1d4ed8;font-size:17px}
+.ppa-ca-settings-form{gap:16px}
+.ppa-ca-settings-form textarea{min-height:155px;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px}
+.ppa-ca-settings-divider{height:1px;background:#edf1f6;margin:2px 0}
+.ppa-ca-settings-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:15px;border-top:1px solid #edf1f6}
+.ppa-ca-settings-actions>span{color:#8997a8;font-size:10px;line-height:1.5}
+.ppa-ca-settings-side{display:grid;gap:14px}
+.ppa-ca-settings-side .ppa-ca-settings-card{padding:20px!important}
+.ppa-ca-settings-side-copy{margin:12px 0 0;color:#718198;font-size:11px;line-height:1.7}
+.ppa-ca-settings-privacy ul{display:grid;gap:9px;margin:14px 0 0;padding-left:18px;color:#687a90;font-size:11px;line-height:1.65}
+.ppa-ca-settings-privacy li::marker{color:#2563eb}
+.ppa-ca-settings-status{margin-top:6px}
+.ppa-ca-sms-composer{border:1px solid #dfe8f2!important}
+.ppa-ca-sms-composer-head{background:#fbfdff}
+.ppa-ca-sms-balance-layout{padding:2px 0}
+.ppa-ca-sms-recipient-summary{background:#eff6ff}
+.ppa-ca-sms-form-footer button{min-width:132px}
+.ppa-ca-sms-portal{padding-top:14px}
+.ppa-ca-sms-result{margin-bottom:16px}
+@media(max-width:980px){.ppa-ca-store-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.ppa-ca-settings-grid{grid-template-columns:1fr}.ppa-ca-settings-side{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:680px){.ppa-ca-store-heading{align-items:flex-start;flex-direction:column;padding:20px}.ppa-ca-store-heading h2{font-size:21px}.ppa-ca-store-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.ppa-ca-store-metrics article{padding:13px}.ppa-ca-store-metrics strong{font-size:21px}.ppa-ca-store-tabs{display:flex;flex-wrap:nowrap;overflow-x:auto}.ppa-ca-store-toolbar{align-items:stretch;flex-direction:column}.ppa-ca-store-search{max-width:none;width:100%}.ppa-ca-store-section .ppa-ca-report-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ppa-ca-settings-hero{padding:20px}.ppa-ca-settings-hero h2{font-size:21px}.ppa-ca-settings-summary{grid-template-columns:1fr}.ppa-ca-settings-main,.ppa-ca-settings-side .ppa-ca-settings-card{padding:17px!important}.ppa-ca-settings-side{grid-template-columns:1fr}.ppa-ca-settings-actions{align-items:flex-start;flex-direction:column}.ppa-ca-sms-form-footer{align-items:stretch}.ppa-ca-sms-form-footer button{width:100%}}
+@media(prefers-reduced-motion:reduce){.ppa-ca-store-metrics article,.ppa-ca-store-tabs a,.ppa-ca-store-section button,.ppa-ca-primary{transition:none!important}}
 </style>
 <?php }
 
@@ -1191,14 +1273,18 @@ function ppa_ca_render_settings_tab() {
     $sender_id=(string)get_option('ppa_ca_sms_sender_id','');
     $slideshow_urls=(string)get_option('ppa_ca_slideshow_urls','');
     $api_ready=ppa_ca_sms_api_key()!=='';
-    echo '<div class="ppa-ca-section-head"><div><h2>Academy Settings</h2><p>Manage essential website presentation settings and secure SMS gateway preferences.</p></div><span class="ppa-ca-section-count">Configuration</span></div>';
-    echo '<div class="ppa-ca-settings-grid"><section class="ppa-ca-panel ppa-ca-settings-card"><h3>Website presentation</h3><p>Update the images used in the homepage slideshow. Keep one image URL on each line; image files remain hosted at their existing URLs.</p><form method="post" class="ppa-ca-settings-form">';
+    $slide_lines=array_values(array_filter(array_map('trim',preg_split('/\\r\\n|\\r|\\n/',$slideshow_urls))));
+    echo '<div class="ppa-ca-settings-hero"><div><span class="ppa-ca-settings-eyebrow">CONTROL CENTRE</span><h2>Academy Settings</h2><p>Manage the public homepage visuals and secure messaging preferences from one place.</p></div><span class="ppa-ca-settings-hero-icon" aria-hidden="true">⚙</span></div>';
+    echo '<div class="ppa-ca-settings-summary"><article><span>Homepage slides</span><strong>'.number_format_i18n(count($slide_lines)).'</strong><small>Image links configured</small></article><article><span>SMS gateway</span><strong>'.($api_ready?'Connected':'Not configured').'</strong><small>'.($api_ready?'Server key detected':'Server key required').'</small></article><article><span>Sender ID</span><strong>'.($sender_id!==''?'Custom':'Default').'</strong><small>'.($sender_id!==''?esc_html($sender_id):'Provider account default').'</small></article></div>';
+    echo '<div class="ppa-ca-settings-grid"><section class="ppa-ca-panel ppa-ca-settings-card ppa-ca-settings-main"><div class="ppa-ca-settings-section-title"><span class="ppa-ca-settings-section-icon">▧</span><div><h3>Homepage presentation</h3><p>Control the images shown in the homepage slideshow.</p></div></div><form method="post" class="ppa-ca-settings-form">';
     wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
     echo '<input type="hidden" name="ppa_ca_action" value="save_settings"><input type="hidden" name="return_tab" value="settings">';
-    echo '<label>Homepage slideshow image URLs<textarea name="slideshow_urls" rows="6" placeholder="https://example.com/slide-1.jpg">'.esc_textarea($slideshow_urls).'</textarea><span class="ppa-ca-settings-help">Paste direct HTTPS image links, one per line. Avoid sharing private or temporary image URLs.</span></label>';
-    echo '<div style="height:1px;background:#edf1f6"></div><div><h3>SMS sender preferences</h3><p style="margin:5px 0 12px">The sender name/ID is optional and must be supported by your SMS provider account.</p><label>SMS Sender ID<input name="sms_sender_id" maxlength="30" value="'.esc_attr($sender_id).'" placeholder="Approved sender ID"><span class="ppa-ca-settings-help">Leave blank to use the gateway account default.</span></label></div>';
-    echo '<button class="ppa-ca-primary" type="submit">Save Settings</button></form></section>';
-    echo '<aside class="ppa-ca-panel ppa-ca-settings-card"><h3>SMS gateway connection</h3><p>Connection credentials are kept on the server and are never displayed or editable in this browser form.</p><div class="ppa-ca-settings-status'.($api_ready?'':' is-warning').'"><i></i><span>'.($api_ready?'API key detected in server configuration':'API key not detected in server configuration').'</span></div><a class="ppa-ca-settings-link" href="https://portal.sms.net.bd/login/" target="_blank" rel="noopener noreferrer">Open sms.net.bd account portal ↗</a><div style="height:1px;background:#edf1f6;margin:18px 0"></div><h3>Privacy & data</h3><p style="margin:5px 0 0">The Academy panel does not save sent-message history, message bodies or recipient lists. The SMS provider may retain its own operational records under its policies.</p><div style="height:1px;background:#edf1f6;margin:18px 0"></div><h3>Configuration safety</h3><p style="margin:5px 0 0">Do not paste API keys into website content, slideshow fields or public code. Keep gateway credentials in the server-side wp-config.php file only.</p></aside></div>';
+    echo '<label>Slideshow image URLs<textarea name="slideshow_urls" rows="7" placeholder="https://example.com/slide-1.jpg">'.esc_textarea($slideshow_urls).'</textarea><span class="ppa-ca-settings-help">Add one direct HTTPS image URL per line. The images stay hosted at their current locations; only their URLs are saved here.</span></label>';
+    echo '<div class="ppa-ca-settings-divider"></div><div class="ppa-ca-settings-section-title"><span class="ppa-ca-settings-section-icon">✉</span><div><h3>SMS sender preferences</h3><p>Optional sender label supported by your gateway account.</p></div></div>';
+    echo '<label>Approved SMS Sender ID<input name="sms_sender_id" maxlength="30" value="'.esc_attr($sender_id).'" placeholder="Leave blank to use the default"><span class="ppa-ca-settings-help">Only enter a sender ID that has already been approved by sms.net.bd.</span></label>';
+    echo '<div class="ppa-ca-settings-actions"><span>Changes apply to the public site and future SMS sends.</span><button class="ppa-ca-primary" type="submit">Save settings</button></div></form></section>';
+    echo '<aside class="ppa-ca-settings-side"><section class="ppa-ca-panel ppa-ca-settings-card"><div class="ppa-ca-settings-section-title"><span class="ppa-ca-settings-section-icon">◎</span><div><h3>SMS gateway connection</h3><p>Secure server-side configuration</p></div></div><div class="ppa-ca-settings-status'.($api_ready?'':' is-warning').'"><i></i><span>'.($api_ready?'API key detected on server':'API key not detected').'</span></div><p class="ppa-ca-settings-side-copy">'.($api_ready?'The gateway key is available to the Academy server. It is never shown in this panel.':'Add the gateway API key to wp-config.php on the server. Do not paste it into this form.').'</p><a class="ppa-ca-settings-link" href="https://portal.sms.net.bd/login/" target="_blank" rel="noopener noreferrer">Open sms.net.bd portal ↗</a></section>';
+    echo '<section class="ppa-ca-panel ppa-ca-settings-card ppa-ca-settings-privacy"><div class="ppa-ca-settings-section-title"><span class="ppa-ca-settings-section-icon">⌑</span><div><h3>Privacy & security</h3><p>Important configuration notes</p></div></div><ul><li>API credentials stay in server-side configuration.</li><li>SMS message history and recipient lists are not stored by this panel.</li><li>The SMS provider may keep its own operational records.</li><li>Slideshow fields accept image URLs only—not uploaded files or API keys.</li></ul></section></aside></div>';
 }
 
 function ppa_ca_render_page() {
