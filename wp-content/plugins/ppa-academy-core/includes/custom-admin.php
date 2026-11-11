@@ -167,6 +167,7 @@ function ppa_ca_handle_post() {
     }
 
     if ($action==='send_fee_payment_sms') { $message=sanitize_textarea_field(wp_unslash($_POST['fee_sms_message']??'')); $pending=get_transient('ppa_ca_pending_fee_sms_'.get_current_user_id()); if(!is_array($pending)||$message==='') ppa_ca_redirect('payments','fee_sms_unavailable'); $sent=ppa_ca_sms_send_one($pending['phone']??'',$message); delete_transient('ppa_ca_pending_fee_sms_'.get_current_user_id()); ppa_ca_redirect('payments',is_wp_error($sent)?'fee_sms_failed':'fee_sms_sent'); }
+    if ($action==='dismiss_fee_payment_sms') { delete_transient('ppa_ca_pending_fee_sms_'.get_current_user_id()); ppa_ca_redirect('payments'); }
     if ($action==='save_settings') {
         $raw_slides=sanitize_textarea_field(wp_unslash($_POST['slideshow_urls'] ?? ''));
         $safe_slides=array();
@@ -1191,7 +1192,7 @@ body.ppa-ca-body{font-family:Inter,'Plus Jakarta Sans','Hind Siliguri',Arial,san
 <?php }
 
 function ppa_ca_render_sms_tab() {
-    $students=ppa_ca_records('ppa_student',2000);
+    $students=ppa_ca_records('ppa_student',10000);
     $recipient_data=array(); $classes=array(); $batches=array();
     foreach(ppa_ca_records('ppa_batch',500) as $batch_record) { $batch_label=ppa_ca_batch_label($batch_record); if($batch_label!=='') $batches[$batch_label]=$batch_label; }
     foreach($students as $student) {
@@ -1456,7 +1457,7 @@ function ppa_ca_render_page() {
             ppa_ca_metric_cards(array(array('Total Payable',$has_payable_data?'৳'.number_format_i18n($total_payable):'—','From saved monthly fee entries'),array('Total Collected','৳'.number_format_i18n($total_collected),'From recorded payments'),array('Total Due',$has_due_data?'৳'.number_format_i18n($total_due):'—','Outstanding amount')));
             echo '<section class="ppa-ca-panel ppa-ca-data-panel"><div class="ppa-ca-panel-head"><div><h2>Payment Records</h2><p>Review recent payments and their billing details.</p></div><span class="ppa-ca-soft-badge">Fee ledger</span></div>';
             ppa_ca_search_toolbar('Search student, ID, billing month or amount...');
-            $pending_fee_sms=get_transient('ppa_ca_pending_fee_sms_'.get_current_user_id()); if(is_array($pending_fee_sms)&&!empty($pending_fee_sms['phone'])) { $default_message='Dear '.$pending_fee_sms['student'].', your payment of Tk '.$pending_fee_sms['amount'].' for '.$pending_fee_sms['month'].' has been received by Photon Physics Academy. Thank you.'; echo '<section class="ppa-ca-panel ppa-ca-fee-sms-prompt"><h3>Payment recorded successfully</h3><p>Would you like to send a confirmation SMS to the guardian?</p><form method="post">'; wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce'); echo '<input type="hidden" name="ppa_ca_action" value="send_fee_payment_sms"><input type="hidden" name="return_tab" value="payments"><label class="ppa-ca-field-label">Default message (editable)<textarea name="fee_sms_message" rows="4" required>'.esc_textarea($default_message).'</textarea></label><div class="ppa-ca-fee-sms-actions"><button class="ppa-ca-primary" type="submit">Send SMS</button><a class="ppa-ca-outline-link" href="'.esc_url(add_query_arg('ppa_tab','payments',home_url('/academyadmin/'))).'">Skip</a></div></form></section>'; }
+            $pending_fee_sms=get_transient('ppa_ca_pending_fee_sms_'.get_current_user_id()); if(is_array($pending_fee_sms)&&!empty($pending_fee_sms['phone'])) { $default_message='Dear '.$pending_fee_sms['student'].', your payment of Tk '.$pending_fee_sms['amount'].' for '.$pending_fee_sms['month'].' has been received by Photon Physics Academy. Thank you.'; echo '<section class="ppa-ca-panel ppa-ca-fee-sms-prompt"><h3>Payment recorded successfully</h3><p>Would you like to send a confirmation SMS to the guardian?</p><form method="post">'; wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce'); echo '<input type="hidden" name="ppa_ca_action" value="send_fee_payment_sms"><input type="hidden" name="return_tab" value="payments"><label class="ppa-ca-field-label">Default message (editable)<textarea name="fee_sms_message" rows="4" required>'.esc_textarea($default_message).'</textarea></label><div class="ppa-ca-fee-sms-actions"><button class="ppa-ca-primary" type="submit">Send SMS</button><button class="ppa-ca-outline-link" type="submit" form="ppa-ca-dismiss-fee-sms" formnovalidate>Skip</button></div></form><form method="post" id="ppa-ca-dismiss-fee-sms">'; wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce'); echo '<input type="hidden" name="ppa_ca_action" value="dismiss_fee_payment_sms"></form></section>'; }
             ppa_ca_add_form('payment','Record a Fee Payment',array('record_title'=>'Student Name / ID','student_id'=>'Find Student by ID','billing_month'=>'Billing Month','billing_year'=>'Billing Year','payment_method'=>'Payment Method','transaction_reference'=>'Transaction Reference (Optional)','payable_amount'=>'Payable Amount (৳)','paid_amount'=>'Paid Amount (৳)','due_amount'=>'Due Amount (৳)','payment_date'=>'Payment Date','record_details'=>'Payment note'),$tab);
             ppa_ca_table($payment_posts,'ppa_fee_payment',$tab); echo '</section>';
         } elseif($tab==='notices') {
