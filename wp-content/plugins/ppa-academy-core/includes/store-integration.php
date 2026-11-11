@@ -19,7 +19,7 @@ function ppa_store_external_product_image($html, $product, $size, $attr, $placeh
 }
 add_filter('woocommerce_product_get_image', 'ppa_store_external_product_image', 10, 5);
 function ppa_store_redirect($view='books',$notice='saved') {
-    $url=add_query_arg(array('ppa_tab'=>'store','ppa_store_view'=>$view,'ppa_store_notice'=>$notice),home_url('/admin/'));
+    $url=add_query_arg(array('ppa_tab'=>'store','ppa_store_view'=>$view,'ppa_store_notice'=>$notice),home_url('/academyadmin/'));
     wp_safe_redirect($url); exit;
 }
 function ppa_store_handle_admin_post() {
@@ -259,12 +259,12 @@ function ppa_store_render_admin($view) {
     $coupons = array_map(function($coupon_post) { return new WC_Coupon($coupon_post->ID); }, $coupon_posts);
     $low_stock=0; foreach($products as $p) if($p->managing_stock() && (int)$p->get_stock_quantity()<=5) $low_stock++;
     $pending=0; $gross=0; $delivered=0; foreach($orders as $o) { if(!$o->is_paid()) $pending++; $gross+=(float)$o->get_total(); if($o->has_status('completed')) $delivered++; }
-    echo '<div class="ppa-ca-store-heading"><div><p class="ppa-ca-store-kicker">COMMERCE OPERATIONS</p><h2>Store Management</h2><p>Live WooCommerce catalogue, orders, coupons and checkout settings.</p></div><a class="ppa-ca-outline-link" href="'.esc_url(get_permalink(wc_get_page_id('shop'))).'" target="_blank" rel="noopener">View Store ↗</a></div>';
+    echo '<div class="ppa-ca-store-heading"><div><p class="ppa-ca-store-kicker">PHOTON PHYSICS ACADEMY · COMMERCE</p><h2>Store Management</h2><p>Manage book inventory, customer orders, payments, promotions and delivery from one workspace.</p></div><a class="ppa-ca-outline-link" href="'.esc_url(get_permalink(wc_get_page_id('shop'))).'" target="_blank" rel="noopener">Open public store ↗</a></div>';
     echo '<div class="ppa-ca-store-metrics">';
-    foreach(array(array('Catalog books',count($products),'▣'),array('Low-stock alerts',$low_stock,'▤'),array('Pending payments / COD',$pending,'৳'),array('Active coupons',count($coupons),'％'),array('Orders loaded',count($orders),'▥')) as $m) echo '<article><div><span>'.esc_html($m[0]).'</span><i>'.esc_html($m[2]).'</i></div><strong>'.esc_html(number_format_i18n($m[1])).'</strong></article>';
+    foreach(array(array('Books in catalogue',count($products),'▣'),array('Low-stock alerts',$low_stock,'▤'),array('Awaiting payment',$pending,'৳'),array('Coupons available',count($coupons),'％'),array('Recent orders',count($orders),'▥')) as $m) echo '<article><div><span>'.esc_html($m[0]).'</span><i>'.esc_html($m[2]).'</i></div><strong>'.esc_html(number_format_i18n($m[1])).'</strong></article>';
     echo '</div><nav class="ppa-ca-store-tabs" aria-label="Store management sections">';
     $views=array('books'=>'Books & Inventory','orders'=>'Orders & Payments','coupons'=>'Coupons & Promotions','analytics'=>'Reports & Export','delivery'=>'Delivery Settings');
-    foreach($views as $key=>$label) echo '<a class="'.($view===$key?'is-active':'').'" href="'.esc_url(add_query_arg(array('ppa_tab'=>'store','ppa_store_view'=>$key),home_url('/admin/'))).'">'.esc_html($label).'</a>';
+    foreach($views as $key=>$label) echo '<a class="'.($view===$key?'is-active':'').'" href="'.esc_url(add_query_arg(array('ppa_tab'=>'store','ppa_store_view'=>$key),home_url('/academyadmin/'))).'">'.esc_html($label).'</a>';
     echo '</nav>';
 
     if (!empty($_GET['ppa_store_notice'])) {
@@ -278,16 +278,16 @@ function ppa_store_render_admin($view) {
     }
     if($view==='books') {
         $edit_id=absint($_GET['edit_product'] ?? 0); $editing=$edit_id?wc_get_product($edit_id):false;
-        echo '<section class="ppa-ca-store-section"><div class="ppa-ca-store-toolbar"><form method="get" class="ppa-ca-store-search"><input type="hidden" name="ppa_tab" value="store"><input type="hidden" name="ppa_store_view" value="books"><input type="search" name="store_search" placeholder="Search title, author or SKU" value="'.esc_attr(sanitize_text_field(wp_unslash($_GET['store_search'] ?? ''))).'"><button class="ppa-ca-outline-link">Search</button></form><a class="ppa-ca-primary" href="'.esc_url(add_query_arg(array('ppa_tab'=>'store','ppa_store_view'=>'books','edit_product'=>0),home_url('/admin/'))).'">＋ Add new book</a></div>';
-        echo '<div class="ppa-ca-panel ppa-ca-store-table"><div class="ppa-ca-table-wrap"><table class="ppa-ca-table"><thead><tr><th>Book</th><th>Author</th><th>SKU</th><th>Price</th><th>Stock</th><th>Visibility</th><th>Actions</th></tr></thead><tbody>';
+        echo '<section class="ppa-ca-store-section"><div class="ppa-ca-store-toolbar"><form method="get" class="ppa-ca-store-search"><input type="hidden" name="ppa_tab" value="store"><input type="hidden" name="ppa_store_view" value="books"><input type="search" name="store_search" placeholder="Search title, author or SKU" value="'.esc_attr(sanitize_text_field(wp_unslash($_GET['store_search'] ?? ''))).'"><button class="ppa-ca-outline-link">Search</button></form><a class="ppa-ca-primary" href="'.esc_url(add_query_arg(array('ppa_tab'=>'store','ppa_store_view'=>'books','edit_product'=>0),home_url('/academyadmin/'))).'">＋ Add new book</a></div>';
+        echo '<div class="ppa-ca-panel ppa-ca-store-table"><div class="ppa-ca-table-wrap"><table class="ppa-ca-table"><thead><tr><th>Cover</th><th>Book details</th><th>SKU</th><th>Price</th><th>Inventory</th><th>Visibility</th><th>Actions</th></tr></thead><tbody>';
         $search=strtolower(sanitize_text_field(wp_unslash($_GET['store_search'] ?? '')));
         $shown=0;
         foreach($products as $p) {
             if($search && strpos(strtolower($p->get_name().' '.get_post_meta($p->get_id(),'_ppa_book_author',true).' '.$p->get_sku()),$search)===false) continue;
-            $shown++; echo '<tr><td><strong>'.esc_html($p->get_name()).'</strong></td><td>'.esc_html(get_post_meta($p->get_id(),'_ppa_book_author',true)?:'—').'</td><td>'.esc_html($p->get_sku()?:'—').'</td><td>'.wp_kses_post($p->get_price_html()).'</td><td>'.esc_html($p->managing_stock()?(string)$p->get_stock_quantity():'Not managed').'</td><td>'.esc_html($p->get_status()==='publish'?'Published':'Draft').'</td><td><a href="'.esc_url(add_query_arg(array('ppa_tab'=>'store','ppa_store_view'=>'books','edit_product'=>$p->get_id()),home_url('/admin/'))).'">Edit</a> ';
+            $shown++; echo '<tr><td class="ppa-ca-store-cover">'.wp_kses_post($p->get_image('woocommerce_thumbnail',array('loading'=>'lazy'))).'</td><td><strong>'.esc_html($p->get_name()).'</strong><br><small>'.esc_html(get_post_meta($p->get_id(),'_ppa_book_author',true)?:'Author not set').'</small></td><td>'.esc_html($p->get_sku()?:'—').'</td><td>'.wp_kses_post($p->get_price_html()).'</td><td><span class="ppa-ca-stock-pill '.($p->managing_stock() && (int)$p->get_stock_quantity()<=5?'is-low':'').'">'.esc_html($p->managing_stock()?(string)$p->get_stock_quantity().' in stock':'Not tracked').'</span></td><td><span class="ppa-ca-visibility-pill '.($p->get_status()==='publish'?'is-live':'is-draft').'">'.esc_html($p->get_status()==='publish'?'Published':'Draft').'</span></td><td><a href="'.esc_url(add_query_arg(array('ppa_tab'=>'store','ppa_store_view'=>'books','edit_product'=>$p->get_id()),home_url('/academyadmin/'))).'">Edit</a> ';
             ppa_store_admin_form('delete_product','books'); echo '<input type="hidden" name="product_id" value="'.$p->get_id().'"><button class="ppa-ca-delete" onclick="return confirm(\'Delete this product?\')">Delete</button></form></td></tr>';
         }
-        if(!$shown) echo '<tr><td colspan="7"><div class="ppa-ca-empty">No matching products found.</div></td></tr>';
+        if(!$shown) echo '<tr><td colspan="7"><div class="ppa-ca-empty">No matching books found. Try another search or add your first book.</div></td></tr>';
         echo '</tbody></table></div></div>';
         $cats=get_terms(array('taxonomy'=>'product_cat','hide_empty'=>false));
         echo '<div class="ppa-ca-panel" style="padding:22px;margin-top:18px"><h3>'.($editing?'Edit Book':'Add a Book').'</h3>';
@@ -296,7 +296,7 @@ function ppa_store_render_admin($view) {
         foreach($cats as $cat) echo '<option value="'.$cat->term_id.'" '.selected($editing?has_term($cat->term_id,'product_cat',$editing->get_id()):false,true,false).'>'.esc_html($cat->name).'</option>';
         echo '</select></label><label class="ppa-store-check"><input type="checkbox" name="published" '.checked($editing?$editing->get_status()==='publish':true,true,false).'> Published</label><label class="ppa-store-check"><input type="checkbox" name="visible" '.checked($editing?$editing->get_catalog_visibility()==='visible':true,true,false).'> Visible in catalogue</label></div><button class="ppa-ca-primary" type="submit">Save Book</button></form></div></section>';
     } elseif($view==='orders') {
-        echo '<section class="ppa-ca-store-section"><div class="ppa-ca-store-toolbar"><div><h3>Orders & payment review</h3><p>Review guest orders, COD collection and bKash/Nagad verification. Wallet payments stay on hold until confirmed.</p></div></div><div class="ppa-ca-panel"><div class="ppa-ca-table-wrap"><table class="ppa-ca-table"><thead><tr><th>Order</th><th>Customer</th><th>Delivery address</th><th>Items</th><th>Total</th><th>Payment</th><th>Status / action</th></tr></thead><tbody>';
+        echo '<section class="ppa-ca-store-section"><div class="ppa-ca-store-toolbar"><div><h3>Orders & payment review</h3><p>Verify bKash/Nagad transactions, confirm COD collection and update fulfilment status.</p></div></div><div class="ppa-ca-panel"><div class="ppa-ca-table-wrap"><table class="ppa-ca-table"><thead><tr><th>Order</th><th>Customer</th><th>Delivery address</th><th>Items</th><th>Total</th><th>Payment review</th><th>Fulfilment</th></tr></thead><tbody>';
         foreach($orders as $o) {
             echo '<tr><td><strong>#'.esc_html($o->get_order_number()).'</strong><br><small>'.esc_html($o->get_date_created()?$o->get_date_created()->date('d M Y'):'').'</small></td><td>'.esc_html($o->get_formatted_billing_full_name()).'<br>'.esc_html($o->get_billing_phone()).'<br><small>'.esc_html($o->get_billing_email()).'</small></td><td>'.wp_kses_post($o->get_formatted_shipping_address() ?: $o->get_formatted_billing_address()).'</td><td>'.esc_html(wp_trim_words(implode(', ',array_map(function($it){return $it->get_name().' × '.$it->get_quantity();},$o->get_items())),12)).'</td><td>'.wp_kses_post($o->get_formatted_order_total()).'</td><td>'.esc_html($o->get_payment_method_title()).'<br>'.esc_html($o->is_paid()?'Paid':'Awaiting').'<br><small>TX: '.esc_html($o->get_meta('_ppa_wallet_transaction_id')?:'—').'</small></td><td>';
             ppa_store_admin_form('update_order','orders'); echo '<input type="hidden" name="order_id" value="'.$o->get_id().'"><select name="order_status">';
@@ -306,6 +306,7 @@ function ppa_store_render_admin($view) {
             if(!$o->is_paid() && $o->get_payment_method()==='cod') echo '<button class="ppa-ca-primary" name="cod_collected" value="1">COD collected</button>';
             echo '</form></td></tr>';
         }
+        if(!$orders) echo '<tr><td colspan="7"><div class="ppa-ca-empty">No store orders have been received yet.</div></td></tr>';
         echo '</tbody></table></div></div></section>';
     } elseif($view==='coupons') {
         echo '<section class="ppa-ca-store-section"><div class="ppa-ca-panel" style="padding:22px"><h3>Create coupon</h3>';
