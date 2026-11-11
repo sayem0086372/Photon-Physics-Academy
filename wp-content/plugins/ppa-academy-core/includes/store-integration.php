@@ -273,8 +273,26 @@ function ppa_store_render_admin($view) {
             'image_upload_denied'=>'Your account cannot upload media files.',
             'image_invalid'=>'Please choose a valid image file.',
             'image_upload_failed'=>'The image could not be uploaded. Check the file size and WordPress upload permissions.',
+            'product_saved'=>'Book details saved successfully.',
+            'product_deleted'=>'Book removed from the catalogue.',
+            'product_missing'=>'The selected book could not be found.',
+            'product_required'=>'Enter a book title before saving.',
+            'coupon_created'=>'Coupon created successfully.',
+            'coupon_deleted'=>'Coupon removed successfully.',
+            'coupon_invalid'=>'That coupon code is empty or already exists.',
+            'settings_saved'=>'Delivery and payment settings saved.',
+            'order_updated'=>'Order details updated successfully.',
+            'order_missing'=>'The selected order could not be found.',
+            'wallet_verification_required'=>'Verify the bKash/Nagad payment before moving this order to processing or completed.',
+            'cod_collection_required'=>'Confirm that cash was collected before completing this COD order.',
+            'invalid_payment_action'=>'That payment action does not match this order payment method.',
+            'transaction_id_missing'=>'This order has no wallet transaction ID to verify.',
+            'woocommerce_missing'=>'WooCommerce is not active. Store controls are unavailable.',
         );
-        if (isset($messages[$notice])) echo '<div class="ppa-ca-alert is-error">'.esc_html($messages[$notice]).'</div>';
+        if (isset($messages[$notice])) {
+            $is_error=in_array($notice,array('image_upload_denied','image_invalid','image_upload_failed','product_missing','product_required','coupon_invalid','order_missing','wallet_verification_required','cod_collection_required','invalid_payment_action','transaction_id_missing','woocommerce_missing'),true);
+            echo '<div class="ppa-ca-alert'.($is_error?' is-error':'').'">'.esc_html($messages[$notice]).'</div>';
+        }
     }
     if($view==='books') {
         $edit_id=absint($_GET['edit_product'] ?? 0); $editing=$edit_id?wc_get_product($edit_id):false;
