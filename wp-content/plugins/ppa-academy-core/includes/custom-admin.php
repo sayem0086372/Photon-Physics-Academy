@@ -225,9 +225,11 @@ function ppa_ca_handle_post() {
         $title=sanitize_text_field(wp_unslash($_POST['record_title'] ?? ''));
         $body=sanitize_textarea_field(wp_unslash($_POST['record_details'] ?? ''));
         if($title==='') ppa_ca_redirect($tab,'required');
+        $batch_before=$post->post_type==='ppa_batch'?ppa_ca_batch_snapshot($post):null;
         wp_update_post(array('ID'=>$id,'post_title'=>$title,'post_content'=>$body));
         $keys=$post->post_type==='ppa_student'?array('bangla_name','institution','guardian_name','phone','guardian_phone','whatsapp_phone','monthly_fee','batch_name','class_level'):array('class_level','max_capacity','schedule_days','time_slot','instructor');
         foreach($keys as $key) if(isset($_POST[$key])) update_post_meta($id,'_ppa_'.$key,sanitize_text_field(wp_unslash($_POST[$key])));
+        if($batch_before!==null) ppa_ca_propagate_batch_change($batch_before,$id);
         $db_result=function_exists('ppa_db_sync_record')?ppa_db_sync_record($id):new WP_Error('ppa_db_unavailable','Database integration is not loaded.');
         if(is_wp_error($db_result)) {
             error_log('Photon Physics Academy database update failed: '.$db_result->get_error_message());
@@ -239,8 +241,10 @@ function ppa_ca_handle_post() {
         $id=absint($_POST['record_id'] ?? 0);
         $post=get_post($id);
         if ($post && current_user_can('manage_options') && in_array($post->post_type,array('ppa_student','ppa_batch','ppa_fee_payment','ppa_exam_result'),true)) {
+            $batch_before=$post->post_type==='ppa_batch'?ppa_ca_batch_snapshot($post):null;
             if(function_exists('ppa_db_delete_record')) ppa_db_delete_record($id);
             wp_delete_post($id,true);
+            if($batch_before!==null) ppa_ca_students_set_batch($batch_before['values'],'');
         }
         ppa_ca_redirect($tab,'deleted');
     }
@@ -307,7 +311,10 @@ function ppa_ca_render_admin_route() {
     ppa_ca_render_page();
     exit;
 }
-add_action("template_redirect", "ppa_ca_render_admin_route", 0);
+// Render AFTER the form handlers. Handlers run at priorities 0 (store, batch import)
+// and 1 (ppa_ca_handle_post). The renderer exits, so at priority 0 it ran first and
+// every POST on /academyadmin/ (add student, add notice, ...) was never processed.
+add_action("template_redirect", "ppa_ca_render_admin_route", 2);
 
 function ppa_ca_login_screen() {
     $error=isset($_GET['ppa_notice']) && $_GET['ppa_notice']==='login_error';
@@ -456,12 +463,136 @@ function ppa_ca_metric_cards($items) {
     foreach ($items as $item) echo '<article class="ppa-ca-metric"><span>'.esc_html($item[0]).'</span><strong>'.esc_html($item[1]).'</strong><small>'.esc_html($item[2]).'</small></article>';
     echo '</div>';
 }
+/**
+ * Batch dropdown helpers. Many batches share a name (e.g. several "ছেলেদের ব্যাচ"),
+ * so every option shows class, name, days and time, grouped by class.
+ * The stored value is the same full label, so each batch is distinguishable.
+ */
+function ppa_ca_batch_label($batch) {
+    $parts=array(
+        (string)get_post_meta($batch->ID,'_ppa_class_level',true),
+        (string)$batch->post_title,
+        (string)get_post_meta($batch->ID,'_ppa_schedule_days',true),
+        (string)get_post_meta($batch->ID,'_ppa_time_slot',true),
+    );
+    return implode(' · ',array_values(array_filter($parts,function($v){return $v!=='';})));
+}
+function ppa_ca_batch_matches($stored,$batch,$title_counts) {
+    $stored=(string)$stored;
+    if($stored==='') return false;
+    if($stored===ppa_ca_batch_label($batch)) return true;
+    // Older records stored only the bare name: match it only when that name is unique.
+    return $stored===(string)$batch->post_title && isset($title_counts[$batch->post_title]) && $title_counts[$batch->post_title]===1;
+}
+/**
+ * Keep students linked to their batch when a batch is edited or deleted.
+ * A student's batch is stored as the batch label, so when a batch's class, name, days
+ * or time change, the matching students' stored label is updated to the new label.
+ * Only the single batch_name column of matching students is changed (no other student data).
+ */
+function ppa_ca_batch_snapshot($post) {
+    global $wpdb;
+    $GLOBALS['ppa_db_meta_bypass']=true;
+    $label=ppa_ca_batch_label($post);
+    unset($GLOBALS['ppa_db_meta_bypass']);
+    $same_title=(int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type='ppa_batch' AND post_status IN ('publish','draft','private') AND post_title=%s",(string)$post->post_title));
+    $values=array($label);
+    if($same_title<=1 && (string)$post->post_title!=='') $values[]=(string)$post->post_title; // older records stored only the bare name
+    return array('values'=>$values);
+}
+function ppa_ca_students_set_batch($from_values,$to_label) {
+    global $wpdb;
+    $to_label=(string)$to_label;
+    $from_values=array_values(array_unique(array_filter(array_map('strval',(array)$from_values),function($v) use ($to_label){return $v!=='' && $v!==$to_label;})));
+    if(!$from_values) return 0;
+    $table=$wpdb->prefix.'ppa_students';
+    if($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s',$wpdb->esc_like($table)))!==$table) return 0;
+    $in=implode(',',array_fill(0,count($from_values),'%s'));
+    $post_ids=$wpdb->get_col($wpdb->prepare("SELECT legacy_post_id FROM {$table} WHERE legacy_post_id IS NOT NULL AND batch_name IN ({$in})",$from_values));
+    $changed=$wpdb->query($wpdb->prepare("UPDATE {$table} SET batch_name=%s, updated_at=%s WHERE batch_name IN ({$in})",array_merge(array($to_label,current_time('mysql')),$from_values)));
+    $GLOBALS['ppa_db_meta_bypass']=true;
+    foreach((array)$post_ids as $pid) { update_post_meta((int)$pid,'_ppa_batch_name',$to_label); }
+    unset($GLOBALS['ppa_db_meta_bypass']);
+    return (int)$changed;
+}
+function ppa_ca_propagate_batch_change($snapshot,$batch_id) {
+    $post=get_post((int)$batch_id);
+    if(!$post || !is_array($snapshot)) return 0;
+    $GLOBALS['ppa_db_meta_bypass']=true;
+    $new_label=ppa_ca_batch_label($post);
+    unset($GLOBALS['ppa_db_meta_bypass']);
+    return ppa_ca_students_set_batch($snapshot['values'],$new_label);
+}
+function ppa_ca_batch_select_options($selected='') {
+    $batches=ppa_ca_records('ppa_batch',200);
+    $title_counts=array();
+    foreach($batches as $b) { $title_counts[$b->post_title]=(isset($title_counts[$b->post_title])?$title_counts[$b->post_title]:0)+1; }
+    $groups=array();
+    foreach($batches as $b) {
+        $class=(string)get_post_meta($b->ID,'_ppa_class_level',true);
+        $groups[$class!==''?$class:'Other'][]=$b;
+    }
+    uksort($groups,function($a,$b){return strnatcasecmp($a,$b);});
+    $html='<option value="">No batch assigned</option>';
+    foreach($groups as $class=>$items) {
+        usort($items,function($x,$y){
+            $kx=get_post_meta($x->ID,'_ppa_schedule_days',true).'|'.$x->post_title;
+            $ky=get_post_meta($y->ID,'_ppa_schedule_days',true).'|'.$y->post_title;
+            return strnatcasecmp($kx,$ky);
+        });
+        $html.='<optgroup label="'.esc_attr($class).'">';
+        foreach($items as $b) {
+            $label=ppa_ca_batch_label($b);
+            $is_selected=ppa_ca_batch_matches($selected,$b,$title_counts);
+            $html.='<option value="'.esc_attr($label).'"'.($is_selected?' selected':'').'>'.esc_html($label).'</option>';
+        }
+        $html.='</optgroup>';
+    }
+    return $html;
+}
+/**
+ * Class-first batch picker: batches stay hidden until a class is chosen, then only that
+ * class's batches appear, each as its own separate radio choice.
+ */
+function ppa_ca_batch_picker($selected='') {
+    static $script_done=false;
+    $batches=ppa_ca_records('ppa_batch',200);
+    $title_counts=array();
+    foreach($batches as $b) { $title_counts[$b->post_title]=(isset($title_counts[$b->post_title])?$title_counts[$b->post_title]:0)+1; }
+    usort($batches,function($x,$y){
+        $kx=get_post_meta($x->ID,'_ppa_class_level',true).'|'.get_post_meta($x->ID,'_ppa_schedule_days',true).'|'.$x->post_title;
+        $ky=get_post_meta($y->ID,'_ppa_class_level',true).'|'.get_post_meta($y->ID,'_ppa_schedule_days',true).'|'.$y->post_title;
+        return strnatcasecmp($kx,$ky);
+    });
+    $html='<div class="ppa-ca-batch-picker" data-ppa-batch-picker>';
+    $html.='<p class="ppa-ca-batch-hint" data-ppa-batch-hint>Select a class first to see its batches.</p>';
+    $html.='<label class="ppa-ca-batch-choice ppa-ca-batch-none"><input type="radio" name="batch_name" value=""'.($selected===''?' checked':'').'><span><strong>No batch assigned</strong></span></label>';
+    $any_checked=false;
+    foreach($batches as $b) {
+        $class=(string)get_post_meta($b->ID,'_ppa_class_level',true);
+        $days=(string)get_post_meta($b->ID,'_ppa_schedule_days',true);
+        $time=(string)get_post_meta($b->ID,'_ppa_time_slot',true);
+        $is_checked=ppa_ca_batch_matches($selected,$b,$title_counts);
+        if($is_checked) $any_checked=true;
+        $html.='<label class="ppa-ca-batch-choice" data-batch-class="'.esc_attr($class).'" hidden><input type="radio" name="batch_name" value="'.esc_attr(ppa_ca_batch_label($b)).'"'.($is_checked?' checked':'').'><span><strong>'.esc_html($b->post_title).'</strong><small>'.esc_html(trim($days.($days!==''&&$time!==''?' · ':'').$time)).'</small></span></label>';
+    }
+    $html.='</div>';
+    if(!$script_done) {
+        $script_done=true;
+        $html.='<script>(function(){function sync(f){var sel=f.querySelector(\'select[name="class_level"]\'),box=f.querySelector("[data-ppa-batch-picker]");if(!sel||!box)return;var cls=sel.value,any=false,hint=box.querySelector("[data-ppa-batch-hint]");box.querySelectorAll("[data-batch-class]").forEach(function(el){var show=cls!==""&&el.getAttribute("data-batch-class")===cls;el.hidden=!show;if(show)any=true;var r=el.querySelector("input");if(!show&&r&&r.checked){var none=box.querySelector(\'input[value=""]\');if(none)none.checked=true;}});if(cls===""){hint.hidden=false;hint.textContent="Select a class first to see its batches.";}else if(!any){hint.hidden=false;hint.textContent="No batches have been created for "+cls+" yet.";}else{hint.hidden=true;}}document.addEventListener("change",function(e){if(e.target&&e.target.matches&&e.target.matches(\'select[name="class_level"]\')){var f=e.target.closest("form");if(f)sync(f);}});function all(){document.querySelectorAll("form").forEach(sync);}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",all);else all();window.addEventListener("hashchange",all);})();</script>';
+    }
+    return $html;
+}
 function ppa_ca_add_form($kind,$title,$fields,$tab) {
     $modal_id='ppa-ca-modal-'.$kind;
-    echo '<div class="ppa-ca-modal-launch"><a href="#'.esc_attr($modal_id).'">＋ '.esc_html($title).'</a></div><div class="ppa-ca-modal" id="'.esc_attr($modal_id).'" role="dialog" aria-modal="true" aria-label="'.esc_attr($title).'"><a class="ppa-ca-modal-backdrop" href="#ppa-ca-modal-close" aria-label="Close dialog"></a><div class="ppa-ca-modal-card"><a class="ppa-ca-modal-close" href="#ppa-ca-modal-close" aria-label="Close dialog">×</a><form method="post" class="ppa-ca-form">';
+    echo '<div class="ppa-ca-modal-launch"><a href="#'.esc_attr($modal_id).'">＋ '.esc_html($title).'</a></div><div class="ppa-ca-modal" id="'.esc_attr($modal_id).'" role="dialog" aria-modal="true" aria-label="'.esc_attr($title).'"><a class="ppa-ca-modal-backdrop" href="#ppa-ca-modal-close" aria-label="Close dialog"></a><div class="ppa-ca-modal-card"><a class="ppa-ca-modal-close" href="#ppa-ca-modal-close" aria-label="Close dialog">×</a><form method="post" class="ppa-ca-form" action="'.esc_url(add_query_arg('ppa_tab',$tab,home_url('/academyadmin/'))).'">';
     wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
     echo '<input type="hidden" name="ppa_ca_action" value="add_record"><input type="hidden" name="record_type" value="'.esc_attr($kind).'"><input type="hidden" name="return_tab" value="'.esc_attr($tab).'"><h3>'.esc_html($title).'</h3><div class="ppa-ca-form-grid">';
     foreach($fields as $field=>$label) {
+        if($field==='batch_name') {
+            echo '<div class="ppa-ca-batch-field"><span class="ppa-ca-batch-title">'.esc_html($label).'</span>'.ppa_ca_batch_picker('').'</div>';
+            continue;
+        }
         $wide=in_array($field,array('record_details'),true);
         echo '<label class="'.($wide?'is-wide':'').'">'.esc_html($label);
         if($field==='record_details') {
@@ -480,9 +611,7 @@ function ppa_ca_add_form($kind,$title,$fields,$tab) {
         } elseif($field==='class_level') {
             echo '<select name="class_level" required><option value="">Select class</option><option value="Class 8">Class 8</option><option value="Class 9">Class 9</option><option value="Class 10">Class 10</option></select>';
         } elseif($field==='batch_name') {
-            echo '<select name="batch_name"><option value="">No batch assigned</option>';
-            foreach(ppa_ca_records('ppa_batch',200) as $batch) echo '<option value="'.esc_attr($batch->post_title).'">'.esc_html($batch->post_title).'</option>';
-            echo '</select>';
+            echo '<select name="batch_name">'.ppa_ca_batch_select_options('').'</select>';
         } elseif($field==='billing_month') {
             echo '<select name="billing_month" required><option value="">Select month</option>';
             foreach(array('January','February','March','April','May','June','July','August','September','October','November','December') as $month) echo '<option value="'.esc_attr($month).'">'.esc_html($month).'</option>';
@@ -524,9 +653,7 @@ function ppa_ca_edit_form($record_id,$tab) {
     foreach(array('Class 8','Class 9','Class 10') as $class) echo '<option value="'.esc_attr($class).'" '.selected(get_post_meta($post->ID,'_ppa_class_level',true),$class,false).'>'.esc_html($class).'</option>';
     echo '</select></label>';
     if($kind==='student') {
-        echo '<label>Batch<select name="batch_name"><option value="">No batch assigned</option>';
-        foreach(ppa_ca_records('ppa_batch',200) as $batch) echo '<option value="'.esc_attr($batch->post_title).'" '.selected(get_post_meta($post->ID,'_ppa_batch_name',true),$batch->post_title,false).'>'.esc_html($batch->post_title).'</option>';
-        echo '</select></label>';
+        echo '<div class="ppa-ca-batch-field"><span class="ppa-ca-batch-title">Batch</span>'.ppa_ca_batch_picker((string)get_post_meta($post->ID,'_ppa_batch_name',true)).'</div>';
         foreach(array('bangla_name'=>'Student Name (Bangla)','institution'=>'Institution','phone'=>'Student Mobile','guardian_name'=>'Guardian Name','guardian_phone'=>'Guardian Mobile','whatsapp_phone'=>'WhatsApp Number','monthly_fee'=>'Monthly Fee (৳)') as $key=>$label) {
             $type=in_array($key,array('phone','guardian_phone','whatsapp_phone'),true)?'tel':($key==='monthly_fee'?'number':'text');
             echo '<label>'.esc_html($label).'<input name="'.esc_attr($key).'" type="'.esc_attr($type).'" value="'.esc_attr(get_post_meta($post->ID,'_ppa_'.$key,true)).'"></label>';
@@ -855,6 +982,7 @@ function ppa_ca_visual_parity_styles() { ?><style>
 .ppa-ca-store-banner{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:25px 28px;margin:0 0 20px;border-radius:16px;background:linear-gradient(115deg,#102b50,#1d4ed8);color:white;overflow:hidden}.ppa-ca-store-banner span{font-size:10px;letter-spacing:1.8px;font-weight:800;color:#bfdbfe}.ppa-ca-store-banner h3{font-size:21px;font-weight:850;margin:7px 0}.ppa-ca-store-banner p{font-size:12px;color:#dbeafe;margin:0}.ppa-ca-store-banner-mark{width:66px;height:66px;border:1px solid rgba(255,255,255,.3);border-radius:18px;display:grid;place-items:center;font-size:19px;font-weight:900;color:#fff;background:rgba(255,255,255,.1)}.ppa-ca-store-card{position:relative;min-height:150px;padding:21px 48px 20px 20px}.ppa-ca-store-card h3{font-size:15px;font-weight:800;color:#0f172a}.ppa-ca-store-card p{font-size:12px;line-height:1.6;color:#64748b}.ppa-ca-store-arrow{position:absolute;right:18px;top:20px;color:#94a3b8;font-size:17px}
 @media(max-width:900px){.ppa-ca-settings-grid{grid-template-columns:1fr}}
 @media(max-width:680px){.ppa-ca-metric-grid{grid-template-columns:1fr;gap:10px}.ppa-ca-metric{padding:14px 16px}.ppa-ca-program-grid{grid-template-columns:1fr}.ppa-ca-store-banner{padding:20px}.ppa-ca-store-banner h3{font-size:18px}.ppa-ca-store-banner-mark{width:50px;height:50px}.ppa-ca-data-panel>.ppa-ca-panel-head{padding:16px}}
+.ppa-ca-batch-field{grid-column:1/-1;display:grid;gap:8px}.ppa-ca-batch-title{font-size:12px;font-weight:650;color:#334155}.ppa-ca-batch-picker{display:grid;gap:8px}.ppa-ca-batch-hint{margin:0;padding:11px 13px;border:1px dashed #cbd5e1;border-radius:10px;background:#f8fafc;color:#64748b;font-size:12px}.ppa-ca-batch-hint[hidden],.ppa-ca-batch-choice[hidden]{display:none!important}.ppa-ca-batch-choice{display:flex!important;flex-direction:row!important;align-items:center;gap:11px;padding:11px 13px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-weight:400!important}.ppa-ca-batch-choice:hover{border-color:#93c5fd;background:#f8fbff}.ppa-ca-batch-choice:has(input:checked){border-color:#2563eb;background:#eff6ff;box-shadow:0 0 0 1px #2563eb inset}.ppa-ca-batch-choice input{flex:0 0 auto;width:16px;height:16px;margin:0}.ppa-ca-batch-choice span{display:grid;gap:2px;min-width:0}.ppa-ca-batch-choice strong{font-size:13px;color:#0f172a}.ppa-ca-batch-choice small{font-size:11px;color:#64748b}
 </style><?php }
 
 function ppa_ca_store_preview($store_view) {
@@ -1101,7 +1229,7 @@ function ppa_ca_render_page() {
         }
         if(isset($_GET['ppa_notice']) && $_GET['ppa_notice']!=='login_error') {
             $notice=sanitize_key(wp_unslash($_GET['ppa_notice']));
-            $messages=array('saved'=>'Settings saved successfully.','database_error'=>'The record was kept in WordPress, but the Academy MySQL table could not be updated. Please contact the site administrator.','student_not_found'=>'Select a valid student ID before saving this record.','invalid_amount'=>'Payment amounts are invalid. Paid amount cannot exceed payable amount.','student_id_limit'=>'Student ID sequence is full for this year.','created'=>'Record saved successfully.','updated'=>'Record updated successfully.','deleted'=>'Record deleted successfully.','sms_result'=>'SMS sending finished. Review the delivery summary below.','sms_invalid'=>'Write a message and choose at least one recipient group.','sms_too_long'=>'The message is longer than the 1,000 character limit.','sms_no_recipients'=>'No eligible phone numbers were found for these filters.','sms_too_many'=>'This send is limited to 100 unique phone numbers. Narrow the class or batch selection.','batch_import_done'=>'All 13 source batches were imported or verified in the Academy MySQL database.','batch_import_partial'=>'The batch import finished with some errors. Review the details in Programs & Batches.','batch_import_error'=>'The batch importer could not run. Check that the Academy database integration is active.');
+            $messages=array('saved'=>'Settings saved successfully.','database_error'=>'The record was kept in WordPress, but the Academy MySQL table could not be updated. Please contact the site administrator.','student_not_found'=>'Select a valid student ID before saving this record.','invalid_amount'=>'Payment amounts are invalid. Paid amount cannot exceed payable amount.','student_id_limit'=>'Student ID sequence is full for this year.','created'=>'Record saved successfully.','required'=>'Please fill in all required fields.','invalid'=>'That request was not valid.','error'=>'The record could not be saved. Please try again.','updated'=>'Record updated successfully.','deleted'=>'Record deleted successfully.','sms_result'=>'SMS sending finished. Review the delivery summary below.','sms_invalid'=>'Write a message and choose at least one recipient group.','sms_too_long'=>'The message is longer than the 1,000 character limit.','sms_no_recipients'=>'No eligible phone numbers were found for these filters.','sms_too_many'=>'This send is limited to 100 unique phone numbers. Narrow the class or batch selection.','batch_import_done'=>'All 13 source batches were imported or verified in the Academy MySQL database.','batch_import_partial'=>'The batch import finished with some errors. Review the details in Programs & Batches.','batch_import_error'=>'The batch importer could not run. Check that the Academy database integration is active.');
             echo '<div class="ppa-ca-alert'.($notice==='database_error'?' is-error':'').'">'.esc_html(isset($messages[$notice])?$messages[$notice]:'Action completed.').'</div>';
         }
         if($tab==='overview') {
@@ -1179,11 +1307,12 @@ function ppa_ca_render_page() {
         } elseif($tab==='programs') {
             $batch_posts=ppa_ca_records('ppa_batch');
             ppa_ca_section_intro('Programs & Batches','Organize class groups, schedules and teaching information.',number_format_i18n(count($batch_posts)).' batches');
-            if(function_exists('ppa_ca_render_batch_import_panel')) ppa_ca_render_batch_import_panel();
             ppa_ca_add_form('batch','Create New Batch',array('record_title'=>'Batch Name','class_level'=>'Class Level','max_capacity'=>'Maximum Capacity','schedule_days'=>'Schedule Days','time_slot'=>'Class Time','instructor'=>'Instructor','record_details'=>'Batch details / class schedule'),$tab);
             echo '<div class="ppa-ca-program-grid">';
             if($batch_posts){
                 $all_students=ppa_ca_records('ppa_student',1000);
+                $batch_title_counts=array();
+                foreach($batch_posts as $bp) { $batch_title_counts[$bp->post_title]=(isset($batch_title_counts[$bp->post_title])?$batch_title_counts[$bp->post_title]:0)+1; }
                 foreach($batch_posts as $batch){
                     $class=get_post_meta($batch->ID,'_ppa_class_level',true);
                     $days=get_post_meta($batch->ID,'_ppa_schedule_days',true);
@@ -1191,7 +1320,7 @@ function ppa_ca_render_page() {
                     $teacher=get_post_meta($batch->ID,'_ppa_instructor',true);
                     $capacity=(int)get_post_meta($batch->ID,'_ppa_max_capacity',true);
                     $enrolled=0;
-                    foreach($all_students as $enrolled_student) if(get_post_meta($enrolled_student->ID,'_ppa_batch_name',true)===$batch->post_title) $enrolled++;
+                    foreach($all_students as $enrolled_student) if(ppa_ca_batch_matches(get_post_meta($enrolled_student->ID,'_ppa_batch_name',true),$batch,$batch_title_counts)) $enrolled++;
                     $percent=$capacity>0?min(100,(int)round(($enrolled/$capacity)*100)):0;
                     $is_full=$capacity>0 && $enrolled >= $capacity;
                     echo '<article class="ppa-ca-program-card"><div class="ppa-ca-program-top"><span class="ppa-ca-program-icon">▤</span><span class="ppa-ca-soft-badge">'.esc_html($class?:'Academy Batch').'</span></div><h3>'.esc_html($batch->post_title).'</h3><div class="ppa-ca-program-meta"><span>◷ '.esc_html($days?:'Schedule not set').'</span><span>◴ '.esc_html($time?:'Time not set').'</span><span>♙ '.esc_html($teacher?:'Instructor not set').'</span></div><div class="ppa-ca-program-enrollment"><div><strong>'.number_format_i18n($enrolled).' enrolled</strong><span>'.($capacity>0?number_format_i18n($capacity).' seats':'Capacity not set').'</span></div><div class="ppa-ca-program-progress"><span style="width:'.(int)$percent.'%"></span></div><small class="'.($is_full?'is-full':'').'">'.($is_full?'Full':($capacity>0?number_format_i18n(max(0,$capacity-$enrolled)).' seats available':'Enrollment tracking')) .'</small></div><div class="ppa-ca-program-foot">Batch details <span>'.esc_html(wp_trim_words(wp_strip_all_tags($batch->post_content),12)).'</span></div></article>';
@@ -1225,6 +1354,17 @@ function ppa_ca_render_page() {
             $notice_terms=get_terms(array('taxonomy'=>'ppa_notice_category','hide_empty'=>false));
             if (is_wp_error($notice_terms)) $notice_terms=array();
             echo '<div class="ppa-ca-section-head"><div><h2>Notice Management</h2><p>Create, publish and manage announcements shown on the academy website.</p></div><span class="ppa-ca-section-count">'.number_format_i18n(ppa_ca_count('ppa_notice')).' published</span></div>';
+            // Add Notice: launch button + modal form (handled by the existing add_notice action).
+            echo '<div class="ppa-ca-modal-launch"><a href="#ppa-ca-modal-notice">＋ Add Notice</a></div><div class="ppa-ca-modal" id="ppa-ca-modal-notice" role="dialog" aria-modal="true" aria-label="Add Notice"><a class="ppa-ca-modal-backdrop" href="#ppa-ca-modal-close" aria-label="Close dialog"></a><div class="ppa-ca-modal-card"><a class="ppa-ca-modal-close" href="#ppa-ca-modal-close" aria-label="Close dialog">×</a><form method="post" class="ppa-ca-form" action="'.esc_url(add_query_arg('ppa_tab','notices',home_url('/academyadmin/'))).'">';
+            wp_nonce_field('ppa_ca_admin_action','ppa_ca_nonce');
+            echo '<input type="hidden" name="ppa_ca_action" value="add_notice"><input type="hidden" name="return_tab" value="notices"><h3>Add Notice</h3><div class="ppa-ca-form-grid">';
+            echo '<label class="is-wide">Notice Title<input name="notice_title" type="text" maxlength="200" required></label>';
+            echo '<label>Category<select name="notice_category"><option value="">General</option>';
+            foreach ($notice_terms as $notice_term) { echo '<option value="'.esc_attr($notice_term->slug).'">'.esc_html($notice_term->name).'</option>'; }
+            echo '</select></label>';
+            echo '<label class="ppa-ca-check"><input name="notice_published" type="checkbox" value="1" checked> Publish on the website now</label>';
+            echo '<label class="is-wide">Notice Details<textarea name="notice_content" rows="6" required></textarea></label>';
+            echo '</div><div class="ppa-ca-modal-actions"><a href="#ppa-ca-modal-close">Cancel</a><button class="ppa-ca-primary" type="submit">Save Notice</button></div></form></div></div>';
             echo '<section class="ppa-ca-panel ppa-ca-notice-panel"><div class="ppa-ca-panel-head"><div><h2>All Notices</h2><p>Drafts and published notices are managed here.</p></div><span class="ppa-ca-soft-badge">Website content</span></div>';
             if($notice_posts){
                 echo '<div class="ppa-ca-notice-grid">';
