@@ -168,9 +168,15 @@ function ppa_ca_handle_post() {
     }
 
     if ($action==='save_settings') {
-        update_option('ppa_ca_sms_gateway_url',esc_url_raw(wp_unslash($_POST['sms_gateway_url'] ?? '')));
-        update_option('ppa_ca_sms_sender_id',sanitize_text_field(wp_unslash($_POST['sms_sender_id'] ?? '')));
-        update_option('ppa_ca_slideshow_urls',sanitize_textarea_field(wp_unslash($_POST['slideshow_urls'] ?? '')));
+        $raw_slides=sanitize_textarea_field(wp_unslash($_POST['slideshow_urls'] ?? ''));
+        $safe_slides=array();
+        foreach(preg_split('/\r\n|\r|\n/',$raw_slides) as $slide_url) {
+            $slide_url=esc_url_raw(trim($slide_url),array('http','https'));
+            if($slide_url && wp_http_validate_url($slide_url)) $safe_slides[]=$slide_url;
+        }
+        $sender_id=substr(sanitize_text_field(wp_unslash($_POST['sms_sender_id'] ?? '')),0,30);
+        update_option('ppa_ca_sms_sender_id',$sender_id);
+        update_option('ppa_ca_slideshow_urls',implode("\n",array_values(array_unique($safe_slides))));
         ppa_ca_redirect('settings','saved');
     }
     if ($action==='add_record') {
@@ -1287,7 +1293,7 @@ function ppa_ca_render_settings_tab() {
     $sender_id=(string)get_option('ppa_ca_sms_sender_id','');
     $slideshow_urls=(string)get_option('ppa_ca_slideshow_urls','');
     $api_ready=ppa_ca_sms_api_key()!=='';
-    $slide_lines=array_values(array_filter(array_map('trim',preg_split('/\\r\\n|\\r|\\n/',$slideshow_urls))));
+    $slide_lines=array_values(array_filter(array_map('trim',preg_split('/\r\n|\r|\n/',$slideshow_urls))));
     echo '<div class="ppa-ca-settings-hero"><div><span class="ppa-ca-settings-eyebrow">CONTROL CENTRE</span><h2>Academy Settings</h2><p>Manage the public homepage visuals and secure messaging preferences from one place.</p></div><span class="ppa-ca-settings-hero-icon" aria-hidden="true">⚙</span></div>';
     echo '<div class="ppa-ca-settings-summary"><article><span>Homepage slides</span><strong>'.number_format_i18n(count($slide_lines)).'</strong><small>Image links configured</small></article><article><span>SMS gateway</span><strong>'.($api_ready?'Configured':'Not configured').'</strong><small>'.($api_ready?'Server key detected':'Server key required').'</small></article><article><span>Sender ID</span><strong>'.($sender_id!==''?'Custom':'Default').'</strong><small>'.($sender_id!==''?esc_html($sender_id):'Provider account default').'</small></article></div>';
     echo '<div class="ppa-ca-settings-grid"><section class="ppa-ca-panel ppa-ca-settings-card ppa-ca-settings-main"><div class="ppa-ca-settings-section-title"><span class="ppa-ca-settings-section-icon">▧</span><div><h3>Homepage presentation</h3><p>Control the images shown in the homepage slideshow.</p></div></div><form method="post" class="ppa-ca-settings-form">';
